@@ -13,11 +13,15 @@ __start:
     add     $t0, $t0, 2         # add 1
     mtc0    $t0, $11            # push to compare
     
-    j main                      # start main program
+    lui     $t0 0x0040
+    ori     $t0 0x0000
+    
+    j       $t0                 # start main program
 
+    .text 0x00400000
     .globl main
 main:
-    break 5;
+    break 5; 
     # print hello world to the console
     la      $a0, hello_msg      # load the addr of hello_msg into $a0.
     li      $v0, 4              # 4 is the print_string syscall.

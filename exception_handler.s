@@ -42,9 +42,12 @@ __excp: .word __e0_, __e1_, __e2_, __e3_, __e4_, __e5_, __e6_, __e7_, __e8_, __e
     .word __e10_, __e11_, __e12_, __e13_, __e14_, __e15_, __e16_, __e17_, __e18_,
     .word __e19_, __e20_, __e21_, __e22_, __e23_, __e24_, __e25_, __e26_, __e27_,
     .word __e28_, __e29_, __e30_, __e31_
-save0:  .word 0
-save1:  .word 0
-save2:  .word 0
+__save_a0:  .word 0
+__save_a1:  .word 0
+__save_a2:  .word 0
+__save_a3:  .word 0
+__save_v0:  .word 0
+__save_v1:  .word 0
 exception_msg: .asciiz "exception handler entered\n"
 
     
@@ -54,9 +57,12 @@ exception_handler:              # exception handler
     .set noat                   # stops spim from complaining that you are touching $at
     move    $k1, $at            # save the $at reg in $k1
     .set at                     # re-ables $at complaints
-    sw      $a0, save0          # save $a0, $a1, $v0
-    sw      $a1, save1
-    sw      $v0, save2
+    sw      $a0 __save_a0
+    sw      $a1 __save_a1
+    sw      $a2 __save_a2
+    sw      $a3 __save_a3
+    sw      $v0 __save_v0
+    sw      $v1 __save_v1
     
     # print a message to the screen
     la      $a0, exception_msg  # load the addr of exception_msg into $a0.
@@ -91,9 +97,12 @@ exception_finished:
     mtc0    $k0, $12            # push status register
     
     # restore state
-    lw      $a0, save0          # load $a0, $a1, $v0
-    lw      $a1, save1
-    lw      $v0, save2
+    lw      $a0 __save_a0
+    lw      $a1 __save_a1
+    lw      $a2 __save_a2
+    lw      $a3 __save_a3
+    lw      $v0 __save_v0
+    lw      $v1 __save_v1
     .set noat
     move    $at, $k1            # restore $at
     .set at
