@@ -10,4 +10,4 @@ interrupt_handler:
     li      $v0, 4              # 4 is the print_string syscall.
     syscall                     # do the syscall.
     
-    j       $k0
+    j       interrupt_return
