@@ -69,6 +69,15 @@ exception_handler:              # exception handler
     li      $v0, 4              # 4 is the print_string syscall.
     syscall                     # do the syscall.
     
+    
+    li      $a0 4
+    li      $v0 9
+    syscall
+    
+    la      $s6 __save_gp
+    la      $s7 __start
+    add     $s5 $v0 $0
+    
     mfc0    $k0 $13             # Cause register
     srl     $a0 $k0 2           # Extract ExcCode Field
     andi    $a0 $a0 0x1f
