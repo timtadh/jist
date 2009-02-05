@@ -10,7 +10,11 @@ Generic macro engine.
 call_macro get_int dict(reg='$t0')
 '''
 
-import string
+import string, re
+
+r = re.compile(r'\%[0-9]+')
+
+#print r.findall("%29 %30")
 
 def process(path, out):
     f = open(path, 'r')
@@ -30,11 +34,11 @@ def process(path, out):
             macros[macro_name] = "".join(macros[macro_name])
         else:
             if in_macro:
-                macros[macro_name].append(line[1:])
+                macros[macro_name].append(line)
             else:
                 linesplit = line.split()
                 if len(linesplit) > 1:
-                    if string.lower(linesplit[0]) == 'call_macro':
+                    if string.lower(linesplit[0]) == 'call':
                         out_line = '!macro error!'
                         if len(linesplit) > 2:
                             args = eval(' '.join(linesplit[2:]))
