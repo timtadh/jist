@@ -8,6 +8,7 @@ should be the last thing in the last file.
 
 import sys
 import subprocess
+import macro
 
 if __name__ != '__main__': sys.exit(0)
 
@@ -22,7 +23,7 @@ for filename in filenames:
     f = open(filename, 'r')
     t = '#'*12 + ' ' + filename + ' ' + '#'*12 + '\n'
     t += f.read()
-    t += '#'*12 + ' ' + filename + ' ' + '#'*12 + '\n'
+    t += '\n' + '#'*12 + ' ' + filename + ' ' + '#'*12 + '\n'
     files.append(t)
     f.close()
 
@@ -31,5 +32,7 @@ s = '\n\n'.join(files)
 f = open('__spim_py_out', 'w')
 f.write(s)
 f.close()
+
+macro.process('__spim_py_out', '__spim_py_out')
 
 subprocess.check_call(["spim", "-ne",  "-mio",  "__spim_py_out"])
