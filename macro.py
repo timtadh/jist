@@ -1,20 +1,35 @@
 '''
 Generic macro engine.
 
+.text 0x00400000
+.globl main
+
 #start_macro get_int
-#        li $v0, 5
-#        syscall
-#        move %(reg)s, $v0
+        li $v0, 5
+        syscall
+        move %1, $v0
 #end_macro
 
-call_macro get_int dict(reg='$t0')
+#start_macro print_int
+        move $a0, #1
+        li $v0, 1
+        syscall
+#end_macro
+
+main:
+        get_int $t0     #You can even put comments after them!
+        get_int $t1
+        
+        add $t2, $t0, $t1
+        
+        print_int $t2
+        
+        li  $v0, 10
+        syscall
+
 '''
 
-import string, re
-
-r = re.compile(r'\%[0-9]+')
-
-#print r.findall("%29 %30")
+import string, sys
 
 def process(path, out):
     f = open(path, 'r')
@@ -27,7 +42,7 @@ def process(path, out):
         if line.startswith('#start_macro'):
             if in_macro: print "Macro error."
             in_macro = True
-            macro_name = line.split()[-1]
+            macro_name = string.lower(line.split()[-1])
             macros[macro_name] = []
         elif line.startswith('#end_macro'):
             in_macro = False
@@ -37,21 +52,17 @@ def process(path, out):
                 macros[macro_name].append(line)
             else:
                 linesplit = line.split()
-                if len(linesplit) > 1:
-                    if string.lower(linesplit[0]) == 'call':
-                        out_line = '!macro error!'
-                        if len(linesplit) > 2:
-                            args = eval(' '.join(linesplit[2:]))
-                            if type(args) == type([]):
-                                out_line = macros[linesplit[1]] % tuple(args)
-                            elif type(args) == type({}):
-                                out_line = macros[linesplit[1]] % args
-                            elif type(args) == type(''):
-                                out_line = macros[linesplit[1]] % \
-                                        tuple([eval(s) for s in linesplit[2:]])
+                if len(linesplit) > 0:
+                    if string.lower(linesplit[0]) in macros.keys():
+                        mtext = macros[linesplit[0]]
+                        if len(linesplit) > 1:
+                            arg_num = 0
+                            for arg in linesplit[1:]:
+                                arg_num += 1
+                                mtext = mtext.replace("%"+str(arg_num), arg)
+                            out_lines.append(mtext)
                         else:
-                            out_line = macros[linesplit[1]]
-                        out_lines.append(out_line)
+                            out_line = macros[mtext]
                     else:
                         out_lines.append(line)
                 else:
@@ -63,4 +74,4 @@ def process(path, out):
     f.close()
 
 if __name__ == "__main__":
-    process('test.asm', 'test_2.asm')
+    process(sys.argv[1], sys.argv[2])
