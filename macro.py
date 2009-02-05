@@ -4,17 +4,17 @@ Generic macro engine.
 .text 0x00400000
 .globl main
 
-#start_macro get_int
+#define get_int global
         li $v0, 5
         syscall
         move %1, $v0
-#end_macro
+#end
 
-#start_macro print_int
+#define print_int local
         move $a0, #1
         li $v0, 1
         syscall
-#end_macro
+#end
 
 main:
         get_int $t0     #You can even put comments after them!
@@ -31,30 +31,52 @@ main:
 
 import string, sys
 
+global_macros = {}
+
 def process(path, out):
+    global global_macros
+    
     f = open(path, 'r')
-    macros = {}
+    local_macros = {}
     out_lines = []
     in_macro = False
     macro_name = ""
+    is_global = False
     for line in f:
         line.strip()
-        if line.startswith('#start_macro'):
+        if line.startswith('#define'):
             if in_macro: print "Macro error."
             in_macro = True
-            macro_name = string.lower(line.split()[-1])
-            macros[macro_name] = []
-        elif line.startswith('#end_macro'):
+            linesplit = line.split()
+            macro_name = string.lower(linesplit[1])
+            is_global = False
+            if len(linesplit) > 2 and string.lower(linesplit[2]) == 'global':
+                is_global = True
+            if is_global:
+                global_macros[macro_name] = []
+            else:
+                local_macros[macro_name] = []
+        elif line.startswith('#end'):
             in_macro = False
-            macros[macro_name] = "".join(macros[macro_name])
+            if macro_name in local_macros:
+                local_macros[macro_name] = "".join(local_macros[macro_name])
+            if macro_name in global_macros:
+                global_macros[macro_name] = "".join(global_macros[macro_name])
         else:
             if in_macro:
-                macros[macro_name].append(line)
+                if macro_name in local_macros.keys():
+                    local_macros[macro_name].append(line)
+                if macro_name in global_macros.keys():
+                    global_macros[macro_name].append(line)
             else:
                 linesplit = line.split()
                 if len(linesplit) > 0:
-                    if string.lower(linesplit[0]) in macros.keys():
-                        mtext = macros[linesplit[0]]
+                    mtext = ""
+                    if string.lower(linesplit[0]) in global_macros.keys():
+                        mtext = global_macros[linesplit[0]]
+                    if string.lower(linesplit[0]) in local_macros.keys():
+                        mtext = local_macros[linesplit[0]]
+                    if mtext != "":
                         if len(linesplit) > 1:
                             arg_num = 0
                             for arg in linesplit[1:]:
@@ -62,12 +84,12 @@ def process(path, out):
                                 mtext = mtext.replace("%"+str(arg_num), arg)
                             out_lines.append(mtext)
                         else:
-                            out_line = macros[mtext]
+                            out_line = mtext
                     else:
                         out_lines.append(line)
                 else:
                     out_lines.append(line)
-                    
+    print local_macros
     f.close()
     f = open(out, 'w')
     f.write(''.join(out_lines))
