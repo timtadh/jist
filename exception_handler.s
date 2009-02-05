@@ -1,7 +1,13 @@
 # Tim Henderson
 # A generalized exception handler adapted from exception.s
 
-
+    
+    .globl __save_a0
+    .globl __save_a1
+    .globl __save_a2
+    .globl __save_a3
+    .globl __save_v0
+    .globl __save_v1
     .kdata                      # stores the save values of these reg's since the stack
                                 # may be unsafe
 __m1_:  .asciiz "  Exception "

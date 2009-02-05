@@ -1,6 +1,18 @@
 # Tim Henderson
 # interrupt handler
 
+    .globl __save_gp
+    .globl __save_sp
+    .globl __save_fp
+    .globl __save_ra
+    .globl __save_t0
+    .globl __save_t1
+    .globl __save_t2
+    .globl __save_t3
+    .globl __save_s0
+    .globl __save_s1
+    .globl __save_s2
+    .globl __save_s3
     .kdata
 __save_gp:  .word 0
 __save_sp:  .word 0
