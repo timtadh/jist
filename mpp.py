@@ -33,27 +33,35 @@ global_macros = {}
 kernel_macros = {}
 max_user_programs = 16
 main_count = 0
-label_inc = 0
+label_count = 0
 main_labels = list()
 
 def make_kernel_macros():
     '''creates specialized macros'''
     global kernel_macros
     
-    number_user_programs = ' '*4 + '#'*16 + ' start number_user_programs ' + '#'*16 + '\n'
+    number_user_programs = ' '*4 + '#'*16 + ' start number_user_programs ' \
+                            + '#'*16 + '\n'
     number_user_programs += ' '*4 + 'li      %1 @main_count@'
-    number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs ' + '#'*17 + '\n'
-    number_user_programs = ''.join(process_lines(number_user_programs.split('\n'), False))
+    number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs ' \
+                            + '#'*17 + '\n'
+    number_user_programs = ''.join(
+        process_lines(number_user_programs.split('\n'), False)
+    )
     
-    load_user_programs = ' '*4 + '#'*16 + ' start load_user_programs ' + '#'*16 + '\n'
+    load_user_programs = ' '*4 + '#'*16 + ' start load_user_programs ' + \
+                            '#'*16 + '\n'
     load_user_programs += ' '*4 + '__save_frame\n'
     load_user_programs += ' '*4 + 'la      $s0 user_program_locations\n'
     for i in range(main_count):
         load_user_programs += ' '*4 + 'la      $s1 @main_labels['+str(i)+']@\n'
         load_user_programs += ' '*4 + 'sw      $s1 '+str(i*4)+'($s0)\n'
     load_user_programs += ' '*4 + '__restore_frame\n'
-    load_user_programs += ' '*4 + '#'*17 + ' end load_user_programs ' + '#'*17 + '\n'
-    load_user_programs = ''.join(process_lines(load_user_programs.split('\n'), False))
+    load_user_programs += ' '*4 + '#'*17 + ' end load_user_programs ' + \
+                            '#'*17 + '\n'
+    load_user_programs = ''.join(
+        process_lines(load_user_programs.split('\n'), False)
+    )
     
     kernel_macros.update({'number_user_programs':number_user_programs, 
                           'load_user_programs':load_user_programs})
@@ -70,24 +78,32 @@ def post_process_kernel_macro(macro_text):
 #if specified, rename all the labels so they don't conflict with
 #tim&steve's kernel labels
 def substitute_labels(s):
-    global main_count, label_inc
-    replacements = []
+    global main_count, label_count
     line_list = s.split('\n')
+    
+    replacements = []
+    
     for line in line_list:
         linestrip = line.strip()
         if len(linestrip) > 0:
             if linestrip[-1] == ':' and linestrip[0] in string.ascii_letters:
                 if linestrip[:-1] == 'main':
-                    replacements.append((linestrip[:-1], linestrip[:-1]+'_'+str(main_count)))
+                    replacements.append((
+                        re.compile(linestrip[:-1]+r'[_]{0}'),
+                        linestrip[:-1]+'_'+str(main_count)
+                    ))
                     main_labels.append(linestrip[:-1]+'_'+str(main_count))
                     main_count += 1
                     if main_count >= max_user_programs:
                         raise Exception, "to many user programs added"
                 else:
-                    replacements.append((linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc)))
-                    label_inc += 1
-    for old, new in replacements:
-        s = s.replace(old, new)
+                    replacements.append((
+                        re.compile(linestrip[:-1]+r'[_]{0}'),
+                        linestrip[:-1]+'_u'+str(label_count)
+                    ))
+                    label_count += 1
+    for r, new in replacements:
+        s = r.sub(new, s)
     return s
 
 def rep_line(line, local_macros, use_kernel_macros):
