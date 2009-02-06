@@ -1,3 +1,6 @@
+# Steve Johnson
+# Macro preprocessor for spim
+
 '''
 Generic macro engine.
 
@@ -33,6 +36,30 @@ import string, sys
 
 global_macros = {}
 
+def rep_line(line, local_macros):
+    out_lines = list()
+    linesplit = line.split()
+    if len(linesplit) > 0:
+        mtext = ""
+        if string.lower(linesplit[0]) in global_macros.keys():
+            mtext = global_macros[linesplit[0]]
+        if string.lower(linesplit[0]) in local_macros.keys():
+            mtext = local_macros[linesplit[0]]
+        if mtext != "":
+            if len(linesplit) > 1:
+                arg_num = 0
+                for arg in linesplit[1:]:
+                    arg_num += 1
+                    mtext = mtext.replace("%"+str(arg_num), arg)
+                out_lines.append(mtext)
+            else:
+                out_lines.append(mtext)
+        else:
+            out_lines.append(line)
+    else:
+        out_lines.append(line)
+    return out_lines
+
 def process(path, out):
     global global_macros
     
@@ -65,31 +92,11 @@ def process(path, out):
         else:
             if in_macro:
                 if macro_name in local_macros.keys():
-                    local_macros[macro_name].append(line)
+                    local_macros[macro_name] += rep_line(line, local_macros)
                 if macro_name in global_macros.keys():
-                    global_macros[macro_name].append(line)
+                    global_macros[macro_name] += rep_line(line, local_macros)
             else:
-                linesplit = line.split()
-                if len(linesplit) > 0:
-                    mtext = ""
-                    if string.lower(linesplit[0]) in global_macros.keys():
-                        mtext = global_macros[linesplit[0]]
-                    if string.lower(linesplit[0]) in local_macros.keys():
-                        mtext = local_macros[linesplit[0]]
-                    if mtext != "":
-                        if len(linesplit) > 1:
-                            arg_num = 0
-                            for arg in linesplit[1:]:
-                                arg_num += 1
-                                mtext = mtext.replace("%"+str(arg_num), arg)
-                            out_lines.append(mtext)
-                        else:
-                            out_lines.append(mtext)
-                    else:
-                        out_lines.append(line)
-                else:
-                    out_lines.append(line)
-    print local_macros
+                out_lines += rep_line(line, local_macros)
     f.close()
     f = open(out, 'w')
     f.write(''.join(out_lines))
