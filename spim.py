@@ -27,29 +27,7 @@ filenames = sys.argv[1:]
 filenames_processed = []
 files = []
 
-def process_labels(path_in, path_out):
-    f1 = open(path_in, 'r')
-    f2 = open(path_out, 'w')
-    replacements = []
-    label_inc = 0
-    for line in f1:
-        linestrip = line.strip()
-        if len(linestrip) > 0:
-            if linestrip[-1] == ':' and linestrip[0] in string.ascii_letters:
-                replacements.append(
-                    (linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc))
-                )
-                label_inc += 1
-    f1.seek(0)
-    s = f1.read()
-    f1.close()
-    for old, new in replacements:
-        s = s.replace(old, new)
-    f2.seek(0)
-    f2.write(s)
-    f2.close()
-
-if os.path.exists('build'): 
+if os.path.exists('build'):
     for f in os.listdir('build'):
         os.remove(os.path.join('build', f))
     os.rmdir('build')
@@ -58,9 +36,9 @@ if os.path.exists('build'):
 for filename in filenames:
     new_path = os.path.join('build', filename)
     if filename not in label_replace_exclude:
-        process_labels(filename, new_path)
+        macro.process(filename, new_path, True)
     else:
-        shutil.copy(filename, new_path)
+        macro.process(filename, new_path, False)
     filenames_processed.append(new_path)
 
 for filename in filenames_processed:
