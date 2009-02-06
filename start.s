@@ -1,9 +1,6 @@
 # Tim Henderson
-# timer_user.s - example of doing timer based interrupts
+# start.s - header for user programs
 
-#define test
-    nop
-#end
     .kdata
 __msg: .asciiz "my procedure\n"
 
