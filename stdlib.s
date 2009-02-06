@@ -10,7 +10,3 @@
         li $v0, 1
         syscall
 #end
-
-#define test
-        #%1 %2 %3
-#end
