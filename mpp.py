@@ -33,6 +33,7 @@ global_macros = {}
 kernel_macros = {}
 max_user_programs = 16
 main_count = 0
+label_inc = 0
 main_labels = list()
 
 def make_kernel_macros():
@@ -69,9 +70,8 @@ def post_process_kernel_macro(macro_text):
 #if specified, rename all the labels so they don't conflict with
 #tim&steve's kernel labels
 def substitute_labels(s):
-    global main_count
+    global main_count, label_inc
     replacements = []
-    label_inc = 0
     line_list = s.split('\n')
     for line in line_list:
         linestrip = line.strip()
