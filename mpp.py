@@ -49,7 +49,7 @@ def get_file_text(f1):
             if arg not in included:
                 included.append(arg)
                 f3 = open(arg, 'r')
-                text = '\n###'+arg+'###\n' + f3.read()
+                text = '\n###'+arg+'###\n' + get_file_text(f3)
                 text = text + '\n###end '+arg+'###\n'
                 f3.close()
                 in_lines.append(text)
