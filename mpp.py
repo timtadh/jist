@@ -24,7 +24,6 @@ You can use macros inside other macros as long as the first is defined above the
 import string, sys
 
 global_macros = {}
-included = []
 
 def rep_line(line, local_macros):
     #process macros
@@ -59,10 +58,9 @@ def rep_line(line, local_macros):
     return out_lines
 
 def process(path, out, replace_labels=False):
-    global global_macros, included
+    global global_macros
     
-    #Turning this off for now because it probably screws with macros a bit:
-    #if path in included: return
+    included = []
     
     f1 = open(path, 'r')
     local_macros = {}
