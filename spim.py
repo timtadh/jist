@@ -9,7 +9,7 @@ should be the last thing in the last file.
 import sys, os, shutil
 import subprocess
 import string
-import mppe
+import mpp
 
 label_replace_exclude = [
     'start.s',
@@ -36,9 +36,9 @@ if os.path.exists('build'):
 for filename in filenames:
     new_path = os.path.join('build', filename)
     if filename not in label_replace_exclude:
-        macro.process(filename, new_path, True)
+        mpp.process(filename, new_path, True)
     else:
-        macro.process(filename, new_path, False)
+        mpp.process(filename, new_path, False)
     filenames_processed.append(new_path)
 
 for filename in filenames_processed:
@@ -55,6 +55,6 @@ f = open(out_path, 'w')
 f.write(s)
 f.close()
 
-macro.process(out_path, out_path)
+mpp.process(out_path, out_path)
 
 subprocess.check_call(["spim", "-ne",  "-mio",  out_path])

@@ -15,7 +15,7 @@ Put %n in macros to specify where parameters go.
 Add 'global' to the #define line if this macro should be accessible from all other files.
 
 ==CALLING MACROS==
-    macro_name a, b
+    macro_name a b
 
 Yes, you can call a macro from within a macro. Just don't do it recursively, or else.
 """
@@ -40,9 +40,10 @@ def rep_line(line, local_macros):
         if mtext != "":
             if len(linesplit) > 1:
                 arg_num = len(linesplit) - 1
-                arg_list_string = ''.join(linesplit[1:])
-                arg_list = [t.strip() for t in arg_list_string.split(',')]
+                arg_list_string = ' '.join(linesplit[1:])
+                arg_list = [t.strip() for t in arg_list_string.split(' ')]
                 while arg_num > 0:
+                    print arg_list, linesplit
                     mtext = mtext.replace("%"+str(arg_num), arg_list[arg_num-1])
                     arg_num -= 1
                 out_lines.append(mtext)
