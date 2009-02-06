@@ -42,7 +42,7 @@ __start:
     
     load_user_programs
     la      $t0  user_program_locations
-    lw      $t0  0($t0)
+    lw      $t0  4($t0)
     
     add     $a0 $t0 $0          # move the program addr into arg1
     #call load_process           # load the proccess
