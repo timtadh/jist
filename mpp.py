@@ -89,7 +89,7 @@ def substitute_labels(s):
             if linestrip[-1] == ':' and linestrip[0] in string.ascii_letters:
                 if linestrip[:-1] == 'main':
                     replacements.append((
-                        re.compile(linestrip[:-1]+r'[_]{0}'),
+                        re.compile(r'\b'+linestrip[:-1]+r'\b'),
                         linestrip[:-1]+'_'+str(main_count)
                     ))
                     main_labels.append(linestrip[:-1]+'_'+str(main_count))
@@ -98,7 +98,7 @@ def substitute_labels(s):
                         raise Exception, "to many user programs added"
                 else:
                     replacements.append((
-                        re.compile(linestrip[:-1]+r'[_]{0}'),
+                        re.compile(r'\b'+linestrip[:-1]+r'\b'),
                         linestrip[:-1]+'_u'+str(label_count)
                     ))
                     label_count += 1
