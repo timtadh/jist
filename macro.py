@@ -4,6 +4,8 @@
 '''
 Generic macro engine.
 
+#include your_file.s
+
 .text 0x00400000
 .globl main
 
@@ -35,6 +37,7 @@ main:
 import string, sys
 
 global_macros = {}
+included = []
 
 def rep_line(line, local_macros):
     out_lines = list()
@@ -60,18 +63,30 @@ def rep_line(line, local_macros):
         out_lines.append(line)
     return out_lines
 
-def process(path, out):
-    global global_macros
+def process(path, out, replace_labels=False):
+    global global_macros, included
     
-    f = open(path, 'r')
+    if path in included: return
+    
+    f1 = open(path, 'r')
     local_macros = {}
     out_lines = []
     in_macro = False
     macro_name = ""
     is_global = False
-    for line in f:
+    for line in f1:
         line.strip()
-        if line.startswith('#define'):
+        if line.startswith("#include"):
+            linesplit = line.split()
+            arg = ' '.join(linesplit[1:])
+            if arg not in included:
+                included.append(arg)
+                f3 = open(arg, 'r')
+                text = '\n###'+arg+'###\n' + f3.read()
+                text = text + '\n###end '+arg+'###\n'
+                f3.close()
+                out_lines.append(text)
+        elif line.startswith('#define'):
             if in_macro: print "Macro error."
             in_macro = True
             linesplit = line.split()
@@ -97,10 +112,27 @@ def process(path, out):
                     global_macros[macro_name] += rep_line(line, local_macros)
             else:
                 out_lines += rep_line(line, local_macros)
-    f.close()
-    f = open(out, 'w')
-    f.write(''.join(out_lines))
-    f.close()
+    s = ''.join(out_lines)
+    replacements = []
+    label_inc = 0
+    if replace_labels:
+        line_list = s.split('\n')
+        for line in line_list:
+            linestrip = line.strip()
+            if len(linestrip) > 0:
+                if linestrip[-1] == ':' \
+                        and linestrip[0] in string.ascii_letters:
+                    replacements.append(
+                        (linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc))
+                    )
+                    label_inc += 1
+        print replacements
+        for old, new in replacements:
+            s = s.replace(old, new)
+    f1.close()
+    f2 = open(out, 'w')
+    f2.write(s)
+    f2.close()
 
 if __name__ == "__main__":
     process(sys.argv[1], sys.argv[2])
