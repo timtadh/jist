@@ -25,6 +25,22 @@ import string, sys
 
 global_macros = {}
 
+#if specified, rename all the labels so they don't conflict with
+#tim&steve's kernel labels
+def substitute_labels(s):
+    replacements = []
+    label_inc = 0
+    line_list = s.split('\n')
+    for line in line_list:
+        linestrip = line.strip()
+        if len(linestrip) > 0:
+            if linestrip[-1] == ':' and linestrip[0] in string.ascii_letters:
+                replacements.append((linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc)))
+                label_inc += 1
+    for old, new in replacements:
+        s = s.replace(old, new)
+    return s
+
 def rep_line(line, local_macros):
     #process macros
     global global_macros
@@ -122,25 +138,10 @@ def process(path, out, replace_labels=False):
             else:
                 #check for regular ol' macro
                 out_lines += rep_line(line, local_macros)
-    s = ''.join(out_lines)
     
-    #if specified, rename all the labels so they don't conflict with
-    #tim&steve's kernel labels
-    replacements = []
-    label_inc = 0
-    if replace_labels:
-        line_list = s.split('\n')
-        for line in line_list:
-            linestrip = line.strip()
-            if len(linestrip) > 0:
-                if linestrip[-1] == ':' \
-                        and linestrip[0] in string.ascii_letters:
-                    replacements.append(
-                        (linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc))
-                    )
-                    label_inc += 1
-        for old, new in replacements:
-            s = s.replace(old, new)
+    s = ''.join(out_lines)
+    if replace_labels: s = substitute_labels(s)
+    
     f1.close()
     #write giant string to file
     f2 = open(out, 'w')
