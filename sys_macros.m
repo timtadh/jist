@@ -56,13 +56,10 @@
 
 # call label num_stored_args
 # label : label you are jumping to
-# num_stored_args : number of args you stored on the previous stack frame
-#                   using the store_arg macro it needs to be an immediate value
 # note when you use this you cannot pass args in $a3 that is reserved to passing
 # a generalized way to call procedures
 #define call global
     __save_frame
-    li      $a3 %2
     jal     %1
     __restore_frame
 #end

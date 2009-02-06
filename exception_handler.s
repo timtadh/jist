@@ -1,6 +1,7 @@
 # Tim Henderson
 # A generalized exception handler adapted from exception.s
 
+#include interrupt_handler.s
     
     .globl __save_a0
     .globl __save_a1

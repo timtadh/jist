@@ -1,6 +1,8 @@
 # Tim Henderson
 # start.s - header for user programs
 
+#include proc_manager.s
+
     .kdata
 __msg: .asciiz "my procedure\n"
 
@@ -25,9 +27,8 @@ __start:
     store_arg $t0
     li      $t0 15
     store_arg $t0
-    call    proc 3
+    call    proc
     
-    load_user_programs
 #     li      $v0, 10              # 4 is the print_string syscall.
 #     syscall
     
@@ -36,10 +37,14 @@ __start:
     mtc0    $t0, $12            # push the changes back to the co-proc
     
     mfc0    $t0, $9             # get the current clock value
-    add     $t0, $t0, 2         # add 1
+    add     $t0, $t0, 2         # add 2
     mtc0    $t0, $11            # push to compare
     
+    load_user_programs
     la      $t0  user_program_locations
     lw      $t0  0($t0)
+    
+    add     $a0 $t0 $0          # move the program addr into arg1
+    #call load_process           # load the proccess
     
     j       $t0                 # start main program
