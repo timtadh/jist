@@ -1,38 +1,24 @@
-# Steve Johnson
-# Macro preprocessor for spim
+#!/usr/bin/python
+"""
+MIPS Preprocessor
+by Steve Johnson
 
-'''
-Generic macro engine.
-
+==INCLUDING FILES==
 #include your_file.s
 
-.text 0x00400000
-.globl main
-
-#define get_int global
-        li $v0, 5
-        syscall
-        move %1, $v0
+==DEFINING MACROS==
+#define macro_name [global]
+    move %1, %2
 #end
 
-#define print_int local
-        move $a0, #1
-        li $v0, 1
-        syscall
-#end
+Put %n in macros to specify where parameters go.
+Add 'global' to the #define line if this macro should be accessible from all other files.
 
-main:
-        get_int $t0     #You can even put comments after them!
-        get_int $t1
-        
-        add $t2, $t0, $t1
-        
-        print_int $t2
-        
-        li  $v0, 10
-        syscall
+==CALLING MACROS==
+    macro_name a, b
 
-'''
+Yes, you can call a macro from within a macro. Just don't do it recursively, or else.
+"""
 
 import string, sys
 
@@ -40,6 +26,9 @@ global_macros = {}
 included = []
 
 def rep_line(line, local_macros):
+    #Check for macros, handle macro-in-macro if necessary.
+    #Hopefully they aren't cyclical.
+    global global_macros
     out_lines = list()
     linesplit = line.split()
     if len(linesplit) > 0:
@@ -50,17 +39,19 @@ def rep_line(line, local_macros):
             mtext = local_macros[linesplit[0]]
         if mtext != "":
             if len(linesplit) > 1:
-                arg_num = 0
-                for arg in linesplit[1:]:
-                    arg_num += 1
-                    mtext = mtext.replace("%"+str(arg_num), arg)
+                arg_num = len(linesplit) - 1
+                arg_list_string = ''.join(linesplit[1:])
+                arg_list = [t.strip() for t in arg_list_string.split(',')]
+                while arg_num > 0:
+                    mtext = mtext.replace("%"+str(arg_num), arg_list[arg_num-1])
+                    arg_num -= 1
                 out_lines.append(mtext)
             else:
                 out_lines.append(mtext)
         else:
-            out_lines.append(line)
+            out_lines.append(line+'\n')
     else:
-        out_lines.append(line)
+        out_lines.append(line+'\n')
     return out_lines
 
 def process(path, out, replace_labels=False):
@@ -74,7 +65,25 @@ def process(path, out, replace_labels=False):
     in_macro = False
     macro_name = ""
     is_global = False
+    s = ""
+    in_lines = []
     for line in f1:
+        stripped = line.strip()
+        if stripped.startswith("#include"):
+            linesplit = stripped.split()
+            arg = ' '.join(linesplit[1:])
+            if arg not in included:
+                included.append(arg)
+                f3 = open(arg, 'r')
+                text = '\n###'+arg+'###\n' + f3.read()
+                text = text + '\n###end '+arg+'###\n'
+                f3.close()
+                in_lines.append(text)
+        else:
+            in_lines.append(line)
+    in_text = ''.join(in_lines)
+    in_lines = in_text.split('\n')
+    for line in in_lines:
         line.strip()
         if line.startswith("#include"):
             linesplit = line.split()
@@ -126,7 +135,6 @@ def process(path, out, replace_labels=False):
                         (linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc))
                     )
                     label_inc += 1
-        print replacements
         for old, new in replacements:
             s = s.replace(old, new)
     f1.close()

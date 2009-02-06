@@ -1,6 +1,6 @@
 # Tim Henderson
 # System Macros for jist
-# Meant to be avaible to every program for jist
+# Meant to be available to every program for jist
 
 #define __save_frame local
     addu    $fp $sp $0          # move the frame pointer to point at top of frame

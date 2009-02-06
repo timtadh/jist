@@ -2,6 +2,8 @@
 # timer_user.s - example of doing timer based interrupts
 # spim.py timer_user.s exception_handler.s
 
+#include stdlib.s
+
     .text 0x00400000
     .globl main
 main:

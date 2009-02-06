@@ -9,7 +9,7 @@ should be the last thing in the last file.
 import sys, os, shutil
 import subprocess
 import string
-import macro
+import mppe
 
 label_replace_exclude = [
     'start.s',
