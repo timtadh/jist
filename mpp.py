@@ -1,7 +1,9 @@
-# Steve Johnson
-# Macro preprocessor for spim
+#!/usr/bin/python
 
-'''
+#Steve Johnson
+#Preprocessor for MIPS assembly code
+
+"""
 Generic macro engine.
 
 #include your_file.s
@@ -31,8 +33,7 @@ main:
         
         li  $v0, 10
         syscall
-
-'''
+"""
 
 import string, sys
 
