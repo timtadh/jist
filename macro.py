@@ -84,7 +84,7 @@ def process(path, out):
                                 mtext = mtext.replace("%"+str(arg_num), arg)
                             out_lines.append(mtext)
                         else:
-                            out_line = mtext
+                            out_lines.append(mtext)
                     else:
                         out_lines.append(line)
                 else:
