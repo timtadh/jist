@@ -8,7 +8,8 @@
     .ktext
     .globl __start
 __start:
-    test
+    call    next
+next:
     mfc0    $t0, $12            # load the status register
     ori     $t0, $t0, 0x1       # enable the interrupts
     mtc0    $t0, $12            # push the changes back to the co-proc
