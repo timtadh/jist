@@ -36,35 +36,54 @@ main_count = 0
 label_count = 0
 main_labels = list()
 
+def get_file_text(f1):
+    #process includes
+    s = ""
+    in_lines = []
+    included = []
+    for line in f1:
+        stripped = line.strip()
+        if stripped.startswith("#include"):
+            linesplit = stripped.split()
+            arg = ' '.join(linesplit[1:])
+            if arg not in included:
+                included.append(arg)
+                f3 = open(arg, 'r')
+                text = '\n###'+arg+'###\n' + f3.read()
+                text = text + '\n###end '+arg+'###\n'
+                f3.close()
+                in_lines.append(text)
+        else:
+            in_lines.append(line)
+    return ''.join(in_lines)
+
 def make_kernel_macros():
     '''creates specialized macros'''
     global kernel_macros
     
-    number_user_programs = ' '*4 + '#'*16 + ' start number_user_programs ' \
-                            + '#'*16 + '\n'
+    number_user_programs = ' '*4 + '#'*16 + ' start number_user_programs '  + '#'*16 + '\n'
     number_user_programs += ' '*4 + 'li      %1 @main_count@'
-    number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs ' \
-                            + '#'*17 + '\n'
+    number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs '  + '#'*17 + '\n'
     number_user_programs = ''.join(
-        process_lines(number_user_programs.split('\n'), False)
+        process_lines(number_user_programs, False)
     )
     
-    load_user_programs = ' '*4 + '#'*16 + ' start load_user_programs ' + \
-                            '#'*16 + '\n'
+    load_user_programs = ' '*4 + '#'*16 + ' start load_user_programs ' +  '#'*16 + '\n'
     load_user_programs += ' '*4 + '__save_frame\n'
     load_user_programs += ' '*4 + 'la      $s0 user_program_locations\n'
     for i in range(main_count):
         load_user_programs += ' '*4 + 'la      $s1 @main_labels['+str(i)+']@\n'
         load_user_programs += ' '*4 + 'sw      $s1 '+str(i*4)+'($s0)\n'
     load_user_programs += ' '*4 + '__restore_frame\n'
-    load_user_programs += ' '*4 + '#'*17 + ' end load_user_programs ' + \
-                            '#'*17 + '\n'
+    load_user_programs += ' '*4 + '#'*17 + ' end load_user_programs ' + '#'*17 + '\n'
     load_user_programs = ''.join(
-        process_lines(load_user_programs.split('\n'), False)
+        process_lines(load_user_programs, False)
     )
     
-    kernel_macros.update({'number_user_programs':number_user_programs, 
-                          'load_user_programs':load_user_programs})
+    kernel_macros.update({
+        'number_user_programs':number_user_programs, 
+        'load_user_programs':load_user_programs
+    })
 
 def post_process_kernel_macro(macro_text):
     '''to be called after arg replacement is finished'''
@@ -129,7 +148,7 @@ def rep_line(line, local_macros, use_kernel_macros):
                 #walk comma-delimited arg list
                 arg_num = len(linesplit) - 1
                 arg_list_string = ' '.join(linesplit[1:])
-                arg_list = [t.strip() for t in arg_list_string.split(' ')]
+                arg_list = [t.strip() for t in arg_list_string.split()]
                 while arg_num > 0:
                     #replace expression with argument
                     mtext = mtext.replace("%"+str(arg_num), arg_list[arg_num-1])
@@ -144,8 +163,11 @@ def rep_line(line, local_macros, use_kernel_macros):
         out_lines.append(line+'\n')
     return out_lines
 
-def process_lines(in_lines, use_kernel_macros):
+def process_lines(s, use_kernel_macros):
     global global_macros
+    
+    in_lines = s.split('\n')
+    
     in_macro = False
     is_global = False
     out_lines = list()
@@ -187,45 +209,17 @@ def process_lines(in_lines, use_kernel_macros):
             else:
                 #check for regular ol' macro
                 out_lines += rep_line(line, local_macros, use_kernel_macros)
-    return out_lines
+    return ''.join(out_lines)
 
 def process(path, out, replace_labels=False, use_kernel_macros=False):
     global global_macros
     
-    included = []
-    
     f1 = open(path, 'r')
-    #local_macros = {}
-    #out_lines = []
-    #in_macro = False
-    #macro_name = ""
-    #is_global = False
     
-    #process includes
-    s = ""
-    in_lines = []
-    for line in f1:
-        stripped = line.strip()
-        if stripped.startswith("#include"):
-            linesplit = stripped.split()
-            arg = ' '.join(linesplit[1:])
-            if arg not in included:
-                included.append(arg)
-                f3 = open(arg, 'r')
-                text = '\n###'+arg+'###\n' + f3.read()
-                text = text + '\n###end '+arg+'###\n'
-                f3.close()
-                in_lines.append(text)
-        else:
-            in_lines.append(line)
-    in_text = ''.join(in_lines)
-    in_lines = in_text.split('\n')
-    
-    #process macros
-    out_lines = process_lines(in_lines, use_kernel_macros)
-    
-    s = ''.join(out_lines)
-    if replace_labels: s = substitute_labels(s)
+    s = get_file_text(f1)
+    s = process_lines(s, use_kernel_macros)
+    if replace_labels:
+        s = substitute_labels(s)
     
     f1.close()
     #write giant string to file
