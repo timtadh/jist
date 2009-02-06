@@ -39,7 +39,7 @@ __start:
     add     $t0, $t0, 2         # add 1
     mtc0    $t0, $11            # push to compare
     
-    lui     $t0 0x0040
-    ori     $t0 0x0000
+    la      $t0  user_program_locations
+    lw      $t0  0($t0)
     
     j       $t0                 # start main program
