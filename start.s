@@ -11,7 +11,7 @@ proc:
     li       $v0 1
     syscall
     
-    la      $a0, __msg      # load the addr of hello_msg into $a0.
+    la      $a0, __msg          # load the addr of hello_msg into $a0.
     li      $v0, 4              # 4 is the print_string syscall.
     #syscall
     return

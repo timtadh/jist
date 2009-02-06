@@ -13,6 +13,7 @@ import mpp
 
 label_replace_exclude = [
     'start.s',
+    'proc_storage.s',
     'interrupt_handler.s',
     'exception_handler.s'
 ]
