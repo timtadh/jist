@@ -126,7 +126,6 @@ def process(path, out, replace_labels=False):
                         (linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc))
                     )
                     label_inc += 1
-        print replacements
         for old, new in replacements:
             s = s.replace(old, new)
     f1.close()
