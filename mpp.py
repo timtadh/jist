@@ -1,38 +1,23 @@
 #!/usr/bin/python
-
-#Steve Johnson
-#Preprocessor for MIPS assembly code
-
 """
-Generic macro engine.
+MIPS Preprocessor
+by Steve Johnson
 
+==INCLUDING FILES==
 #include your_file.s
 
-.text 0x00400000
-.globl main
-
-#define get_int global
-        li $v0, 5
-        syscall
-        move %1, $v0
+==DEFINING MACROS==
+#define macro_name [global]
+    move %1, %2
 #end
 
-#define print_int local
-        move $a0, #1
-        li $v0, 1
-        syscall
-#end
+Put %n in macros to specify where parameters go.
+Add 'global' to the #define line if this macro should be accessible from all other files.
 
-main:
-        get_int $t0     #You can even put comments after them!
-        get_int $t1
-        
-        add $t2, $t0, $t1
-        
-        print_int $t2
-        
-        li  $v0, 10
-        syscall
+==CALLING MACROS==
+    macro_name a, b
+
+Yes, you can call a macro from within a macro. Just don't do it recursively, or else.
 """
 
 import string, sys
@@ -41,6 +26,8 @@ global_macros = {}
 included = []
 
 def rep_line(line, local_macros):
+    #Check for macros, handle macro-in-macro if necessary.
+    #Hopefully they aren't cyclical.
     global global_macros
     out_lines = list()
     linesplit = line.split()
@@ -53,8 +40,10 @@ def rep_line(line, local_macros):
         if mtext != "":
             if len(linesplit) > 1:
                 arg_num = len(linesplit) - 1
+                arg_list_string = ''.join(linesplit[1:])
+                arg_list = [t.strip() for t in arg_list_string.split(',')]
                 while arg_num > 0:
-                    mtext = mtext.replace("%"+str(arg_num), linesplit[arg_num])
+                    mtext = mtext.replace("%"+str(arg_num), arg_list[arg_num-1])
                     arg_num -= 1
                 out_lines.append(mtext)
             else:
