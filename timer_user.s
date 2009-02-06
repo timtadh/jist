@@ -7,7 +7,7 @@
     .text 0x00400000
     .globl main
 main:
-    break 5; 
+    #break 5; 
     # print hello world to the console
     la      $a0, hello_msg      # load the addr of hello_msg into $a0.
     li      $v0, 4              # 4 is the print_string syscall.

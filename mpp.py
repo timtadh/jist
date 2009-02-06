@@ -15,7 +15,7 @@ Put %n in macros to specify where parameters go.
 Add 'global' to the #define line if this macro should be accessible from all other files.
 
 ==CALLING MACROS==
-    macro_name a, b
+    macro_name a b
 
 ==USING MACROS IN MACROS==
 You can use macros inside other macros as long as the first is defined above the second.
@@ -44,8 +44,8 @@ def rep_line(line, local_macros):
             if len(linesplit) > 1:
                 #walk comma-delimited arg list
                 arg_num = len(linesplit) - 1
-                arg_list_string = ''.join(linesplit[1:])
-                arg_list = [t.strip() for t in arg_list_string.split(',')]
+                arg_list_string = ' '.join(linesplit[1:])
+                arg_list = [t.strip() for t in arg_list_string.split(' ')]
                 while arg_num > 0:
                     #replace expression with argument
                     mtext = mtext.replace("%"+str(arg_num), arg_list[arg_num-1])

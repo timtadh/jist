@@ -10,3 +10,8 @@
         li $v0, 1
         syscall
 #end
+
+#define exit global
+        li  $v0, 10
+        syscall
+#end
