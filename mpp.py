@@ -21,13 +21,45 @@ Add 'global' to the #define line if this macro should be accessible from all oth
 You can use macros inside other macros as long as the first is defined above the second.
 """
 
+
+"""
+    number_user_programs $dst
+    user_program $dst x
+"""
+
 import string, sys
 
 global_macros = {}
+kernel_macros = {}
+max_user_programs = 16
+main_count = 0
+main_labels = list()
+
+def make_kernel_macros():
+    '''creates specialized macros'''
+    global kernel_macros
+    number_user_programs = \
+    """
+        li      %1 @main_count@
+    """
+    load_user_programs = \
+    """
+        __save_frame
+        la      %1 @main_labels[%2]@
+        __restore_frame
+    """
+    kernel_macros.update({'number_user_programs':number_user_programs, 'user_program':user_program})
+
+def post_process_kernel_macro(macro_text):
+    '''to be called after arg replacement is finished'''
+    if not kernel_macros.has_key(macro_name): 
+        raise Exception, "unknown kernel macro %s" % macro_name
+    
 
 #if specified, rename all the labels so they don't conflict with
 #tim&steve's kernel labels
 def substitute_labels(s):
+    global main_count
     replacements = []
     label_inc = 0
     line_list = s.split('\n')
@@ -35,8 +67,15 @@ def substitute_labels(s):
         linestrip = line.strip()
         if len(linestrip) > 0:
             if linestrip[-1] == ':' and linestrip[0] in string.ascii_letters:
-                replacements.append((linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc)))
-                label_inc += 1
+                if linestrip[:-1] == 'main':
+                    replacements.append((linestrip[:-1], linestrip[:-1]+'_'+str(main_count)))
+                    main_labels.append(linestrip[:-1]+'_'+str(main_count))
+                    main_count += 1
+                    if main_count >= max_user_programs:
+                        raise Exception, "to many user programs added"
+                else:
+                    replacements.append((linestrip[:-1], linestrip[:-1]+"_u"+str(label_inc)))
+                    label_inc += 1
     for old, new in replacements:
         s = s.replace(old, new)
     return s
@@ -73,17 +112,62 @@ def rep_line(line, local_macros):
         out_lines.append(line+'\n')
     return out_lines
 
+def process_lines(in_lines):
+    global global_macros
+    in_macro = False
+    is_global = False
+    out_lines = list()
+    local_macros = dict()
+    macro_name = ""
+    for line in in_lines:
+        line.strip()
+        if line.startswith('#define'):
+            #start defining macro, get its name and init a list of its lines
+            if in_macro: print "Macro error."
+            in_macro = True
+            linesplit = line.split()
+            macro_name = string.lower(linesplit[1])
+            is_global = False
+            start_text = ' '*4 + '#'*16 + ' start ' + macro_name + ' ' + '#'*16 + '\n'
+            if len(linesplit) > 2 and string.lower(linesplit[2]) == 'global':
+                is_global = True
+            if is_global:
+                global_macros[macro_name] = [start_text]
+            else:
+                local_macros[macro_name] = [start_text]
+        elif line.startswith('#end'):
+            #concatenate the lines and stop defining the macro
+            in_macro = False
+            end_text = ' '*4 + '#'*17 + ' end ' + macro_name + ' ' + '#'*17 + '\n'
+            if macro_name in local_macros:
+                local_macros[macro_name].append(end_text)
+                local_macros[macro_name] = "".join(local_macros[macro_name])
+            if macro_name in global_macros:
+                global_macros[macro_name].append(end_text)
+                global_macros[macro_name] = "".join(global_macros[macro_name])
+        else:
+            if in_macro:
+                #check for macro-in-macro
+                if macro_name in local_macros.keys():
+                    local_macros[macro_name] += rep_line(line, local_macros)
+                if macro_name in global_macros.keys():
+                    global_macros[macro_name] += rep_line(line, local_macros)
+            else:
+                #check for regular ol' macro
+                out_lines += rep_line(line, local_macros)
+    return out_lines
+
 def process(path, out, replace_labels=False):
     global global_macros
     
     included = []
     
     f1 = open(path, 'r')
-    local_macros = {}
-    out_lines = []
-    in_macro = False
-    macro_name = ""
-    is_global = False
+    #local_macros = {}
+    #out_lines = []
+    #in_macro = False
+    #macro_name = ""
+    #is_global = False
     
     #process includes
     s = ""
@@ -106,38 +190,7 @@ def process(path, out, replace_labels=False):
     in_lines = in_text.split('\n')
     
     #process macros
-    for line in in_lines:
-        line.strip()
-        if line.startswith('#define'):
-            #start defining macro, get its name and init a list of its lines
-            if in_macro: print "Macro error."
-            in_macro = True
-            linesplit = line.split()
-            macro_name = string.lower(linesplit[1])
-            is_global = False
-            if len(linesplit) > 2 and string.lower(linesplit[2]) == 'global':
-                is_global = True
-            if is_global:
-                global_macros[macro_name] = []
-            else:
-                local_macros[macro_name] = []
-        elif line.startswith('#end'):
-            #concatenate the lines and stop defining the macro
-            in_macro = False
-            if macro_name in local_macros:
-                local_macros[macro_name] = "".join(local_macros[macro_name])
-            if macro_name in global_macros:
-                global_macros[macro_name] = "".join(global_macros[macro_name])
-        else:
-            if in_macro:
-                #check for macro-in-macro
-                if macro_name in local_macros.keys():
-                    local_macros[macro_name] += rep_line(line, local_macros)
-                if macro_name in global_macros.keys():
-                    global_macros[macro_name] += rep_line(line, local_macros)
-            else:
-                #check for regular ol' macro
-                out_lines += rep_line(line, local_macros)
+    out_lines = process_lines(in_lines)
     
     s = ''.join(out_lines)
     if replace_labels: s = substitute_labels(s)
@@ -147,6 +200,9 @@ def process(path, out, replace_labels=False):
     f2 = open(out, 'w')
     f2.write(s)
     f2.close()
+    
+    #print main_labels
+    #print global_macros
 
 if __name__ == "__main__":
     #if called from the cl, process with default args

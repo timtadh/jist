@@ -2,7 +2,7 @@
 # System Macros for jist
 # Meant to be available to every program for jist
 
-#define __save_frame local
+#define __save_frame global
     addu    $fp $sp $0          # move the frame pointer to point at top of frame
     subu    $sp $sp 36          # move the stack pointer down 36
     sw      $ra 36($sp)         # save the return address
@@ -16,7 +16,7 @@
     sw      $s7 4($sp)
 #end
 
-#define __restore_frame local
+#define __restore_frame global
     subu    $sp $fp 36          # move the stack pointer to the orginal unmodified bottom
     lw      $ra 36($sp)         # load the return address
     lw      $s0 32($sp)         # load registers $s0 - $s7
