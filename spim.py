@@ -11,7 +11,7 @@ import subprocess
 import string
 import mpp
 
-label_replace_exclude = [
+kernel_files = [
     'start.s',
     'kernel_data.s',
     'proc_storage.s',
@@ -35,12 +35,18 @@ if os.path.exists('build'):
     os.rmdir('build')
     os.makedirs('build')
 
+kernel_started = False
+
 for filename in filenames:
     new_path = os.path.join('build', filename)
-    if filename not in label_replace_exclude:
+    if filename not in kernel_files:
         mpp.process(filename, new_path, True)
+    elif not kernel_started:
+        kernel_started = True
+        mpp.make_kernel_macros()
+        mpp.process(filename, new_path, False, True)
     else:
-        mpp.process(filename, new_path, False)
+        mpp.process(filename, new_path, False, True)
     filenames_processed.append(new_path)
 
 for filename in filenames_processed:

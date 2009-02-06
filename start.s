@@ -26,6 +26,8 @@ __start:
     li      $t0 15
     store_arg $t0
     call    proc 3
+    
+    load_user_programs
 #     li      $v0, 10              # 4 is the print_string syscall.
 #     syscall
     

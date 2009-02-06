@@ -134,7 +134,7 @@ proc_list:
             .word   0
             .word   0
             .word   0
-user_programs_locations:
+user_program_locations:
             .word   0
             .word   0
             .word   0
