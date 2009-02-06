@@ -5,7 +5,7 @@
         move %1, $v0
 #end
 
-#define print_int
+#define print_int global
         move $a0, %1
         li $v0, 1
         syscall
