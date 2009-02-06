@@ -16,7 +16,8 @@
     sw      $s7 4($sp)
 #end
 
-#define __restore_frame global
+#define __restore_frame local
+    subu    $sp $fp 36          # move the stack pointer to the orginal unmodified bottom
     lw      $ra 36($sp)         # load the return address
     lw      $s0 32($sp)         # load registers $s0 - $s7
     lw      $s1 28($sp)
@@ -30,10 +31,42 @@
     addu    $fp $fp 36          # move the frame pointer up 36
 #end
 
-# call label
+# store_arg arg
+# arg : the register you would like to store on frame
+#define store_arg global
+    sw      %1 0($sp)
+    subu    $sp $sp 4           # move the stack pointer down 4
+#end
+
+# load_arg arg_num destination temp_reg
+# arg_num : the number of the argument you want it must an immediate value
+# destination : register you want your argument in
+# temp_reg : this macro requires a temporary register
+# args number works like this
+# store_arg $t3  --> arg 3
+# store_arg $s3  --> arg 2
+# store_arg $v1  --> arg 1
+# call my_procedure
+#define load_arg global
+    li      %2 %1
+    mul     %2 %2 4
+    addu    %3 $fp %2
+    lw      %2 0(%3)
+#end
+
+# call label num_stored_args
+# label : label you are jumping to
+# num_stored_args : number of args you stored on the previous stack frame
+#                   using the store_arg macro it needs to be an immediate value
+# note when you use this you cannot pass args in $a3 that is reserved to passing
 # a generalized way to call procedures
 #define call global
     __save_frame
+    li      $a3 %2
     jal     %1
     __restore_frame
+#end
+
+#define return global
+    jr      $ra
 #end

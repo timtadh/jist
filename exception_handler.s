@@ -48,6 +48,7 @@ __excp: .word __e0_, __e1_, __e2_, __e3_, __e4_, __e5_, __e6_, __e7_, __e8_, __e
     .word __e10_, __e11_, __e12_, __e13_, __e14_, __e15_, __e16_, __e17_, __e18_,
     .word __e19_, __e20_, __e21_, __e22_, __e23_, __e24_, __e25_, __e26_, __e27_,
     .word __e28_, __e29_, __e30_, __e31_
+__save_at:  .word 0
 __save_a0:  .word 0
 __save_a1:  .word 0
 __save_a2:  .word 0
@@ -61,7 +62,7 @@ exception_msg: .asciiz "exception handler entered\n"
 exception_handler:              # exception handler
     # first store state
     .set noat                   # stops spim from complaining that you are touching $at
-    move    $k1, $at            # save the $at reg in $k1
+    sw      $at __save_at
     .set at                     # re-ables $at complaints
     sw      $a0 __save_a0
     sw      $a1 __save_a1
@@ -70,34 +71,29 @@ exception_handler:              # exception handler
     sw      $v0 __save_v0
     sw      $v1 __save_v1
     
+    
+    
+    
     # print a message to the screen
-    la      $a0, exception_msg  # load the addr of exception_msg into $a0.
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
-    
-    
-    li      $a0 4
-    li      $v0 9
-    syscall
-    
-    la      $s6 __save_gp
-    la      $s7 __start
-    add     $s5 $v0 $0
     
     mfc0    $k0 $13             # Cause register
     srl     $a0 $k0 2           # Extract ExcCode Field
     andi    $a0 $a0 0x1f
     
+    la      $a0, exception_msg  # load the addr of exception_msg into $a0.
+    li      $v0, 4              # 4 is the print_string syscall.
+    #syscall                     # do the syscall
+    
     beqz    $a0 interrupt_handler
     
     li      $v0 1               # syscall 1 (print_int)
-    syscall
+    #syscall
 
     li      $v0 4               # syscall 4 (print_str)
     andi    $a0 $k0 0x3c        # print what exception was called
     lw      $a0 __excp($a0)
     nop
-    syscall
+    #syscall
     
 
 interrupt_return:
@@ -119,7 +115,7 @@ exception_finished:
     lw      $v0 __save_v0
     lw      $v1 __save_v1
     .set noat
-    move    $at, $k1            # restore $at
+    lw      $at __save_at
     .set at
 
     eret                        # return from exception handler
