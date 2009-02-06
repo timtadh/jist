@@ -14,7 +14,7 @@ import mpp
 kernel_files = [
     'start.s',
     'kernel_data.s',
-    'proc_storage.s',
+    'proc_manager.s',
     'interrupt_handler.s',
     'exception_handler.s'
 ]

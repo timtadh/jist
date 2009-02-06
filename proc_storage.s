@@ -1,6 +1,15 @@
 # Tim Henderson
 # proc_storage.s handles storing proccess in PCBs
-
+#
+# procedures availble:
+#     create_pcb() return $v0 -> addr of pcb
+#     save_proc(pcb_addr, nice, status)  -> Null
+#     new_proc(pcb_address  program_start  program_len) -> Null
+#     restore_proc(pcb_address) -> $v0 = program_start  $v1 = program_end
+#     proc_number(pcb_address) -> v0 = proc_number
+#     proc_status(pcb_address) -> v0 = proc_status
+#     proc_nice(pcb_address) -> v0 = proc_nice
+#
 # Proccess Control Block Structure:
 # --------------------
 # | Nice   | State   | 1
@@ -51,26 +60,19 @@ create_pcb:
     
     return
 
-    # save_proc(pcb_address  program_start  program_len) -> Null
-save_proc:    
+    # save_proc(pcb_addr, nice, status)  -> Null
+save_proc:
     addu    $t0  $a0  0         # move the address of the PCB to $t0
-    lui     $t1  5              # set the default nice level to 5
-    ori     $t1  $t1  0         # load the state "new" into the lower part of $t1
-    sw      $t1  0($t0)         # save the nice and status into the pcb
     
-    lw      $t1  next_proc_num  # load the next proccess number into $t1
-    sw      $t1  4($t0)         # save the proc number in the pcb
+    sll     $t1  $a1  16        # move the nice into upper part of $t1
+    or      $t1  $t1  $a2       # move status into lower poart of $t1
+    sw      $t1  0($t0)         # save the nice and status into the pcb
     
     mfc0    $t1  $14            # get the EPC register
     sw      $t1  8($t0)         # save the program counter number in the pcb
     
-    sw      $a1  12($t0)        # save the start of the program in the pcb
-    
-    addu    $t1  $a1  $a2       # add the length of the program to where it starts
-    sw      $t1  16($t0)        # save the end of the program in the pcb
-    
-    sw      $k1  20($t0)        # save $at into the PCB ($at is saved to $k1
-                                #   at the start of the interrupt)
+    lw      $t1  __save_at      # load the saved $at reg
+    sw      $t1  20($t0)        # save it in the PCB
     
     lw      $t1  __save_sp      # load the saved stack pointer
     sw      $t1  24($t0)        # save it in the PCB
@@ -140,6 +142,30 @@ save_proc:
     
     return
     
+    # new_proc(pcb_address  program_start  program_len) -> Null
+new_proc:    
+    addu    $t0  $a0  0         # move the address of the PCB to $t0
+    
+    lw      $t1  next_proc_num  # load the next proccess number into $t1
+    sw      $t1  4($t0)         # save the proc number in the pcb
+    addi    $t1  $t1  1         # increment the next_proc_num
+    sw      $t1  next_proc_num  # save it
+    
+    mfc0    $t1  $14            # get the EPC register
+    sw      $t1  8($t0)         # save the program counter number in the pcb
+    
+    sw      $a1  12($t0)        # save the start of the program in the pcb
+    
+    addu    $t1  $a1  $a2       # add the length of the program to where it starts
+    sw      $t1  16($t0)        # save the end of the program in the pcb
+    
+                                # arg1 is already loaded
+    li      $a1 5               # load a default nice level of 5 into arg2
+    li      $a2 0               # load a default status of 0 "new" into arg3
+    call    save_proc
+    
+    return
+    
     # restore_proc(pcb_address) -> $v0 = program_start  $v1 = program_end
 restore_proc:
     addu    $t0  $a0  0         # move the address of the PCB to $t0
@@ -150,8 +176,8 @@ restore_proc:
     lw      $v0  12($t0)        # load the start of the program from the pcb
     lw      $v1  16($t0)        # load the end of the program from the pcb
     
-    lw      $k1  20($t0)        # load $at from the PCB ($at will be restored from
-                                #       $k1 at the end of the exception_handler)
+    lw      $t1  20($t0)        # load the saved $at reg
+    sw      $t1  __save_at      # 
     
     lw      $t1  24($t0)        # load the saved stack pointer
     sw      $t1  __save_sp      # save it into its imm location
