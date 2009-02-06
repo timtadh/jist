@@ -40,6 +40,7 @@ global_macros = {}
 included = []
 
 def rep_line(line, local_macros):
+    global global_macros
     out_lines = list()
     linesplit = line.split()
     if len(linesplit) > 0:
@@ -50,17 +51,17 @@ def rep_line(line, local_macros):
             mtext = local_macros[linesplit[0]]
         if mtext != "":
             if len(linesplit) > 1:
-                arg_num = 0
-                for arg in linesplit[1:]:
-                    arg_num += 1
-                    mtext = mtext.replace("%"+str(arg_num), arg)
+                arg_num = len(linesplit) - 1
+                while arg_num > 0:
+                    mtext = mtext.replace("%"+str(arg_num), linesplit[arg_num])
+                    arg_num -= 1
                 out_lines.append(mtext)
             else:
                 out_lines.append(mtext)
         else:
-            out_lines.append(line)
+            out_lines.append(line+'\n')
     else:
-        out_lines.append(line)
+        out_lines.append(line+'\n')
     return out_lines
 
 def process(path, out, replace_labels=False):
@@ -74,7 +75,25 @@ def process(path, out, replace_labels=False):
     in_macro = False
     macro_name = ""
     is_global = False
+    s = ""
+    in_lines = []
     for line in f1:
+        stripped = line.strip()
+        if stripped.startswith("#include"):
+            linesplit = stripped.split()
+            arg = ' '.join(linesplit[1:])
+            if arg not in included:
+                included.append(arg)
+                f3 = open(arg, 'r')
+                text = '\n###'+arg+'###\n' + f3.read()
+                text = text + '\n###end '+arg+'###\n'
+                f3.close()
+                in_lines.append(text)
+        else:
+            in_lines.append(line)
+    in_text = ''.join(in_lines)
+    in_lines = in_text.split('\n')
+    for line in in_lines:
         line.strip()
         if line.startswith("#include"):
             linesplit = line.split()
