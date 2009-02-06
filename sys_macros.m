@@ -32,21 +32,21 @@
 #end
 
 # store_arg arg
-# arg : the register you would like to store on frame
+#     arg : the register you would like to store on frame
 #define store_arg global
     sw      %1 0($sp)
     subu    $sp $sp 4           # move the stack pointer down 4
 #end
 
 # load_arg arg_num destination temp_reg
-# arg_num : the number of the argument you want it must an immediate value
-# destination : register you want your argument in
-# temp_reg : this macro requires a temporary register
-# args number works like this
-# store_arg $t3  --> arg 3
-# store_arg $s3  --> arg 2
-# store_arg $v1  --> arg 1
-# call my_procedure
+#     arg_num : the number of the argument you want it must an immediate value
+#     destination : register you want your argument in
+#     temp_reg : this macro requires a temporary register
+#     args number works like this
+#     store_arg $t3  --> arg 3
+#     store_arg $s3  --> arg 2
+#     store_arg $v1  --> arg 1
+#     call my_procedure
 #define load_arg global
     li      %2 %1
     mul     %2 %2 4
@@ -54,10 +54,10 @@
     lw      %2 0(%3)
 #end
 
-# call label num_stored_args
-# label : label you are jumping to
-# note when you use this you cannot pass args in $a3 that is reserved to passing
-# a generalized way to call procedures
+# call label
+#     label : label you are jumping to
+#     note when you use this you cannot pass args in $a3 that is reserved to passing
+#     a generalized way to call procedures
 #define call global
     __save_frame
     jal     %1
