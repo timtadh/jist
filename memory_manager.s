@@ -116,21 +116,33 @@
 # | Memory Block 0             |
 # ------------------------------ -> Bottom of Heap
 
-# calc_top dst hcb_addr size_HCB amt_freed
+# words_to_bytes words
+#     words : the number of words in a reg
+#
+#     it puts the result in the same register you got it from
+#define words_to_bytes local
+    mul     %1 %1 4             # multiply the number of words by four and store in same reg
+#end
+
+# calctop dst hcb_addr size_HCB amt_freed
 #     dst : the register you want the result stored in
 #     hcb_addr : a register with the size of the hcb in it
 #     size_HCB : the size of the hcb in words it should be in a reg
 #     amt_freed : how much space above the control block is their in words also in reg
 #
 #     calculates the addr of the top of the heap
-#define calc_top local
-    mul     %3 %3 4             # multiply the size of the hcb by 4 and store in size
-    mul     %4 %4 4             # multiply the amt of freed space by for and store in amt
+#     MODIFIES: size_HCB and amt_freed registers
+#
+#define calctop local
+    words_to_bytes %3           # multiply the size of the hcb by 4 and store in size
+    words_to_bytes %4           # multiply the amt of freed space by for and store in amt
     addu    %1 %2 %3            # add the size of the hcb to the addr
     addu    %1 %1 %4            # add amt to the addr
 #end
 
     .ktext
+# initialize_heap() --> Null
+#     initializes the heap and put the addr of the HCB in HCB_ADDR
 initialize_heap:
     sbrk_imm    20 $s0          # request just enough memory to put the HCB in
     sw      $s0 HCB_ADDR        # store the location of the HCB in the HCB_ADDR label
@@ -143,10 +155,58 @@ initialize_heap:
     
     li      $t1 0               # store the amt of freed space in $t1
     
-    calc_top $t0 $s0 $s1 $t1    # calculate the addr at the top of the heap
+    calctop $t0 $s0 $s1 $t1     # calculate the addr at the top of the heap
+    sw      $t0 8($s0)          # stop the top into the HCB
     
-    ## NOT FINISHED
+    sw      $0 12($s0)          # store the initial amount, zero, of freed space in the HCB
     
+    sw      $0 16($s0)          # the intial size of the list is 0 so store it in the HCB
+    
+    return
+
+# alloc(amt) --> $v0 = mem_id
+#     amt : the amount in words of memory you are requesting
+#     mem_id : the id you will use to access your memory
+alloc:
+    addu    $s7 $a0 $0          # move the amt to $s7
+    
+    lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
+    lw      $s1 12($s0)         # load the current amount of free space into $s1
+    
+    
+## PSUEDOCODE for ths stuff
+#     size_hcb_bytes = size_HCB
+#     words_to_bytes size_hcb_bytes
+#     end_list = HCB_ADDR + size_hcb_bytes
+#     
+#     if free < amt:
+#         amt_requested = 3 + amt - free
+#         free = 0
+#     if free >= amt:
+#         amt_requested = 0
+#         free = free - amt
+#     top = top + amt_requested
+#     len_list += 1
+#     size_HCB += 3
+#     
+#     amt_in_bytes = amt_requested
+#     words_to_bytes amt_in_bytes
+#     sbrk amt_in_bytes addr
+#     
+#     sw      next_id 0(end_list)
+#     add     $s6 next_id $0  so you can return it to the user
+#     next_id += 1
+#     sw      HCB_ADDR 4(end_list)
+#     sw      amt 8(end_list)
+#     
+#     move_hcb_up(amt)
+#     
+#     return $s6
+    
+    return
+
+
+
 
 
 

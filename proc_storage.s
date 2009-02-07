@@ -47,6 +47,8 @@
 # 4 -> halted
 # 5 -> marked for clean up
 
+#include memory_manager.s
+
     .kdata
 pcb_size: .word 0x88            # 136 = 34 * 4
 next_proc_num: .word 0x0        # start proccess number at 0
