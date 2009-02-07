@@ -19,6 +19,9 @@ Add 'global' to the #define line if this macro should be accessible from all oth
 
 ==USING MACROS IN MACROS==
 You can use macros inside other macros as long as the first is defined above the second.
+
+==REPETITIONS==
+Put "#repeat n" above a line to repeat that line n times. See kernel_data.s for an example.
 """
 
 
@@ -172,10 +175,13 @@ def process_lines(s, use_kernel_macros):
     is_global = False
     out_lines = list()
     local_macros = dict()
+    
+    repetitions = 1
+    
     macro_name = ""
     for line in in_lines:
-        line.strip()
-        if line.startswith('#define'):
+        kw = string.lower(line.strip())
+        if kw.startswith('#define'):
             #start defining macro, get its name and init a list of its lines
             if in_macro: print "Macro error."
             in_macro = True
@@ -189,7 +195,7 @@ def process_lines(s, use_kernel_macros):
                 global_macros[macro_name] = [start_text]
             else:
                 local_macros[macro_name] = [start_text]
-        elif line.startswith('#end'):
+        elif kw.startswith('#end'):
             #concatenate the lines and stop defining the macro
             in_macro = False
             end_text = ' '*4 + '#'*17 + ' end ' + macro_name + ' ' + '#'*17 + '\n'
@@ -199,6 +205,10 @@ def process_lines(s, use_kernel_macros):
             if macro_name in global_macros:
                 global_macros[macro_name].append(end_text)
                 global_macros[macro_name] = "".join(global_macros[macro_name])
+        elif kw.startswith('#repeat'):
+            linesplit = line.split()
+            if len(linesplit) == 2:
+                repetitions = int(linesplit[1])
         else:
             if in_macro:
                 #check for macro-in-macro
@@ -210,7 +220,8 @@ def process_lines(s, use_kernel_macros):
                     #+= rep_line(line, local_macros, use_kernel_macros)
             else:
                 #check for regular ol' macro
-                out_lines += rep_line(line, local_macros, use_kernel_macros)
+                out_lines += rep_line(line, local_macros, use_kernel_macros) * repetitions
+                repetitions = 1
     return ''.join(out_lines)
 
 def process(path, out, replace_labels=False, use_kernel_macros=False):
