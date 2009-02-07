@@ -124,6 +124,17 @@
     mul     %1 %1 4             # multiply the number of words by four and store in same reg
 #end
 
+# load_hcb
+#     loads the HCB into $s0 - $s5 see the comments for what is in what reg
+#define load_hcb local
+    lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
+    lw      $s1 0($s0)          # load the size_HCB into $s1
+    lw      $s2 4($s0)          # load the next_id into $s2
+    lw      $s3 8($s0)          # load the top into $s3
+    lw      $s4 12($s0)         # load the free into $s4
+    lw      $s5 16($s0)         # load the len_list into $s5
+#end
+
 # calctop dst hcb_addr size_HCB amt_freed
 #     dst : the register you want the result stored in
 #     hcb_addr : a register with the size of the hcb in it
@@ -170,11 +181,7 @@ initialize_heap:
 alloc:
     addu    $s7 $a0 $0          # move the amt to $s7
     
-    lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
-    lw      $s1 12($s0)         # load the current amount of free space into $s1
-    
-    
-## PSUEDOCODE for ths stuff
+    ## PSUEDOCODE for this stuff
 #     size_hcb_bytes = size_HCB
 #     words_to_bytes size_hcb_bytes
 #     end_list = HCB_ADDR + size_hcb_bytes
@@ -182,7 +189,7 @@ alloc:
 #     if free < amt:
 #         amt_requested = 3 + amt - free
 #         free = 0
-#     if free >= amt:
+#     else if free >= amt:
 #         amt_requested = 0
 #         free = free - amt
 #     top = top + amt_requested
@@ -202,6 +209,14 @@ alloc:
 #     move_hcb_up(amt)
 #     
 #     return $s6
+    
+    load_hcb                    # load the HCB into $s0 - $s5 see documenation of macro
+    
+    addu    $t0 $s1 $0          # move size_HCB into $t0
+    words_to_bytes $t0          # convert it to bytes
+    addu    $t0 $s0 $t0         # end_list = HCB_ADDR + size_hcb_bytes
+    
+    
     
     return
 
