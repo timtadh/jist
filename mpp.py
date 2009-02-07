@@ -156,7 +156,7 @@ def rep_line(line, local_macros, use_kernel_macros):
             if use_kernel_macros and string.lower(name) in kernel_macros.keys():
                 mtext = post_process_kernel_macro(mtext)
             #append macro text (possibly transformed) to output
-            out_lines.append(mtext)
+            out_lines.append(process_lines(mtext, use_kernel_macros))
         else:
             out_lines.append(line+'\n')
     else:
@@ -203,9 +203,11 @@ def process_lines(s, use_kernel_macros):
             if in_macro:
                 #check for macro-in-macro
                 if macro_name in local_macros.keys():
-                    local_macros[macro_name] += rep_line(line, local_macros, use_kernel_macros)
+                    local_macros[macro_name].append(line+'\n')
+                    #+= rep_line(line, local_macros, use_kernel_macros)
                 if macro_name in global_macros.keys():
-                    global_macros[macro_name] += rep_line(line, local_macros, use_kernel_macros)
+                    global_macros[macro_name].append(line+'\n')
+                    #+= rep_line(line, local_macros, use_kernel_macros)
             else:
                 #check for regular ol' macro
                 out_lines += rep_line(line, local_macros, use_kernel_macros)
