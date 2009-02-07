@@ -159,14 +159,14 @@ def rep_line(line, local_macros, use_kernel_macros):
             if use_kernel_macros and string.lower(name) in kernel_macros.keys():
                 mtext = post_process_kernel_macro(mtext)
             #append macro text (possibly transformed) to output
-            out_lines.append(process_lines(mtext, use_kernel_macros))
+            out_lines.append(process_lines(mtext, use_kernel_macros, local_macros))
         else:
             out_lines.append(line+'\n')
     else:
         out_lines.append(line+'\n')
     return out_lines
 
-def process_lines(s, use_kernel_macros):
+def process_lines(s, use_kernel_macros, local_macros=dict()):
     global global_macros
     
     in_lines = s.split('\n')
@@ -174,7 +174,6 @@ def process_lines(s, use_kernel_macros):
     in_macro = False
     is_global = False
     out_lines = list()
-    local_macros = dict()
     
     repetitions = 1
     
