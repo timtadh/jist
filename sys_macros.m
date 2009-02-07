@@ -40,7 +40,7 @@
     subu    $sp $sp 4           # move the stack pointer down 4
 #end
 
-# load_arg arg_num destination temp_reg
+# load_arg arg_num destination
 #     arg_num : the number of the argument you want it must an immediate value
 #     destination : register you want your argument in
 #     temp_reg : this macro requires a temporary register
@@ -52,8 +52,8 @@
 #define load_arg global
     li      %2 %1
     mul     %2 %2 4
-    addu    %3 $fp %2
-    lw      %2 0(%3)
+    addu    %2 $fp %2
+    lw      %2 0(%2)
 #end
 
 # call label

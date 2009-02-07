@@ -8,7 +8,7 @@ __msg: .asciiz "my procedure\n"
 
     .ktext
 proc:
-    load_arg 2 $a0 $t1
+    load_arg 2 $a0
     #li      $a0 15
     li       $v0 1
     syscall
