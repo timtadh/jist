@@ -8,7 +8,7 @@
 user_program_locations:
             #repeat 16
             .word   0
-
+HCB_ADDR:   .word   0
 proc_limit: .word   0x80
 proc_list:
             #repeat 128

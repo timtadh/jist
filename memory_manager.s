@@ -56,7 +56,7 @@
 # At the very top of the heap will be a control structure. in essance it will be a assending sorted
 # list of memory blocks in use sorted by the memory id number. It will look like this.
 #
-# Structure of Heap Control Block
+# Structure of Heap Control Block(HCB)
 # -------------------------------------
 # | The Sorted List Inside the Block  |
 # | --------------------------------- |
@@ -75,6 +75,10 @@
 # | | Memory id 0                   | |
 # | --------------------------------- |
 # -------------------------------------
+# | Length of List                    | -> the length of the sorted list
+# -------------------------------------
+# | Freed Space in Words              | -> How many words of free space are there above the HCB
+# -------------------------------------
 # |                                   | -> ie what is the farthest the heap can grow with doing
 # | Address of the Top of the Heap    |    another sbrk call. this includes the space that the 
 # |                                   |    Heap Control Block is occupying
@@ -85,32 +89,64 @@
 # -------------------------------------
 #
 # The heap control block will grow in size as the number of blocks in the heap grows and it will 
-# shrink at as blocks of memory are free. There will be a special label called HPC_ADDR which will
+# shrink at as blocks of memory are free. There will be a special label called HCB_ADDR which will
 # store the start of the heap control block. This will make it quicker to access the block. That
 # way the memory manager doesn't have to walk the entire heap to get to the control block.
 
 # Structure of Heap
-# ----------------------------- -> Top of Heap
-# |                           |
-# |        Freed Space        |
-# |                           |
-# -----------------------------
-# | ------------------------- |
-# | | Heap Control Block    | |
-# | ------------------------- | -> HPC_ADDR
-# ----------------------------- 
-# | Memory Block N            |
-# -----------------------------
-# | Memory Block N-1          |
-# -----------------------------
-# |                           |
-# |            ....           |
-# |                           |
-# -----------------------------
-# | Memory Block 1            |
-# -----------------------------
-# | Memory Block 0            |
-# ----------------------------- -> Bottom of Heap
+# ------------------------------ -> Top of Heap
+# |                            |
+# |        Freed Space         |
+# |                            |
+# ------------------------------
+# | -------------------------- |
+# | | Heap Control Block(HCB)| |
+# | -------------------------- | -> HCB_ADDR
+# ------------------------------ 
+# | Memory Block N             |
+# ------------------------------
+# | Memory Block N-1           |
+# ------------------------------
+# |                            |
+# |            ....            |
+# |                            |
+# ------------------------------
+# | Memory Block 1             |
+# ------------------------------
+# | Memory Block 0             |
+# ------------------------------ -> Bottom of Heap
+
+# calc_top dst hcb_addr size_HCB amt_freed
+#     dst : the register you want the result stored in
+#     hcb_addr : a register with the size of the hcb in it
+#     size_HCB : the size of the hcb in words it should be in a reg
+#     amt_freed : how much space above the control block is their in words also in reg
+#
+#     calculates the addr of the top of the heap
+#define calc_top local
+    mul     %3 %3 4             # multiply the size of the hcb by 4 and store in size
+    mul     %4 %4 4             # multiply the amt of freed space by for and store in amt
+    addu    %1 %2 %3            # add the size of the hcb to the addr
+    addu    %1 %1 %4            # add amt to the addr
+#end
+
+    .ktext
+initialize_heap:
+    sbrk_imm    20 $s0          # request just enough memory to put the HCB in
+    sw      $s0 HCB_ADDR        # store the location of the HCB in the HCB_ADDR label
+    
+    li      $s1 5               # the HCB start out as three words long
+    sw      $s1 0($s0)          # store the size of HCB in words in the HCB
+    
+    li      $t0 1               # the first memory id is one
+    sw      $t0 4($s0)          # store the next memory id in the HCB
+    
+    li      $t1 0               # store the amt of freed space in $t1
+    
+    calc_top $t0 $s0 $s1 $t1    # calculate the addr at the top of the heap
+    
+    ## NOT FINISHED
+    
 
 
 
