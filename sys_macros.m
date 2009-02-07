@@ -143,7 +143,9 @@
 # sbrk reg dst
 #     reg : stored in the reg should be the amount of memory you want to allocate
 #define sbrk global
+    quickstore %1
     __save_args
+    quickrestore %1
     li      $v0 9               # system call code for sbrk
     add     $a0 %1 $0           # amount
     syscall                     # make the call
