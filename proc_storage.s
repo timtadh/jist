@@ -54,10 +54,7 @@ next_proc_num: .word 0x0        # start proccess number at 0
     .ktext
     # create_pcb() return $v0 -> addr of pcb
 create_pcb:
-    li      $v0  9              # system call code for sbrk
-    lw      $a0  pcb_size       # amount
-    syscall                     # make the call
-    
+    sbrk_addr pcb_size $v0
     return
 
     # save_proc(pcb_addr, nice, status)  -> Null
