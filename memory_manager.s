@@ -388,11 +388,21 @@ get_hcb_list_elem_index_in_list:
     add     $v1 $0 $0           # error = 0 (success!)
     return
 
-# find_mem_id(mem_id) --> $v0 = found?, $v1 = addr if found
+# find_addr(mem_id) --> $v0 = found?, $v1 = addr if found
 #     mem_id : the memory_id you want to find the addr
 #     found? : zero if not found one if found
 #     addr : address in the hcb list of that mem_id's control block
-find_mem_id:
+find_addr:
+#     l = $s0
+#     r = $s1
+#     len_list = $s5
+#     m = $s2
+#     addr = $t0
+#     err = $v1
+#     val = $t1
+#     mem_id = $s7
+#     temp = $t2
+#     ----------------------------------
 #     l = 0
 #     r = len_list
 #     while (l <= r) 
@@ -409,7 +419,40 @@ find_mem_id:
 #             return 1, addr // found
 #     }
 #     return 0, 0 // not found
+    add     $s7 $a0 $0          # mem_id = $s7
     load_hcb
+    add     $s0 $0 $0           # l = 0
+    add     $s1 $s5 $0          # r = len_list
+find_addr_loop:
+#     if l > r: jump find_addr_loop_end
+    bgt     $s0 $s1 find_addr_loop_end
+    sub     $s2 $s1 $s0         # m = r - l
+    li      $t2 2               # temp = 2
+    div     $s2 $s2 $t2         # m = m/2
+    add     $s2 $s2 $s0         # m = m + l
+    add     $a0 $s2 $0          # arg1 = m
+    call    get_hcb_list_elem   # get the addr of that list element
+#     if err != 0: jump find_addr_loop_end (ie there was an error return not found)
+    bne     $v1 $0 find_addr_loop_end
+    add     $t0 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)
+    lw      $t1 0($t0)          # val = 0(addr of the element) ie the mem_id of m
+#     if val = mem_id: jump find_addr_found
+    beq     $t1 $s7 find_addr_found
+#     if val > mem_id: jump find_addr_val_gt_mem_id
+    bgt     $t1 $s7 find_addr_val_gt_mem_id
+#     else: val < mem_id
+    addi    $s0 $s2 1           # l = m + 1
+    j       find_addr_loop
+find_addr_val_gt_mem_id:
+    sub     $s1 $s2 1           # r = m - 1
+    j       find_addr_loop
+find_addr_found:
+    addi    $v0 $0 1            # found = 1
+    add     $v1 $0 $t0          # return addr = addr
+    return
+find_addr_loop_end:
+    add     $v0 $0 $0           # found = 0
+    add     $v1 $0 $0           # addr = 0
     return
 
 # free(mem_id) --> Null
