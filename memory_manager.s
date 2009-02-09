@@ -365,7 +365,10 @@ alloc_end_if:
 #     addr : the address of the element
 #     error : 0 if not error, error number otherwise
 get_hcb_list_elem:
-    
+#     if index >= len_list: return 0, 1
+#     i_bytes = index + 5 (to account for the size of the control block
+#     words_to_bytes i
+#     return i, 0
     load_hcb
     return
 
