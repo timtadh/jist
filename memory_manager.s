@@ -246,7 +246,7 @@ compact:
 #     from_addr = $t0
 #     to_addr = $t1
 #     last_addr = $t2
-#     temp = $t4
+#     temp = $t3
 #     hcb_addr = $s0
 #     while (from_addr <= last_addr)
 #     {
@@ -268,7 +268,19 @@ compact:
     addu    $t1 $s6 $0          # to_addr = $t1
     addu    $t2 $s1 $0          # move size_HCB into $t0
     hcbtop  $t2 $s0 $t2         # last_addr = $t1
-    
+compact_loop:
+#   if from_addr > last_addr: jump compact_loop_end
+    bgt     $t0 $t2 compact_loop_end
+    lw      $t3 0($t0)          # lw  temp 0(from_addr)
+    sw      $t3 0($t1)          # sw  temp 0(to_addr)
+#         if (from_addr == hcb_addr)
+    bne     $t0 $s0 compact_loop_endif
+    addu    $s0 $t1 $0          # hcb_addr = to_addr
+    sw      $s0 HCB_ADDR        # save the hcb_addr in HCB_ADDR
+compact_loop_endif:
+    addu    $t1 $t1 4           # to_addr += 4
+    addu    $t0 $t0 4           # from_addr += 4
+compact_loop_end:
     return
 
 # alloc(amt) --> $v0 = mem_id
@@ -347,6 +359,55 @@ alloc_end_if:
     call    move_hcb_up         # move the HCB into its new location
     
     return
+
+# get_hcb_list_elem(index) --> $v0 = addr, $v1 = error
+#     index : the index the element you want
+#     addr : the address of the element
+#     error : 0 if not error, error number otherwise
+get_hcb_list_elem:
+    
+    load_hcb
+    return
+
+# find_mem_id(mem_id) --> $v0 = found?, $v1 = addr if found
+#     mem_id : the memory_id you want to find the addr
+#     found? : zero if not found one if found
+#     addr : address in the hcb list of that mem_id's control block
+find_mem_id:
+    l = 0#hcb_addr
+    r = len_list#hcbtop - 8
+    while (l <= r) 
+    {
+        m = l + (r - l) / 2  // Note: not (l + r) / 2  may overflow!!
+        if (A[m] > mem_id)
+            r = m - 1
+        else if (A[m] < mem_id)
+            l = m + 1
+        else
+            return m // found
+    }
+    return -1 // not found
+    load_hcb
+    return
+
+# free(mem_id) --> Null
+#     finds the mem_id using the mem_id find_mem_id method
+#     Removes the mem_id from the HCB list
+#     Subtracts 1 from the size of the HCB list
+#     Adjusts the HCB's size
+#     Adds the amount freed to the freed space + 3 for the amount taken off the HCB
+#     saves the HCB
+#     compacts the heap using the compact method
+free:
+    return
+
+
+
+
+
+
+
+
 
 
 
