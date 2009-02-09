@@ -365,11 +365,27 @@ alloc_end_if:
 #     addr : the address of the element
 #     error : 0 if not error, error number otherwise
 get_hcb_list_elem:
+#     $s7 = index
+#     $s5 = len_list
+#     $s0 = hcb_addr
+#     $t0 = i_byte
 #     if index >= len_list: return 0, 1
 #     i_bytes = index + 5 (to account for the size of the control block
-#     words_to_bytes i
-#     return i, 0
-    load_hcb
+#     words_to_bytes i_bytes
+#     
+#     return i_bytes, 0
+    add     $s7 $a0 $0          # $s0 = index
+    load_hcb                    # load the HCB
+#     if index < len_list: jump get_hcb_list_elem_index_in_list
+    blt     $s7 $s5 get_hcb_list_elem_index_in_list
+    add     $v0 $0 $0           # addr = 0
+    addi    $v1 $0 1            # error = 1
+    return
+get_hcb_list_elem_index_in_list:
+    addi    $t0 $s7 5           # i_bytes = index + 5
+    words_to_bytes $t0
+    add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
+    add     $v1 $0 $0           # error = 0 (success!)
     return
 
 # find_mem_id(mem_id) --> $v0 = found?, $v1 = addr if found
@@ -377,19 +393,22 @@ get_hcb_list_elem:
 #     found? : zero if not found one if found
 #     addr : address in the hcb list of that mem_id's control block
 find_mem_id:
-    l = 0#hcb_addr
-    r = len_list#hcbtop - 8
-    while (l <= r) 
-    {
-        m = l + (r - l) / 2  // Note: not (l + r) / 2  may overflow!!
-        if (A[m] > mem_id)
-            r = m - 1
-        else if (A[m] < mem_id)
-            l = m + 1
-        else
-            return m // found
-    }
-    return -1 // not found
+#     l = 0
+#     r = len_list
+#     while (l <= r) 
+#     {
+#         m = l + (r - l) / 2  // Note: not (l + r) / 2  may overflow!!
+#         addr, err = get_hcb_list_elem(m)
+#         if err: break;
+#         lw  val 0(addr)
+#         if (val > mem_id)
+#             r = m - 1
+#         else if (val < mem_id)
+#             l = m + 1
+#         else
+#             return 1, addr // found
+#     }
+#     return 0, 0 // not found
     load_hcb
     return
 
