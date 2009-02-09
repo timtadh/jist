@@ -222,7 +222,7 @@ move_hcb_up:
     addu    $s7 $a0 $0          # move the amt to $s7
     load_hcb
     addu    $t0 $s1 $0          # move size_HCB into $t0
-    hcbtop $t0 $s0 $t0          # move_from_addr = $t0
+    hcbtop  $t0 $s0 $t0         # move_from_addr = $t0
 move_hcb_up_loop:
 #   if hcb_addr > move_from_addr: jump move_hcb_up_loop_end
     bgt     $s0 $t0 move_hcb_up_loop_end
@@ -235,6 +235,40 @@ move_hcb_up_loop_end:
 #     sw      move_to_addr HCB_ADDR
     sw      $t1 HCB_ADDR
 
+    return
+
+# compact(hole_addr, hole_size) --> Null
+#     hole_addr : The address of the hole
+#     hole_size : the size of the hole in words
+#     moves all of the memory starting with (hole_addr + hole_size * 4) down to fill the hole
+#     updates HCB_ADDR when finished
+compact:
+#     from_addr = $t0
+#     to_addr = $t1
+#     last_addr = $t2
+#     temp = $t4
+#     hcb_addr = $s0
+#     while (from_addr <= last_addr)
+#     {
+#         lw  temp 0(from_addr)
+#         sw  temp 0(to_addr)
+#         if (from_addr == hcb_addr)
+#         {
+#             hcb_addr = to_addr
+#             sw  hcb_addr HCB_ADDR
+#         }
+#         to_addr += 4
+#         from_addr += 4
+#     }
+    addu    $s6 $a0 $0          # $s6 = hole_addr
+    addu    $s7 $a1 $0          # $s7 = hole_size
+    load_hcb                    # load the control block
+    addu    $t0 $7 $0           # move hole_size into $t0
+    words_to_bytes $t0          # convert hole_size to bytes
+    addu    $t1 $s6 $0          # to_addr = $t1
+    addu    $t2 $s1 $0          # move size_HCB into $t0
+    hcbtop  $t2 $s0 $t2         # last_addr = $t1
+    
     return
 
 # alloc(amt) --> $v0 = mem_id
