@@ -343,11 +343,11 @@ get_hcb_list_elem_index_in_list:
     add     $v1 $0 $0           # error = 0 (success!)
     return
 
-# del_hcb_list_elem(mem_id) --> $v0 = error
+# del_hcb_list_elem(index) --> $v0 = error
 #     mem_id : the mem_id you want to remove from the list
 #     error : 0 if success error code otherwise
 del_hcb_list_elem:
-#     mem_id = $s7
+#     index = $s7
 #     to_addr = $t0
 #     from_addr = $t1
 #     last_addr = $t2
@@ -375,7 +375,7 @@ del_hcb_list_elem:
 #     free += 3
 #     save_hcb
     load_hcb
-    addu    $s7 $a0 $0          # put the mem_id into $s7
+    addu    $s7 $a0 $0          # put the index into $s7
     call get_hcb_list_elem      # get the addr of the element
 #     if err: jump del_hcb_list_elem_error
     bne     $v1 $0 del_hcb_list_elem_error
@@ -403,11 +403,11 @@ del_hcb_list_elem_error:
     addi    $v0 $0 1            # move error = 1 to output
     return
 
-# find_addr(mem_id) --> $v0 = found?, $v1 = addr if found
+# find_index(mem_id) --> $v0 = found?, $v2 = index if found
 #     mem_id : the memory_id you want to find the addr
 #     found? : zero if not found one if found
-#     addr : address in the hcb list of that mem_id's control block
-find_addr:
+#     index : the index in the hcb list of that mem_id's control block
+find_index:
 #     l = $s0
 #     r = $s1
 #     len_list = $s5
@@ -431,43 +431,43 @@ find_addr:
 #         else if (val < mem_id)
 #             l = m + 1
 #         else
-#             return 1, addr // found
+#             return 1, addr, m // found
 #     }
-#     return 0, 0 // not found
+#     return 0, 0, 0 // not found
     add     $s7 $a0 $0          # mem_id = $s7
     load_hcb
     add     $s0 $0 $0           # l = 0
     add     $s1 $s5 $0          # r = len_list
-find_addr_loop:
-#     if l > r: jump find_addr_loop_end
-    bgt     $s0 $s1 find_addr_loop_end
+find_index_loop:
+#     if l > r: jump find_index_loop_end
+    bgt     $s0 $s1 find_index_loop_end
     sub     $s2 $s1 $s0         # m = r - l
     li      $t2 2               # temp = 2
     div     $s2 $s2 $t2         # m = m/2
     add     $s2 $s2 $s0         # m = m + l
     add     $a0 $s2 $0          # arg1 = m
     call    get_hcb_list_elem   # get the addr of that list element
-#     if err != 0: jump find_addr_loop_end (ie there was an error return not found)
-    bne     $v1 $0 find_addr_loop_end
+#     if err != 0: jump find_index_loop_end (ie there was an error return not found)
+    bne     $v1 $0 find_index_loop_end
     add     $t0 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)
     lw      $t1 0($t0)          # val = 0(addr of the element) ie the mem_id of m
-#     if val = mem_id: jump find_addr_found
-    beq     $t1 $s7 find_addr_found
-#     if val > mem_id: jump find_addr_val_gt_mem_id
-    bgt     $t1 $s7 find_addr_val_gt_mem_id
+#     if val = mem_id: jump find_index_found
+    beq     $t1 $s7 find_index_found
+#     if val > mem_id: jump find_index_val_gt_mem_id
+    bgt     $t1 $s7 find_index_val_gt_mem_id
 #     else: val < mem_id
     addi    $s0 $s2 1           # l = m + 1
-    j       find_addr_loop
-find_addr_val_gt_mem_id:
+    j       find_index_loop
+find_index_val_gt_mem_id:
     sub     $s1 $s2 1           # r = m - 1
-    j       find_addr_loop
-find_addr_found:
+    j       find_index_loop
+find_index_found:
     addi    $v0 $0 1            # found = 1
-    add     $v1 $0 $t0          # return addr = addr
+    add     $v1 $0 $s2          # return index = m
     return
-find_addr_loop_end:
+find_index_loop_end:
     add     $v0 $0 $0           # found = 0
-    add     $v1 $0 $0           # addr = 0
+    add     $v1 $0 $0           # index = 0
     return
 
 
@@ -536,13 +536,64 @@ alloc_end_if:
 
 # free(mem_id) --> Null
 #     finds the mem_id using the mem_id find_mem_id method DONE
-#     Removes the mem_id from the HCB list
-#     Subtracts 1 from the size of the HCB list
-#     Adjusts the HCB's size
-#     Adds the amount freed to the freed space + 3 for the amount taken off the HCB
+#     get the amount to free
+#     Removes the mem_id from the HCB list DONE
+#     Subtracts 1 from the size of the HCB list DONE
+#     Adjusts the HCB's size DONE
+#     freed += 3 for the amount taken off the HCB DONE
+#     freed += amt freed
 #     saves the HCB
 #     compacts the heap using the compact method DONE
 free:
+#     mem_id = $s7
+#     index = $s6
+#     found = $v0
+#     addr = $t0
+#     err = $v1
+#     block_addr = $s0, $s7
+#     block_amt = $s1, $s6
+#     free = $s4
+#     -----------------------------------------
+#     found, index = find_index(mem_id)
+#     if not found: jump free_error
+#     addr, err = get_hcb_list_elem(index)
+#     if err: jump free_error
+#     lw block_addr 4(addr)
+#     lw block_amt 8(addr)
+#     del_hcb_list_elem(index)
+#     $s7 = block_addr
+#     $s6 = block_amt
+#     load_hcb
+#     free += block_amt
+#     save_hcb
+#     compact(block_addr, block_amt)
+    addu    $s7 $a0 $0          # mem_id = $s7
+    call    find_index
+    beqz    $v0 free_error      # if not found: jump free_error
+    addu    $s6 $v1 $0          # index = $s6
+    
+    addu    $a0 $s6 $0
+    call    get_hcb_list_elem   # get_hcb_list_elem(index)s
+    bne     $v1 $0 free_error   # if err: jump free_error
+    addu    $t0 $v0 $0          # addr = $t0
+    lw      $s0 4($t0)          # block_addr = $s0
+    lw      $s1 8($t0)          # block_amt = $s1
+    
+    addu    $a0 $s6 $0
+    call    del_hcb_list_elem   # del_hcb_list_elem(index)
+    
+    addu    $s7 $s0 $0          # $s7 = block_addr
+    addu    $s6 $s1 $0          # $s6 = block_amt
+    
+    load_hcb
+    addu    $s4 $s4 $s6         # free += block_amt
+    save_hcb
+    
+    addu    $a0 $s7 $0
+    addu    $a1 $s6 $0
+    call    compact             # compact(block_addr, block_amt)
+    
+free_error:
     return
 
 
