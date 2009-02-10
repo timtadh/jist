@@ -283,81 +283,36 @@ compact_loop_endif:
 compact_loop_end:
     return
 
-# alloc(amt) --> $v0 = mem_id
-#     amt : the amount in words of memory you are requesting
-#     mem_id : the id you will use to access your memory
-alloc:
-    ## PSUEDOCODE for this function
-#     size_hcb_bytes = size_HCB
-#     words_to_bytes size_hcb_bytes
-#     end_list = HCB_ADDR + size_hcb_bytes
-#     
-#     if free < amt:
-#         amt_requested = 3 + amt - free
-#         free = 0
-#     else if free >= amt:
-#         amt_requested = 0
-#         free = free - amt
-#     top = top + amt_requested
+# add_hcb_list_elem(addr, size) --> $v0 = mem_id
+add_hcb_list_elem:
+#     addr = $a0
+#     size = $a1
+#     next_id = $s2
+#     mem_id = $t1
+#     end_list = $t0
+#     size_HCB = $s1
+#     len_list = $s5
+#     mem_id = next_id
+#     next_id += 1
 #     len_list += 1
 #     size_HCB += 3
-#     
-#     amt_in_bytes = amt_requested
-#     words_to_bytes amt_in_bytes
-#     sbrk amt_in_bytes addr
-#     
-#     sw      next_id 0(end_list)
-#     add     $s6 next_id $0  so you can return it to the user
-#     next_id += 1
-#     sw      HCB_ADDR 4(end_list)
-#     sw      amt 8(end_list)
-#     
-#     move_hcb_up(amt)
-#     
-#     return $s6
-    addu    $s7 $a0 $0          # move the amt to $s7
-    
-    load_hcb                    # load the HCB into $s0 - $s5 see documenation of macro
-    
-    addu    $t0 $s1 $0          # move size_HCB into $t0
-    hcbtop $t0 $s0 $t0          # end_list = $t0
-    
-    blt     $s4, $s7, alloc_free_lt_amt     
-                                # if free < amt: jump alloc_free_lt_amt
-    
-    # $t1 = amt_requested
-    addu    $t1 $0 $0           # amt_requested = 0
-    subu    $s4 $s4 $s7         # free = free - amt
-    j       alloc_end_if
-alloc_free_lt_amt:
-    addu    $t1 $s7 3           # amt_requested = 3 + amt
-    subu    $t1 $t1 $s4         # amt_requested = amt_requested - free
-    addu    $s4 $0 $0           # free = 0
-alloc_end_if:
-    addu    $s3 $s3 $t1         # top = top + amt_requested #top = $s3
-    addu    $s5 $s5 1           # len_list += 1 #len_list = $s5
-    addu    $s1 $s1 3           # size_HCB += 3 # size_HCB = $s1
-    
-    addu    $t2 $t1 $0          # amt_in_bytes = amt_requested #amt_in_bytes = $t2
-    words_to_bytes $t2          # convert to bytes
-    sbrk    $t2 $t3             # alocate the memory place the addr in $t3 (sbrk is a macro)
-    
-#     sw      next_id 0(end_list) # next_id = $s2
-#     add     $s6 next_id $0  so you can return it to the user
-#     next_id += 1
-#     sw      HCB_ADDR 4(end_list)
-#     sw      amt 8(end_list)
-    sw      $s2 0($t0)          # save next_id 0(end_list)
-    add     $s6 $s2 0           # save next_id into $s6 so you can return it to the user
-    addi    $s2 $s2 1           # next_id += 1
-    sw      $s0 4($t0)          # save the location of the new block of memory
-    sw      $s7 8($t0)          # save the amt of the memory
-    
+#     save_hcb
+#     sw      mem_id 0(end_list)
+#     sw      addr 4(end_list)
+#     sw      size 8(end_list)
+    load_hcb
+    addu    $t1 $s2 $0          # mem_id = next_id
+    addu    $s2 $s2 1           # next_id += 1
+    addu    $s5 $s5 1           # len_list += 1
+    addu    $s1 $s1 3           # size_HCB += 3
     save_hcb
+    addu    $t0 $s1 $0          # move size_HCB into $t0
+    hcbtop  $t0 $s0 $t0         # end_list = $t0
+    sw      $t1 0($t0)          # sw      mem_id 0(end_list)
+    sw      $a0 4($t0)          # sw      addr 4(end_list)
+    sw      $a1 8($t0)          # sw      size 8(end_list)
     
-    add     $a0 $s7 $0          # move the amt in words you want move the HCB by into arg1
-    call    move_hcb_up         # move the HCB into its new location
-    
+    addu    $v0 $t1 $0          # return mem_id
     return
 
 # get_hcb_list_elem(index) --> $v0 = addr, $v1 = error
@@ -386,6 +341,66 @@ get_hcb_list_elem_index_in_list:
     words_to_bytes $t0
     add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
     add     $v1 $0 $0           # error = 0 (success!)
+    return
+
+# del_hcb_list_elem(mem_id) --> $v0 = error
+#     mem_id : the mem_id you want to remove from the list
+#     error : 0 if success error code otherwise
+del_hcb_list_elem:
+#     mem_id = $s7
+#     to_addr = $t0
+#     from_addr = $t1
+#     last_addr = $t2
+#     temp = $t3
+#     err = $v1
+#     HCB_ADDR = $s0
+#     size_HCB = $s1
+#     free = $s4
+#     len_list = $s5
+#     -------------------------------
+#     load_hcb
+#     to_addr, err = get_hcb_list_elem(mem_id)
+#     if err: jump get_hcb_list_elem_error
+#     from_addr = to_addr + 3*4
+#     hcbtop  last_addr HCB_ADDR size_HCB
+#     while (from_addr <= last_addr)
+#     {
+#         lw      temp 0(from_addr)
+#         sw      temp 0(to_addr)
+#         from_addr += 4
+#         to_addr += 4
+#     }
+#     len_list -= 1
+#     size_HCB -= 3
+#     free += 3
+#     save_hcb
+    load_hcb
+    addu    $s7 $a0 $0          # put the mem_id into $s7
+    call get_hcb_list_elem      # get the addr of the element
+#     if err: jump del_hcb_list_elem_error
+    bne     $v1 $0 del_hcb_list_elem_error
+    addu    $t0 $v0 $0          # to_addr = $t0
+    addu    $t1 $t1 12          # from_addr = to_addr + 3*4
+    addu    $t2 $s1 $0          # last_addr = size_HCB
+    hcbtop  $t2 $s0 $t2         # get the hcbtop using a macro, last_addr = $t2
+del_hcb_list_elem_loop:
+#     if from_addr > last_addr: jump del_hcb_list_elem_loop_end
+    bgt     $t1 $t2 del_hcb_list_elem_loop_end
+    lw      $t3 0($t1)          # lw      temp 0(from_addr)
+    sw      $t3 0($t0)          # sw      temp 0(to_addr)
+    addu    $t1 $t1 4           # from_addr += 4
+    addu    $t0 $t0 4           # to_addr += 4
+    j       del_hcb_list_elem_loop
+del_hcb_list_elem_loop_end:
+    subu    $s5 $s5 1           # len_list -= 1
+    subu    $s1 $s1 3           # size_HCB -= 3
+    addu    $s4 $s4 3           # free += 3
+    save_hcb
+    
+    add     $v0 $0 $0           # error = 0 success!
+    return
+del_hcb_list_elem_error:
+    addi    $v0 $0 1            # move error = 1 to output
     return
 
 # find_addr(mem_id) --> $v0 = found?, $v1 = addr if found
@@ -455,16 +470,81 @@ find_addr_loop_end:
     add     $v1 $0 $0           # addr = 0
     return
 
+
+# alloc(amt) --> $v0 = mem_id
+#     amt : the amount in words of memory you are requesting
+#     mem_id : the id you will use to access your memory
+alloc:
+    ## PSUEDOCODE for this function
+#     size_hcb_bytes = size_HCB
+#     words_to_bytes size_hcb_bytes
+#     end_list = HCB_ADDR + size_hcb_bytes
+#     
+#     if free < amt:
+#         amt_requested = 3 + amt - free
+#         free = 0
+#     else if free >= amt:
+#         amt_requested = 0
+#         free = free - amt
+#     top = top + amt_requested
+#     save_hcb
+#     
+#     amt_in_bytes = amt_requested
+#     words_to_bytes amt_in_bytes
+#     sbrk amt_in_bytes addr
+#
+#     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
+#     
+#     move_hcb_up(amt)
+#     
+#     return $s6
+    addu    $s7 $a0 $0          # move the amt to $s7
+    
+    load_hcb                    # load the HCB into $s0 - $s5 see documenation of macro
+    
+    addu    $t0 $s1 $0          # move size_HCB into $t0
+    hcbtop $t0 $s0 $t0          # end_list = $t0
+    
+    blt     $s4, $s7, alloc_free_lt_amt     
+                                # if free < amt: jump alloc_free_lt_amt
+    
+    # $t1 = amt_requested
+    addu    $t1 $0 $0           # amt_requested = 0
+    subu    $s4 $s4 $s7         # free = free - amt
+    j       alloc_end_if
+alloc_free_lt_amt:
+    addu    $t1 $s7 3           # amt_requested = 3 + amt
+    subu    $t1 $t1 $s4         # amt_requested = amt_requested - free
+    addu    $s4 $0 $0           # free = 0
+alloc_end_if:
+    addu    $s3 $s3 $t1         # top = top + amt_requested #top = $s3
+    save_hcb
+    
+    addu    $t2 $t1 $0          # amt_in_bytes = amt_requested #amt_in_bytes = $t2
+    words_to_bytes $t2          # convert to bytes
+    sbrk    $t2 $t3             # alocate the memory place the addr in $t3 (sbrk is a macro)
+#     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
+    addu    $a0 $s0 $0
+    addu    $a1 $s7 $0
+    call    add_hcb_list_elem
+    addu    $s6 $v0 $0
+    
+    add     $a0 $s7 $0          # move the amt in words you want move the HCB by into arg1
+    call    move_hcb_up         # move the HCB into its new location
+    
+    return
+
 # free(mem_id) --> Null
-#     finds the mem_id using the mem_id find_mem_id method
+#     finds the mem_id using the mem_id find_mem_id method DONE
 #     Removes the mem_id from the HCB list
 #     Subtracts 1 from the size of the HCB list
 #     Adjusts the HCB's size
 #     Adds the amount freed to the freed space + 3 for the amount taken off the HCB
 #     saves the HCB
-#     compacts the heap using the compact method
+#     compacts the heap using the compact method DONE
 free:
     return
+
 
 
 
