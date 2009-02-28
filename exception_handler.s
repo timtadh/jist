@@ -24,8 +24,8 @@ __e7_:  .asciiz "  [Bad data address] \n"
 __e8_:  .asciiz "  [Error in syscall] \n"
 __e9_:  .asciiz "  [Breakpoint] \n"
 __e10_: .asciiz "  [Reserved instruction] "
-__e11_: .asciiz ""
-__e12_: .asciiz "  [Arithmetic overflow] "
+__e11_: .asciiz "  "
+__e12_: .asciiz "  [Arithmetic overflow] \n"
 __e13_: .asciiz "  [Trap] "
 __e14_: .asciiz ""
 __e15_: .asciiz "  [Floating point] "
@@ -45,10 +45,11 @@ __e28_: .asciiz ""
 __e29_: .asciiz ""
 __e30_: .asciiz "  [Cache]"
 __e31_: .asciiz ""
-__excp: .word __e0_, __e1_, __e2_, __e3_, __e4_, __e5_, __e6_, __e7_, __e8_, __e9_
-    .word __e10_, __e11_, __e12_, __e13_, __e14_, __e15_, __e16_, __e17_, __e18_,
-    .word __e19_, __e20_, __e21_, __e22_, __e23_, __e24_, __e25_, __e26_, __e27_,
-    .word __e28_, __e29_, __e30_, __e31_
+__excp: 
+     .word __e0_, __e1_, __e2_, __e3_, __e4_, __e5_, __e6_, __e7_, __e8_, __e9_
+     .word __e10_, __e11_, __e12_, __e13_, __e14_, __e15_, __e16_, __e17_, __e18_
+     .word __e19_, __e20_, __e21_, __e22_, __e23_, __e24_, __e25_, __e26_, __e27_
+     .word __e28_, __e29_, __e30_, __e31_
 __save_at:  .word 0
 __save_a0:  .word 0
 __save_a1:  .word 0
@@ -79,22 +80,25 @@ exception_handler:              # exception handler
     
     mfc0    $k0 $13             # Cause register
     srl     $a0 $k0 2           # Extract ExcCode Field
+    printint $a0
     andi    $a0 $a0 0x1f
     
     la      $a0, exception_msg  # load the addr of exception_msg into $a0.
     li      $v0, 4              # 4 is the print_string syscall.
     #syscall                     # do the syscall
     
-    beqz    $a0 interrupt_handler
+    #beqz    $a0 interrupt_handler
     
     li      $v0 1               # syscall 1 (print_int)
     #syscall
 
-    li      $v0 4               # syscall 4 (print_str)
-    andi    $a0 $k0 0x3c        # print what exception was called
+    srl     $a0 $k0 2           # Extract ExcCode Field
+    printint $a0
+    mul     $a0 $a0 4
     lw      $a0 __excp($a0)
+    li      $v0 4               # syscall 4 (print_str)
     nop
-    #syscall
+    syscall
     
 
 interrupt_return:
