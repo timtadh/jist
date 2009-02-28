@@ -112,7 +112,6 @@ def substitute_labels(s):
         if linestrip.startswith('#end'): in_macro = False
         if len(linestrip) > 0 and not in_macro:
             r =  label_test.match(linestrip)
-            print r
             if r:
                 label = r.groups()[0]
                 if label == 'main':
