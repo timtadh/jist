@@ -154,3 +154,9 @@
     quickrestore %2
 #end
 
+
+#define exit global
+    li      $v0, 10             # syscall code 10 is for exit.
+    syscall                     # make the syscall.
+#end
+

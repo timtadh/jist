@@ -38,7 +38,7 @@ if os.path.exists('build'):
 kernel_started = False
 
 for filename in filenames:
-    new_path = os.path.join('build', filename)
+    new_path = os.path.join('build', filename.split('/')[-1])
     if filename not in kernel_files:
         mpp.process(filename, new_path, True)
     elif not kernel_started:

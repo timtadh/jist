@@ -104,24 +104,30 @@ def substitute_labels(s):
     line_list = s.split('\n')
     
     replacements = []
-    
+    label_test = re.compile(r'^([a-zA-Z0-9_]+):( |$)')
+    in_macro = False
     for line in line_list:
         linestrip = line.strip()
-        if len(linestrip) > 0:
-            if linestrip[-1] == ':' and linestrip[0] in string.ascii_letters:
-                if linestrip[:-1] == 'main':
+        if linestrip.startswith('#define'): in_macro = True
+        if linestrip.startswith('#end'): in_macro = False
+        if len(linestrip) > 0 and not in_macro:
+            r =  label_test.match(linestrip)
+            print r
+            if r:
+                label = r.groups()[0]
+                if label == 'main':
                     replacements.append((
-                        re.compile(r'\b'+linestrip[:-1]+r'\b'),
-                        linestrip[:-1]+'_'+str(main_count)
+                        re.compile(r'\b'+label+r'\b'),
+                        label+'_'+str(main_count)
                     ))
-                    main_labels.append(linestrip[:-1]+'_'+str(main_count))
+                    main_labels.append(label+'_'+str(main_count))
                     main_count += 1
                     if main_count >= max_user_programs:
                         raise Exception, "to many user programs added"
                 else:
                     replacements.append((
-                        re.compile(r'\b'+linestrip[:-1]+r'\b'),
-                        linestrip[:-1]+'_u'+str(label_count)
+                        re.compile(r'\b'+label+r'\b'),
+                        label+'_u'+str(label_count)
                     ))
                     label_count += 1
     for r, new in replacements:
@@ -158,6 +164,7 @@ def rep_line(line, local_macros, use_kernel_macros):
                     arg_num -= 1
             if use_kernel_macros and string.lower(name) in kernel_macros.keys():
                 mtext = post_process_kernel_macro(mtext)
+            mtext = substitute_labels(mtext)
             #append macro text (possibly transformed) to output
             out_lines.append(process_lines(mtext, use_kernel_macros, local_macros))
         else:
@@ -227,11 +234,10 @@ def process(path, out, replace_labels=False, use_kernel_macros=False):
     global global_macros
     
     f1 = open(path, 'r')
-    
     s = get_file_text(f1)
-    s = process_lines(s, use_kernel_macros)
     if replace_labels:
         s = substitute_labels(s)
+    s = process_lines(s, use_kernel_macros)
     
     f1.close()
     #write giant string to file

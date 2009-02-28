@@ -36,13 +36,13 @@ __start:
     ori     $t0, $t0, 0x1       # enable the interrupts
     mtc0    $t0, $12            # push the changes back to the co-proc
     
-    mfc0    $t0, $9             # get the current clock value
-    add     $t0, $t0, 2         # add 2
-    mtc0    $t0, $11            # push to compare
+#     mfc0    $t0, $9             # get the current clock value
+#     add     $t0, $t0, 2         # add 2
+#     mtc0    $t0, $11            # push to compare
     
     load_user_programs
     la      $t0  user_program_locations
-    lw      $t0  4($t0)
+    lw      $t0  8($t0)
     
     add     $a0 $t0 $0          # move the program addr into arg1
     #call load_process           # load the proccess
