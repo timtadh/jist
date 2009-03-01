@@ -58,12 +58,28 @@
 
 # call label
 #     label : label you are jumping to
-#     note when you use this you cannot pass args in $a3 that is reserved to passing
-#     a generalized way to call procedures
 #define call global
     __save_frame
     jal     %1
     __restore_frame
+#end
+
+# exec label
+#     label : label you are jumping to
+# like call but more minimal stack save
+#define exec global
+    sw      $fp 0($sp)          # save the old frame pointer
+    addu    $fp $sp $0          # move the frame pointer to point at top of frame
+    subu    $sp $sp 12          # move the stack pointer down 32
+    sw      $fp 8($sp)         # save the old stack pointer
+    sw      $ra 4($sp)         # save the return address
+    
+    jal     %1
+    
+    subu    $sp $fp 12           # move the stack pointer to the orginal unmodified bottom
+    lw      $ra 4($sp)         # save the return address
+    lw      $fp 12($sp)         # load the old frame pointer
+    lw      $sp 8($sp)         # load the old stack pointer
 #end
 
 #define return global
