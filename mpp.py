@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """
 MIPS Preprocessor
-by Steve Johnson
+by Steve Johnson and Tim Henderson
 
 ==INCLUDING FILES==
 #include your_file.s
@@ -105,6 +105,7 @@ def substitute_labels(s):
     
     replacements = []
     label_test = re.compile(r'^([a-zA-Z0-9_]+):( |$)')
+    label_strip = re.compile(r'__u\d+$')
     in_macro = False
     for line in line_list:
         linestrip = line.strip()
@@ -126,7 +127,7 @@ def substitute_labels(s):
                 else:
                     replacements.append((
                         re.compile(r'\b'+label+r'\b'),
-                        label+'_u'+str(label_count)
+                        label_strip.split(label)[0]+'__u'+str(label_count)
                     ))
                     label_count += 1
     for r, new in replacements:
@@ -167,9 +168,9 @@ def rep_line(line, local_macros, use_kernel_macros):
             #append macro text (possibly transformed) to output
             out_lines.append(process_lines(mtext, use_kernel_macros, local_macros))
         else:
-            out_lines.append(line+'\n')
+            out_lines.append(line)
     else:
-        out_lines.append(line+'\n')
+        out_lines.append(line)
     return out_lines
 
 def process_lines(s, use_kernel_macros, local_macros=dict()):
@@ -179,11 +180,12 @@ def process_lines(s, use_kernel_macros, local_macros=dict()):
     
     in_macro = False
     is_global = False
-    out_lines = list()
+    #out_lines = list()
     
     repetitions = 1
     
     macro_name = ""
+    scopes = [[]]
     for line in in_lines:
         kw = string.lower(line.strip())
         if kw.startswith('#define'):
@@ -193,7 +195,7 @@ def process_lines(s, use_kernel_macros, local_macros=dict()):
             linesplit = line.split()
             macro_name = string.lower(linesplit[1])
             is_global = False
-            start_text = ' '*4 + '#'*16 + ' start ' + macro_name + ' ' + '#'*16 + '\n'
+            start_text = ' '*4 + '#'*16 + ' start ' + macro_name + ' ' + '#'*16
             if len(linesplit) > 2 and string.lower(linesplit[2]) == 'global':
                 is_global = True
             if is_global:
@@ -203,31 +205,43 @@ def process_lines(s, use_kernel_macros, local_macros=dict()):
         elif kw.startswith('#end'):
             #concatenate the lines and stop defining the macro
             in_macro = False
-            end_text = ' '*4 + '#'*17 + ' end ' + macro_name + ' ' + '#'*17 + '\n'
+            end_text = ' '*4 + '#'*17 + ' end ' + macro_name + ' ' + '#'*17
             if macro_name in local_macros:
                 local_macros[macro_name].append(end_text)
-                local_macros[macro_name] = "".join(local_macros[macro_name])
+                local_macros[macro_name] = "\n".join(local_macros[macro_name])
             if macro_name in global_macros:
                 global_macros[macro_name].append(end_text)
-                global_macros[macro_name] = "".join(global_macros[macro_name])
+                global_macros[macro_name] = "\n".join(global_macros[macro_name])
         elif kw.startswith('#repeat'):
             linesplit = line.split()
             if len(linesplit) == 2:
                 repetitions = int(linesplit[1])
+        elif kw.startswith('{'):
+            #print '{'
+            scopes.append(list())
+        elif kw.startswith('}'):
+            #print '}'
+            l = scopes.pop()
+            #print l
+            scopes[-1].extend(substitute_labels('\n'.join(l)).split('\n'))
+            #print scopes[-1][-3:]
         else:
             if in_macro:
                 #check for macro-in-macro
                 if macro_name in local_macros.keys():
-                    local_macros[macro_name].append(line+'\n')
+                    local_macros[macro_name].append(line)
                     #+= rep_line(line, local_macros, use_kernel_macros)
                 if macro_name in global_macros.keys():
-                    global_macros[macro_name].append(line+'\n')
+                    global_macros[macro_name].append(line)
                     #+= rep_line(line, local_macros, use_kernel_macros)
             else:
                 #check for regular ol' macro
-                out_lines += rep_line(line, local_macros, use_kernel_macros) * repetitions
+                scopes[-1] += rep_line(line, local_macros, use_kernel_macros) * repetitions
                 repetitions = 1
-    return ''.join(out_lines)
+    if len(scopes) == 1:
+        return '\n'.join(scopes[0])
+    else:
+        raise Exception, "Scoping Error"
 
 def process(path, out, replace_labels=False, use_kernel_macros=False):
     global global_macros
