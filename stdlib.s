@@ -1,11 +1,7 @@
 # get_int dest
 #define get_int global
-    __save_args
-    li $v0, 5
-    syscall
-    quickstore $v0
-    __restore_args
-    quickrestore %1
+    exec    get_int
+    add     %1 $v0 $0
 #end
 
 
@@ -23,24 +19,17 @@
 # print msg_label
 #     msg_label = the label that holds the addr of the message
 #define print global
-    __save_args
-    la      $a0, %1
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
-    __restore_args
+    la      $a0 %1
+    exec    print
 #end
 
 # println msg_label
 #     msg_label = the label that holds the addr of the message
 #define println global
-    __save_args
-    la      $a0, %1
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
-    la      $a0, newline
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
-    __restore_args
+    la      $a0 %1
+    exec    print
+    la      $a0 newline
+    exec    print
 #end
 
 # printint reg
@@ -49,7 +38,9 @@
     quickstore %1
     __save_args
     quickrestore %1
-    print_int %1
+    move $a0, %1
+    li $v0, 1
+    syscall
     la      $a0, newline
     li      $v0, 4              # 4 is the print_string syscall.
     syscall                     # do the syscall.
@@ -109,8 +100,8 @@
     quickrestore %1
     print   sbracket_l
     add     $a3 $0 $0
+    beq     %2 $0 end_loop
 loop:
-    
     get     %1 $a3 $a2
     print_int $a2
     
@@ -122,12 +113,6 @@ loop:
 end_loop:
     println sbracket_r
     __restore_args
-#end
-
-# exit
-#define exit global
-    li  $v0, 10
-    syscall
 #end
 
 # print_hex_digit reg
@@ -155,7 +140,7 @@ print_digit:
 #end
 
     .data
-ox: .ascii "0x"
+ox: .asciiz "0x"
 
 # print_hex reg
 #     reg = the word you want to print
@@ -185,9 +170,72 @@ loop_end:
     __restore_args
 #end
 
+    .text
+print:
+{
+    li      $v0, 4              # 4 is the print_string syscall.
+    syscall                     # do the syscall.
+    return
+}
 
+println:
+{
+    li      $v0, 4              # 4 is the print_string syscall.
+    syscall                     # do the syscall.
+    la      $a0, newline
+    li      $v0, 4              # 4 is the print_string syscall.
+    syscall            
+    return
+}
 
+    .text
+# print_hex_digit digit
+#     digit = contains the digit your want to print in first nibble
+print_hex_digit:
+{
+    andi    $s0 $a0 0x000f
+    #if $a0 >= 10
+    li      $s1 10
+    bge     $s0 $s1 bigger_than_10
+    li      $s1 0x30 # 0 in ascii
+    j       print_digit
+bigger_than_10:
+    li      $s1 0x57 # a - 10 in ascii
+print_digit:
+    add     $a0 $s0 $s1
+    li      $v0, 11             # 4 is the print_char syscall.
+    syscall                     # do the syscall.
+    return
+}
+    .text
+print_hex:
+{
+    add     $s0 $a0 $0
+    la      $a0 ox
+    exec    print
+    add     $s1 $0 8
+    
+loop:
+    beq     $s1 $0 loop_end
+    
+    lui     $a0 0xf000
+    and     $a0 $s0 $a0
+    srl     $a0 $a0 28
+    #printint $a2
+    call    print_hex_digit
+    sll     $s0 $s0 4
+    
+    sub     $s1 $s1 1
+    j       loop
+loop_end:
+    return
+}
 
-
+get_int:
+{
+    li $v0, 5
+    syscall
+    return
+}
 
 
