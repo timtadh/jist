@@ -2,11 +2,12 @@
 # timer_user.s - example of doing timer based interrupts
 # spim.py timer_user.s exception_handler.s
 
-#include stdlib.s
+## #include stdlib.s
 
     .text 0x00400000
     .globl main
 main:
+{
     #break 5; 
     # print hello world to the console
     la      $a0, hello_msg      # load the addr of hello_msg into $a0.
@@ -46,3 +47,4 @@ hello_msg:
     .asciiz "Hello World\n"
 newline:
     .asciiz "\n"
+}

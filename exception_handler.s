@@ -80,7 +80,6 @@ exception_handler:              # exception handler
     
     mfc0    $k0 $13             # Cause register
     srl     $a0 $k0 2           # Extract ExcCode Field
-    printint $a0
     andi    $a0 $a0 0x1f
     
     la      $a0, exception_msg  # load the addr of exception_msg into $a0.
@@ -93,7 +92,6 @@ exception_handler:              # exception handler
     #syscall
 
     srl     $a0 $k0 2           # Extract ExcCode Field
-    printint $a0
     mul     $a0 $a0 4
     lw      $a0 __excp($a0)
     li      $v0 4               # syscall 4 (print_str)
