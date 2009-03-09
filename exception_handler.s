@@ -22,7 +22,7 @@ __e5_:  .asciiz "  [Address error in store] \n"
 __e6_:  .asciiz "  [Bad instruction address] \n"
 __e7_:  .asciiz "  [Bad data address] \n"
 __e8_:  .asciiz "  [Error in syscall] \n"
-__e9_:  .asciiz "  [Breakpoint] \n"
+__e9_:  .asciiz "  [Arithmetic overflow] \n"
 __e10_: .asciiz "  [Reserved instruction] "
 __e11_: .asciiz "  "
 __e12_: .asciiz "  [Arithmetic overflow] \n"
@@ -79,24 +79,29 @@ exception_handler:              # exception handler
     # print a message to the screen
     
     mfc0    $k0 $13             # Cause register
-    srl     $a0 $k0 2           # Extract ExcCode Field
-    andi    $a0 $a0 0x1f
+    andi    $a0 $k0 0x7C      
+    srl     $a0 $a0 2           # Extract ExcCode Field
     
-    la      $a0, exception_msg  # load the addr of exception_msg into $a0.
-    li      $v0, 4              # 4 is the print_string syscall.
-    #syscall                     # do the syscall
+#     li      $v0 1               # syscall 1 (print_int)
+#     syscall
     
-    #beqz    $a0 interrupt_handler
+    beqz    $a0 interrupt_handler
     
-    li      $v0 1               # syscall 1 (print_int)
-    #syscall
 
-    srl     $a0 $k0 2           # Extract ExcCode Field
+    andi    $a0 $k0 0x7C      
+    srl     $a0 $a0 2           # Extract ExcCode Field
+    addu    $k1 $a0 $0          # set $k1 to the error number so user program can access it
     mul     $a0 $a0 4
     lw      $a0 __excp($a0)
     li      $v0 4               # syscall 4 (print_str)
     nop
     syscall
+    
+    
+    la      $a0 __m1_
+    li      $v0 4               # syscall 4 (print_str)
+    syscall
+    
     
 
 interrupt_return:
@@ -109,6 +114,10 @@ exception_finished:
     mfc0    $k0, $12            # get status register
     xori    $k0, $k0, 0x2       # set exception level to 0 this re-enables interrupts
     mtc0    $k0, $12            # push status register
+    
+#     mfc0    $a0, $9             # get the current clock value
+#     add     $a0, $a0, 1         # add 2
+#     mtc0    $a0, $11            # push to compare
     
     # restore state
     lw      $a0 __save_a0

@@ -64,22 +64,33 @@
     __restore_frame
 #end
 
-# exec label
-#     label : label you are jumping to
-# like call but more minimal stack save
-#define exec global
+# __min_save
+#     most minimal stack frame save
+#define __min_save
     sw      $fp 0($sp)          # save the old frame pointer
     addu    $fp $sp $0          # move the frame pointer to point at top of frame
     subu    $sp $sp 12          # move the stack pointer down 32
     sw      $fp 8($sp)         # save the old stack pointer
     sw      $ra 4($sp)         # save the return address
-    
-    jal     %1
-    
+#end
+
+# __min_restore
+#     most minimal stack frame restore
+#define __min_restore
     subu    $sp $fp 12           # move the stack pointer to the orginal unmodified bottom
     lw      $ra 4($sp)         # save the return address
     lw      $fp 12($sp)         # load the old frame pointer
     lw      $sp 8($sp)         # load the old stack pointer
+#end
+
+
+# exec label
+#     label : label you are jumping to
+# like call but more minimal stack save
+#define exec global
+    __min_save
+    jal     %1
+    __min_restore
 #end
 
 #define return global
@@ -174,5 +185,15 @@
 #define exit global
     li      $v0, 10             # syscall code 10 is for exit.
     syscall                     # make the syscall.
+#end
+
+
+#define wait global
+    la      $k0 wait_return
+    subu    $k0 $k0 4
+    mtc0    $k0 $14
+    la      $k0 exception_handler
+    jr      $k0
+wait_return:
 #end
 

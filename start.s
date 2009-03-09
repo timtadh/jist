@@ -29,20 +29,24 @@ __start:
     store_arg $t0
     call    proc
     
-#     li      $v0, 10              # 4 is the print_string syscall.
-#     syscall
+    la      $a0 __msg
+    li      $v0, 4              # 4 is the print_string syscall.
+    syscall
     
     mfc0    $t0, $12            # load the status register
     ori     $t0, $t0, 0x1       # enable the interrupts
     mtc0    $t0, $12            # push the changes back to the co-proc
     
-#     mfc0    $t0, $9             # get the current clock value
-#     add     $t0, $t0, 2         # add 2
-#     mtc0    $t0, $11            # push to compare
+    mfc0    $t0, $9             # get the current clock value
+    add     $t0, $t0, 1         # add 2
+    mtc0    $t0, $11            # push to compare
+    
+
+    wait
     
     load_user_programs
     la      $t0  user_program_locations
-    lw      $t0  12($t0)
+    lw      $t0  0($t0)
     
     add     $a0 $t0 $0          # move the program addr into arg1
     #call load_process           # load the proccess
