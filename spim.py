@@ -12,12 +12,7 @@ import string
 import mpp
 
 kernel_files = [
-    'start.s',
-    'stdlib.s',
-    'kernel_data.s',
-    'proc_manager.s',
-    'interrupt_handler.s',
-    'exception_handler.s'
+    'kernel.s'
 ]
 
 if __name__ != '__main__': sys.exit(0)

@@ -41,14 +41,12 @@ __start:
     add     $t0, $t0, 1         # add 2
     mtc0    $t0, $11            # push to compare
     
-
     wait
+    
     
     load_user_programs
     la      $t0  user_program_locations
     lw      $t0  0($t0)
     
-    add     $a0 $t0 $0          # move the program addr into arg1
-    #call load_process           # load the proccess
-    
     j       $t0                 # start main program
+    
