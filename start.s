@@ -41,7 +41,6 @@ __start:
 #     mfc0    $t0, $9             # get the current clock value
 #     add     $t0, $t0, 1         # add 2
 #     mtc0    $t0, $11            # push to compare
-
 {
     .kdata
 empty: .asciiz ""
@@ -59,11 +58,11 @@ empty: .asciiz ""
     
     load_user_programs
     la      $t0  user_program_locations
-    lw      $a0  12($t0)
-    #call    print_hex
-    
-    
+    lw      $t0  0($t0)
+    add     $a0  $t0  $0
+    call    load_process
     la      $t0  user_program_locations
-    lw      $t0  12($t0)
+    lw      $t0  0($t0)
+    
     j       $t0                 # start main program
     

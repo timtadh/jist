@@ -51,7 +51,7 @@
 #include memory_manager.s
 
     .kdata
-pcb_size: .word 0x88            # 136 = 34 * 4
+pcb_size: .word 0x8c            # 140 = 35 * 4
 next_proc_num: .word 0x0        # start proccess number at 0
 
     .ktext
@@ -112,7 +112,7 @@ save_proc:
     sw      $t1  72($t0)        # save it in the PCB
     
     lw      $t1  __save_t2      # load the saved $t2
-    sw      $t1  74($t0)        # save it in the PCB
+    sw      $t1  76($t0)        # save it in the PCB
     
     lw      $t1  __save_t3      # load the saved $t3
     sw      $t1  80($t0)        # save it in the PCB
@@ -143,28 +143,35 @@ save_proc:
     
     return
     
-    # new_proc(pcb_address  data_start  data_end) -> Null
-new_proc:    
-    addu    $t0  $a0  0         # move the address of the PCB to $t0
+# new_proc(pcb_address data_amt) -> Null
+#     data_amt = the amount of room this proccess gets for its heap and stack. static can't change.
+new_proc:
+{
+    call create_pcb             # create a process control block
+    add     $s0 $v0 $0          # save the pcb addr into $s0
     
-    lw      $t1  next_proc_num  # load the next proccess number into $t1
-    sw      $t1  4($t0)         # save the proc number in the pcb
-    addi    $t1  $t1  1         # increment the next_proc_num
-    sw      $t1  next_proc_num  # save it
     
-    mfc0    $t1  $14            # get the EPC register
-    sw      $t1  8($t0)         # save the program counter number in the pcb
+    lw      $t1 next_proc_num   # load the next proccess number into $t1
+    sw      $t1 4($s0)          # save the proc number in the pcb
+    addi    $t1 $t1 1           # increment the next_proc_num
+    sw      $t1 next_proc_num   # save it
     
-    sw      $a1  16($t0)        # save the start of the data in the pcb
+    mfc0    $t1 $14             # get the EPC register
+    sw      $t1 8($s0)          # save the program counter number in the pcb
     
-    sw      $a2  20($t0)        # save the end of the data in the pcb
+    mul     $t1 $a0 4
+    sbrk    $t1 $t0
     
-                                # arg1 is already loaded
-    li      $a1 5               # load a default nice level of 5 into arg2
-    li      $a2 0               # load a default status of 0 "new" into arg3
+    sw      $t0 16($s0)         # save the start of the data in the pcb
+    addu    $t0 $t1 $t0
+    sw      $t0 20($s0)         # save the end of the data in the pcb
+    
+    addu    $a0 $s0 $0          # load pcb_addr into arg1
+    li      $a1 0               # load a default status of 0 "new" into arg2
     call    save_proc
     
     return
+}
     
     # restore_proc(pcb_address) -> $v0 = program_start  $v1 = program_end
 restore_proc:
