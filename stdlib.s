@@ -90,7 +90,7 @@ print_hex:
 {
     add     $s0 $a0 $0
     la      $a0 ox
-    exec    print
+    call    print
     add     $s1 $0 8
     
 loop:
@@ -106,7 +106,6 @@ loop:
     j       loop
 loop_end:
     return
-    
     .data
 ox: .asciiz "0x"
 }

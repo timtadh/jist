@@ -2,9 +2,10 @@
 # start.s - header for user programs
 
 #include proc_manager.s
+#include stdlib.s
 
     .kdata
-__msg: .asciiz "my procedure\n"
+__msg: .asciiz "\nmy procedure\n"
 
     .ktext
 proc:
@@ -37,16 +38,32 @@ __start:
     ori     $t0, $t0, 0x1       # enable the interrupts
     mtc0    $t0, $12            # push the changes back to the co-proc
     
-    mfc0    $t0, $9             # get the current clock value
-    add     $t0, $t0, 1         # add 2
-    mtc0    $t0, $11            # push to compare
+#     mfc0    $t0, $9             # get the current clock value
+#     add     $t0, $t0, 1         # add 2
+#     mtc0    $t0, $11            # push to compare
+
+{
+    .kdata
+empty: .asciiz ""
+    .ktext
+    la      $a0 print
+    call    print_hex
+    la      $a0 empty
+    call    println
+}
+    
+    #call    print_hex
     
     wait
     
     
     load_user_programs
     la      $t0  user_program_locations
-    lw      $t0  0($t0)
+    lw      $a0  12($t0)
+    #call    print_hex
     
+    
+    la      $t0  user_program_locations
+    lw      $t0  12($t0)
     j       $t0                 # start main program
     

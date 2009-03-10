@@ -36,13 +36,13 @@ kernel_started = False
 for filename in filenames:
     new_path = os.path.join('build', filename.split('/')[-1])
     if filename not in kernel_files:
-        mpp.process(filename, new_path, True)
+        mpp.process(filename, new_path, replace_labels=True)
     elif not kernel_started:
         kernel_started = True
         mpp.make_kernel_macros()
-        mpp.process(filename, new_path, False, True)
+        mpp.process(filename, new_path, True, False, True)
     else:
-        mpp.process(filename, new_path, False, True)
+        mpp.process(filename, new_path, True, False, True)
     filenames_processed.append(new_path)
 
 for filename in filenames_processed:

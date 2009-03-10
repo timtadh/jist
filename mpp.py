@@ -68,7 +68,7 @@ def make_kernel_macros():
     number_user_programs += ' '*4 + 'li      %1 @main_count@'
     number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs '  + '#'*17 + '\n'
     number_user_programs = ''.join(
-        process_lines(number_user_programs, False)
+        process_lines(number_user_programs, True, False)
     )
     
     load_user_programs = ' '*4 + '#'*16 + ' start load_user_programs ' +  '#'*16 + '\n'
@@ -80,7 +80,7 @@ def make_kernel_macros():
     load_user_programs += ' '*4 + '__restore_frame\n'
     load_user_programs += ' '*4 + '#'*17 + ' end load_user_programs ' + '#'*17 + '\n'
     load_user_programs = ''.join(
-        process_lines(load_user_programs, False)
+        process_lines(load_user_programs, True, False)
     )
     
     kernel_macros.update({
@@ -173,7 +173,7 @@ def rep_line(line, local_macros, use_kernel_macros):
         out_lines.append(line)
     return out_lines
 
-def process_lines(s, use_kernel_macros, local_macros=dict()):
+def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
     global global_macros
     
     in_lines = s.split('\n')
@@ -188,7 +188,11 @@ def process_lines(s, use_kernel_macros, local_macros=dict()):
     scopes = [[]]
     for line in in_lines:
         kw = string.lower(line.strip())
-        if kw.startswith('#define'):
+        if kernel and kw.startswith('.text'):
+            scopes[-1].append(' '*4 + '.ktext')
+        elif kernel and kw.startswith('.data'):
+            scopes[-1].append(' '*4 + '.kdata')
+        elif kw.startswith('#define'):
             #start defining macro, get its name and init a list of its lines
             if in_macro: print "Macro error."
             in_macro = True
@@ -243,14 +247,14 @@ def process_lines(s, use_kernel_macros, local_macros=dict()):
     else:
         raise Exception, "Scoping Error"
 
-def process(path, out, replace_labels=False, use_kernel_macros=False):
+def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False):
     global global_macros
     
     f1 = open(path, 'r')
     s = get_file_text(f1)
     if replace_labels:
         s = substitute_labels(s)
-    s = process_lines(s, use_kernel_macros)
+    s = process_lines(s, kernel, use_kernel_macros)
     
     f1.close()
     #write giant string to file
