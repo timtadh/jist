@@ -180,6 +180,7 @@
 # initialize_heap() --> Null
 #     initializes the heap and put the addr of the HCB in HCB_ADDR
 initialize_heap:
+{
     sbrk_imm    20 $s0          # request just enough memory to put the HCB in
     sw      $s0 HCB_ADDR        # store the location of the HCB in the HCB_ADDR label
     
@@ -199,6 +200,7 @@ initialize_heap:
     sw      $0 16($s0)          # the intial size of the list is 0 so store it in the HCB
     
     return
+}
 
 
 # move_hcb_up(amt) --> Null
@@ -206,6 +208,7 @@ initialize_heap:
 #     moves the HCB up by amt in words
 #     save the new location of HCB in HCB_ADDR
 move_hcb_up:
+{
 #     hcb_addr = $s0
 #     amt = $s7
 #     move_from_addr = $t0
@@ -236,6 +239,7 @@ move_hcb_up_loop_end:
     sw      $t1 HCB_ADDR
 
     return
+}
 
 # compact(hole_addr, hole_size) --> Null
 #     hole_addr : The address of the hole
@@ -243,6 +247,7 @@ move_hcb_up_loop_end:
 #     moves all of the memory starting with (hole_addr + hole_size * 4) down to fill the hole
 #     updates HCB_ADDR when finished
 compact:
+{
 #     from_addr = $t0
 #     to_addr = $t1
 #     last_addr = $t2
@@ -282,9 +287,11 @@ compact_loop_endif:
     addu    $t0 $t0 4           # from_addr += 4
 compact_loop_end:
     return
+}
 
 # add_hcb_list_elem(addr, size) --> $v0 = mem_id
 add_hcb_list_elem:
+{
 #     addr = $a0
 #     size = $a1
 #     next_id = $s2
@@ -314,12 +321,14 @@ add_hcb_list_elem:
     
     addu    $v0 $t1 $0          # return mem_id
     return
+}
 
 # get_hcb_list_elem(index) --> $v0 = addr, $v1 = error
 #     index : the index the element you want
 #     addr : the address of the element
 #     error : 0 if not error, error number otherwise
 get_hcb_list_elem:
+{
 #     $s7 = index
 #     $s5 = len_list
 #     $s0 = hcb_addr
@@ -342,11 +351,13 @@ get_hcb_list_elem_index_in_list:
     add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
     add     $v1 $0 $0           # error = 0 (success!)
     return
+}
 
 # del_hcb_list_elem(index) --> $v0 = error
 #     mem_id : the mem_id you want to remove from the list
 #     error : 0 if success error code otherwise
 del_hcb_list_elem:
+{
 #     index = $s7
 #     to_addr = $t0
 #     from_addr = $t1
@@ -402,12 +413,14 @@ del_hcb_list_elem_loop_end:
 del_hcb_list_elem_error:
     addi    $v0 $0 1            # move error = 1 to output
     return
+}
 
 # find_index(mem_id) --> $v0 = found?, $v2 = index if found
 #     mem_id : the memory_id you want to find the addr
 #     found? : zero if not found one if found
 #     index : the index in the hcb list of that mem_id's control block
 find_index:
+{
 #     l = $s0
 #     r = $s1
 #     len_list = $s5
@@ -469,12 +482,13 @@ find_index_loop_end:
     add     $v0 $0 $0           # found = 0
     add     $v1 $0 $0           # index = 0
     return
-
+}
 
 # alloc(amt) --> $v0 = mem_id
 #     amt : the amount in words of memory you are requesting
 #     mem_id : the id you will use to access your memory
 alloc:
+{
     ## PSUEDOCODE for this function
 #     size_hcb_bytes = size_HCB
 #     words_to_bytes size_hcb_bytes
@@ -533,6 +547,7 @@ alloc_end_if:
     call    move_hcb_up         # move the HCB into its new location
     
     return
+}
 
 # free(mem_id) --> Null
 #     finds the mem_id using the mem_id find_mem_id method DONE
@@ -545,6 +560,7 @@ alloc_end_if:
 #     saves the HCB
 #     compacts the heap using the compact method DONE
 free:
+{
 #     mem_id = $s7
 #     index = $s6
 #     found = $v0
@@ -595,6 +611,7 @@ free:
     
 free_error:
     return
+}
 
 
 

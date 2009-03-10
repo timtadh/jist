@@ -1,18 +1,18 @@
 # Tim Henderson
 # interrupt handler
 
-    .globl __save_gp
-    .globl __save_sp
-    .globl __save_fp
-    .globl __save_ra
-    .globl __save_t0
-    .globl __save_t1
-    .globl __save_t2
-    .globl __save_t3
-    .globl __save_s0
-    .globl __save_s1
-    .globl __save_s2
-    .globl __save_s3
+# #     .globl __save_gp
+# #     .globl __save_sp
+# #     .globl __save_fp
+# #     .globl __save_ra
+# #     .globl __save_t0
+# #     .globl __save_t1
+# #     .globl __save_t2
+# #     .globl __save_t3
+# #     .globl __save_s0
+# #     .globl __save_s1
+# #     .globl __save_s2
+# #     .globl __save_s3
     .kdata
 __save_gp:  .word 0
 __save_sp:  .word 0
@@ -26,10 +26,14 @@ __save_s0:  .word 0
 __save_s1:  .word 0
 __save_s2:  .word 0
 __save_s3:  .word 0
+__save_HCB_ADDR: .word 0
+
+__k_HCB_ADDR: .word 0
 
 
     .ktext
 save_state:
+{
     sw      $gp __save_gp       # save the pointer registers
     sw      $sp __save_sp
     sw      $fp __save_fp
@@ -44,9 +48,23 @@ save_state:
     sw      $s2 __save_s2
     sw      $s3 __save_s3
     
+    #load kernel heap address
+    lw      $t0 HCB_ADDR
+    sw      $t0 __save_HCB_ADDR
+    lw      $t0 __k_HCB_ADDR
+    sw      $t0 HCB_ADDR
+    
     j       save_state_return
+}
     
 restore_state:
+{
+    #load user heap address
+    lw      $t0 HCB_ADDR
+    sw      $t0 __k_HCB_ADDR
+    lw      $t0 __save_HCB_ADDR
+    sw      $t0 HCB_ADDR
+
     sw      $t0 __save_t0       # load $t0 - $t3
     sw      $t1 __save_t1
     sw      $t2 __save_t2
@@ -62,6 +80,7 @@ restore_state:
     lw      $ra __save_ra
     
     j       restore_state_return
+}
 
     .kdata
 __int_msg: .asciiz "interrupt handler entered\n"

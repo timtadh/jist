@@ -12,14 +12,15 @@
 #
 # Proccess Control Block Structure:
 # --------------------
-# | Nice   | State   | 1
+# | State            | 0
 # --------------------
-# | Process Number   | 2
+# | Process Number   | 1
 # --------------------
-# | Program Counter  | 3
+# | Program Counter  | 2
 # --------------------
-# | Base Address     | 4
-# | Top Address      | 5
+# | HCB Address      | 3
+# | Base Data Addr   | 4
+# | Top Data Addr    | 5
 # --------------------
 # | at               | 6
 # | sp               | 7
@@ -59,89 +60,90 @@ create_pcb:
     sbrk_addr pcb_size $v0
     return
 
-    # save_proc(pcb_addr, nice, status)  -> Null
+    # save_proc(pcb_addr, status)  -> Null
 save_proc:
     addu    $t0  $a0  0         # move the address of the PCB to $t0
     
-    sll     $t1  $a1  16        # move the nice into upper part of $t1
-    or      $t1  $t1  $a2       # move status into lower poart of $t1
-    sw      $t1  0($t0)         # save the nice and status into the pcb
+    sw      $a1  0($t0)         # save the status into the pcb
     
     mfc0    $t1  $14            # get the EPC register
     sw      $t1  8($t0)         # save the program counter number in the pcb
     
-    lw      $t1  __save_at      # load the saved $at reg
-    sw      $t1  20($t0)        # save it in the PCB
+    lw      $t1  __save_HCB_ADDR
+    sw      $t1  12($t0)        # save the hcb_addr into the pcb
     
-    lw      $t1  __save_sp      # load the saved stack pointer
+    lw      $t1  __save_at      # load the saved $at reg
     sw      $t1  24($t0)        # save it in the PCB
     
-    lw      $t1  __save_fp      # load the saved frame pointer
+    lw      $t1  __save_sp      # load the saved stack pointer
     sw      $t1  28($t0)        # save it in the PCB
     
-    lw      $t1  __save_gp      # load the saved global pointer
+    lw      $t1  __save_fp      # load the saved frame pointer
     sw      $t1  32($t0)        # save it in the PCB
     
-    lw      $t1  __save_ra      # load the saved return address pointer
+    lw      $t1  __save_gp      # load the saved global pointer
     sw      $t1  36($t0)        # save it in the PCB
     
-    lw      $t1  __save_v0      # load the saved $v0
+    lw      $t1  __save_ra      # load the saved return address pointer
     sw      $t1  40($t0)        # save it in the PCB
     
-    lw      $t1  __save_v1      # load the saved $v1
+    lw      $t1  __save_v0      # load the saved $v0
     sw      $t1  44($t0)        # save it in the PCB
     
-    lw      $t1  __save_a0      # load the saved $a0
+    lw      $t1  __save_v1      # load the saved $v1
     sw      $t1  48($t0)        # save it in the PCB
     
-    lw      $t1  __save_a1      # load the saved $a1
+    lw      $t1  __save_a0      # load the saved $a0
     sw      $t1  52($t0)        # save it in the PCB
     
-    lw      $t1  __save_a2      # load the saved $a2
+    lw      $t1  __save_a1      # load the saved $a1
     sw      $t1  56($t0)        # save it in the PCB
     
-    lw      $t1  __save_a3      # load the saved $a3
+    lw      $t1  __save_a2      # load the saved $a2
     sw      $t1  60($t0)        # save it in the PCB
     
-    lw      $t1  __save_t0      # load the saved $t0
+    lw      $t1  __save_a3      # load the saved $a3
     sw      $t1  64($t0)        # save it in the PCB
     
-    lw      $t1  __save_t1      # load the saved $t1
+    lw      $t1  __save_t0      # load the saved $t0
     sw      $t1  68($t0)        # save it in the PCB
     
-    lw      $t1  __save_t2      # load the saved $t2
+    lw      $t1  __save_t1      # load the saved $t1
     sw      $t1  72($t0)        # save it in the PCB
     
-    lw      $t1  __save_t3      # load the saved $t3
-    sw      $t1  76($t0)        # save it in the PCB
+    lw      $t1  __save_t2      # load the saved $t2
+    sw      $t1  74($t0)        # save it in the PCB
     
-    sw      $t4  80($t0)        # save $t4 in the PCB
-    sw      $t5  84($t0)        # save $t5 in the PCB
-    sw      $t6  88($t0)        # save $t6 in the PCB
-    sw      $t7  92($t0)        # save $t7 in the PCB
-    sw      $t8  96($t0)        # save $t8 in the PCB
-    sw      $t9  100($t0)       # save $t9 in the PCB
+    lw      $t1  __save_t3      # load the saved $t3
+    sw      $t1  80($t0)        # save it in the PCB
+    
+    sw      $t4  84($t0)        # save $t4 in the PCB
+    sw      $t5  88($t0)        # save $t5 in the PCB
+    sw      $t6  92($t0)        # save $t6 in the PCB
+    sw      $t7  96($t0)        # save $t7 in the PCB
+    sw      $t8  100($t0)        # save $t8 in the PCB
+    sw      $t9  104($t0)       # save $t9 in the PCB
     
     lw      $t1  __save_s0      # load the saved $s0
-    sw      $t1  104($t0)       # save it in the PCB
-    
-    lw      $t1  __save_s1      # load the saved $s1
     sw      $t1  108($t0)       # save it in the PCB
     
-    lw      $t1  __save_s2      # load the saved $s2
+    lw      $t1  __save_s1      # load the saved $s1
     sw      $t1  112($t0)       # save it in the PCB
     
-    lw      $t1  __save_s3      # load the saved $s3
+    lw      $t1  __save_s2      # load the saved $s2
     sw      $t1  116($t0)       # save it in the PCB
     
-    sw      $s4  120($t0)       # save $s4 in the PCB
-    sw      $s5  124($t0)       # save $s5 in the PCB
-    sw      $s6  128($t0)       # save $s6 in the PCB
-    sw      $s7  132($t0)       # save $s7 in the PCB
+    lw      $t1  __save_s3      # load the saved $s3
+    sw      $t1  120($t0)       # save it in the PCB
+    
+    sw      $s4  124($t0)       # save $s4 in the PCB
+    sw      $s5  128($t0)       # save $s5 in the PCB
+    sw      $s6  132($t0)       # save $s6 in the PCB
+    sw      $s7  136($t0)       # save $s7 in the PCB
     
     return
     
-    # new_proc(pcb_address  program_start  program_len) -> Null
+    # new_proc(pcb_address  data_start  data_end) -> Null
 new_proc:    
     addu    $t0  $a0  0         # move the address of the PCB to $t0
     
@@ -153,10 +155,9 @@ new_proc:
     mfc0    $t1  $14            # get the EPC register
     sw      $t1  8($t0)         # save the program counter number in the pcb
     
-    sw      $a1  12($t0)        # save the start of the program in the pcb
+    sw      $a1  16($t0)        # save the start of the data in the pcb
     
-    addu    $t1  $a1  $a2       # add the length of the program to where it starts
-    sw      $t1  16($t0)        # save the end of the program in the pcb
+    sw      $a2  20($t0)        # save the end of the data in the pcb
     
                                 # arg1 is already loaded
     li      $a1 5               # load a default nice level of 5 into arg2
@@ -172,77 +173,80 @@ restore_proc:
     sw      $t1  8($t0)         # get the program counter from pcb
     mtc0    $t1  $14            # save it in the EPC register in the co-proc
     
-    lw      $v0  12($t0)        # load the start of the program from the pcb
-    lw      $v1  16($t0)        # load the end of the program from the pcb
+    lw      $t1  12($t0)        # load the hcb_addr into the pcb
+    sw      $t1  __save_HCB_ADDR
     
-    lw      $t1  20($t0)        # load the saved $at reg
+    lw      $v0  16($t0)        # load the start of the data from the pcb
+    lw      $v1  20($t0)        # load the end of the data from the pcb
+    
+    lw      $t1  24($t0)        # load the saved $at reg
     sw      $t1  __save_at      # 
     
-    lw      $t1  24($t0)        # load the saved stack pointer
+    lw      $t1  28($t0)        # load the saved stack pointer
     sw      $t1  __save_sp      # save it into its imm location
     
-    lw      $t1  28($t0)        # load the saved frame pointer
+    lw      $t1  32($t0)        # load the saved frame pointer
     sw      $t1  __save_fp      # save it into its imm location
     
-    lw      $t1  32($t0)        # load the saved global pointer
+    lw      $t1  36($t0)        # load the saved global pointer
     sw      $t1  __save_gp      # 
     
-    lw      $t1  36($t0)        # load the saved return address pointer
+    lw      $t1  40($t0)        # load the saved return address pointer
     sw      $t1  __save_ra      # 
     
-    lw      $t1  40($t0)        # load the saved $v0
+    lw      $t1  44($t0)        # load the saved $v0
     sw      $t1  __save_v0      # 
     
-    lw      $t1  44($t0)        # load the saved $v1
+    lw      $t1  48($t0)        # load the saved $v1
     sw      $t1  __save_v1      # 
     
-    lw      $t1  48($t0)        # load the saved $a0
+    lw      $t1  52($t0)        # load the saved $a0
     sw      $t1  __save_a0      # 
     
-    lw      $t1  52($t0)        # load the saved $a1
+    lw      $t1  56($t0)        # load the saved $a1
     sw      $t1  __save_a1      # 
     
-    lw      $t1  56($t0)        # load the saved $a2
+    lw      $t1  60($t0)        # load the saved $a2
     sw      $t1  __save_a2      # 
     
-    lw      $t1  60($t0)        # load the saved $a3
+    lw      $t1  64($t0)        # load the saved $a3
     sw      $t1  __save_a3      # 
     
-    lw      $t1  64($t0)        # load the saved $t0
+    lw      $t1  68($t0)        # load the saved $t0
     sw      $t1  __save_t0      #
     
-    lw      $t1  68($t0)        # load the saved $t1
+    lw      $t1  72($t0)        # load the saved $t1
     sw      $t1  __save_t1      # 
     
-    lw      $t1  72($t0)        # load the saved $t2
+    lw      $t1  76($t0)        # load the saved $t2
     sw      $t1  __save_t2      #
     
-    lw      $t1  76($t0)        # load the saved $t3
+    lw      $t1  80($t0)        # load the saved $t3
     sw      $t1  __save_t3      # 
     
-    lw      $t4  80($t0)        # load $t4 from the PCB
-    lw      $t5  84($t0)        # load $t5 from the PCB
-    lw      $t6  88($t0)        # load $t6 from the PCB
-    lw      $t7  92($t0)        # load $t7 from the PCB
-    lw      $t8  96($t0)        # load $t8 from the PCB
-    lw      $t9  100($t0)       # load $t9 from the PCB
+    lw      $t4  84($t0)        # load $t4 from the PCB
+    lw      $t5  88($t0)        # load $t5 from the PCB
+    lw      $t6  92($t0)        # load $t6 from the PCB
+    lw      $t7  96($t0)        # load $t7 from the PCB
+    lw      $t8  100($t0)        # load $t8 from the PCB
+    lw      $t9  104($t0)       # load $t9 from the PCB
     
-    lw      $t1  104($t0)       # load the saved $s0
+    lw      $t1  108($t0)       # load the saved $s0
     sw      $t1  __save_s0      # 
     
     lw      $t1  __save_s1      # load the saved $s1
-    sw      $t1  108($t0)       #
+    sw      $t1  112($t0)       #
     
-    lw      $t1  112($t0)       # load the saved $s2
+    lw      $t1  116($t0)       # load the saved $s2
     sw      $t1  __save_s2      # 
     
-    lw      $t1  116($t0)       # load the saved $s3
+    lw      $t1  120($t0)       # load the saved $s3
     sw      $t1  __save_s3      # 
     
-    lw      $s4  120($t0)       # load $s4 from the PCB
-    lw      $s5  124($t0)       # load $s5 from the PCB
-    lw      $s6  128($t0)       # load $s6 from the PCB
-    lw      $s7  132($t0)       # load $s7 from the PCB
+    lw      $s4  124($t0)       # load $s4 from the PCB
+    lw      $s5  128($t0)       # load $s5 from the PCB
+    lw      $s6  132($t0)       # load $s6 from the PCB
+    lw      $s7  136($t0)       # load $s7 from the PCB
     
     return
     
@@ -256,13 +260,5 @@ proc_number:
     # proc_status(pcb_address) -> v0 = proc_status
 proc_status:
     addu    $t0  $a0  0         # move the address of the PCB to $t0
-    lw      $t1  0($t0)         # load the nice and status from the pcb
-    andi    $v0  $t1  0xffff    # and out the nice half
-    return
-    
-    # proc_nice(pcb_address) -> v0 = proc_nice
-proc_nice:
-    addu    $t0  $a0  0         # move the address of the PCB to $t0
-    lw      $t1  0($t0)         # load the nice and status from the pcb
-    srl     $v0 $t1 16          # shift t
+    lw      $v0  0($t0)         # load the nice and status from the pcb
     return
