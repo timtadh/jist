@@ -177,11 +177,13 @@
 #end
 
     .ktext
-# initialize_heap() --> Null
+# initialize_heap(start, len) --> Null
+#     start = the start address
+#     len = the length of the heap in words
 #     initializes the heap and put the addr of the HCB in HCB_ADDR
 initialize_heap:
 {
-    sbrk_imm    20 $s0          # request just enough memory to put the HCB in
+    addu    $s0 $a0 $0
     sw      $s0 HCB_ADDR        # store the location of the HCB in the HCB_ADDR label
     
     li      $s1 5               # the HCB start out as five words long
@@ -190,10 +192,11 @@ initialize_heap:
     li      $t0 1               # the first memory id is one
     sw      $t0 4($s0)          # store the next memory id in the HCB
     
-    li      $t1 0               # store the amt of freed space in $t1
+    
+    sub     $t1 $a1 $s1         # subtract the size of the hcb from the size of the heap
     
     calctop $t0 $s0 $s1 $t1     # calculate the addr at the top of the heap
-    sw      $t0 8($s0)          # stop the top into the HCB
+    sw      $t0 8($s0)          # put the top into the HCB
     
     sw      $0 12($s0)          # store the initial amount, zero, of freed space in the HCB
     
@@ -503,9 +506,10 @@ alloc:
 #     top = top + amt_requested
 #     save_hcb
 #     
-#     amt_in_bytes = amt_requested
-#     words_to_bytes amt_in_bytes
-#     sbrk amt_in_bytes addr
+#     if amt_requested != 0: raise error
+#     # amt_in_bytes = amt_requested
+#     # words_to_bytes amt_in_bytes
+#     # sbrk amt_in_bytes addr
 #
 #     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
 #     
@@ -514,13 +518,13 @@ alloc:
 #     return $s6
     addu    $s7 $a0 $0          # move the amt to $s7
     
-    load_hcb                    # load the HCB into $s0 - $s5 see documenation of macro
+    load_hcb                    # load the HCB into $s0 - $s5 see documentation of macro
     
     addu    $t0 $s1 $0          # move size_HCB into $t0
-    hcbtop $t0 $s0 $t0          # end_list = $t0
+    hcbtop  $t0 $s0 $t0         # end_list = $t0
     
-    blt     $s4, $s7, alloc_free_lt_amt     
-                                # if free < amt: jump alloc_free_lt_amt
+    blt     $s4 $s7 alloc_free_lt_amt
+    #                           # if free < amt: jump alloc_free_lt_amt
     
     # $t1 = amt_requested
     addu    $t1 $0 $0           # amt_requested = 0
@@ -534,9 +538,10 @@ alloc_end_if:
     addu    $s3 $s3 $t1         # top = top + amt_requested #top = $s3
     save_hcb
     
-    addu    $t2 $t1 $0          # amt_in_bytes = amt_requested #amt_in_bytes = $t2
-    words_to_bytes $t2          # convert to bytes
-    sbrk    $t2 $t3             # alocate the memory place the addr in $t3 (sbrk is a macro)
+    bne     $t1 $0 error        # if amt_requested != 0: jump error
+    ## addu    $t2 $t1 $0          # amt_in_bytes = amt_requested #amt_in_bytes = $t2
+    ## words_to_bytes $t2          # convert to bytes
+    ## sbrk    $t2 $t3             # alocate the memory place the addr in $t3 (sbrk is a macro)
 #     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
     addu    $a0 $s0 $0
     addu    $a1 $s7 $0
@@ -547,6 +552,14 @@ alloc_end_if:
     call    move_hcb_up         # move the HCB into its new location
     
     return
+
+error:
+    la      $a0 error_msg
+    call    println
+    exit
+    .data
+error_msg: .asciiz "Out of memory.\n"
+    .text
 }
 
 # free(mem_id) --> Null
