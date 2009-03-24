@@ -197,3 +197,30 @@
 wait_return:
 #end
 
+#define disable_interrupts global
+    mfc0    $t0 $12             # load the status register
+    lui     $t1 0xffff
+    ori     $t1 0xfffc
+    and     $t0 $t0 $t1         # enable the interrupts
+    mtc0    $t0 $12             # push the changes back to the co-proc
+    nop
+    nop
+#end
+
+#define enable_interrupts global
+    mfc0    $t0, $12            # load the status register
+    lui     $t1 0xffff
+    ori     $t1 0xfffd
+    and     $t0 $t0 $t1         # enable the interrupts
+    ori     $t0, $t0, 0x1       # set exception level to 0 this re-enables interrupts
+    mtc0    $t0, $12            # push the changes back to the co-proc
+    nop
+    nop
+#end
+
+#define enable_clock_interrupt global
+    mfc0    $t0, $9             # get the current clock value
+    add     $t0, $t0, 1         # add 1
+    mtc0    $t0, $11            # push to compare
+#end
+

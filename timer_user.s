@@ -15,7 +15,7 @@ main:
     syscall
     
     # waste sometime
-    li      $t1, 0xf000         # initialize loop counter
+    li      $t1, 0xffff         # initialize loop counter
 loop:
     addi    $t1, $t1, -1        # decrement every loop
     bgez    $t1, loop           # if $t1 > 0: jump loop

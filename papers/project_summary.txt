@@ -1,0 +1,48 @@
+Jist
+Tim Henderson (tah35), Stephen Johnson (srj15), Dan DeCovnick (dhd4)
+
+
+Our project is to write a small demo operating system on top of spim. The
+code for it can be found at http://github.com/timtadh/jist/. The point of
+the project is to learn some of the basic concepts behind constructing an
+operating system, most significantly memory management and CPU scheduling.
+Our goal is to have two or more concurrently running user programs at the
+same time. In our current design design, all user programs are statically
+assembled along with the operating system so that we do not have to write a
+MIPS assembler to generate the relocatable object code. We already have
+several things written.
+
+   1. MPP -- Macro Pre-Processor written in python allows us to make use of
+   macros
+   2. sys_macros.m -- Macros for doing procedure calls
+   3. kernel.s -- This is the base code for the kernel it is really just an
+   exception handler
+   4. interrupt_handler -- Is the actual entry point for the kernel code it
+   saves and loads PCBs
+   5. proc_storage -- Incomplete it is sketch of how we want to store PCBs
+   6. memory_manager -- A mostly complete implementation of a compacting
+   memory manager
+
+Our current todo list includes:
+
+   1. Change Memory Manager so it cannot allocate memory itself, it must
+   work with a given amount instead.
+   2. Create a public interface (API) to Memory Manager via macros.
+   3. Change Procedure Storage to use the Memory Manager.
+   4. Create a way to initialize the Memory Manager from kernel mode on the
+   behalf of a user program.
+   5. Create a stack manager
+   6. Create a way to pass interrupt code to the kernel.
+   7. Create an exception throwing mechanism (on top of the interrupt code
+   created in part 6).
+   8. Change Memory Manager so that it throws exceptions when things go
+   wrong.
+   9. Create a way for a process to send messages to the kernel, and for the
+   kernel to send message to a process.
+   10. Create an I/O system using memory mapped IO
+
+At this point we will now consider CPU scheduling and other tricky issues
+before detailing more tasks.
+
+Hopefully now you have a good idea of the scope of our project and what we
+intend to accomplish and a idea of how we intend to do it.

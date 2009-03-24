@@ -9,7 +9,7 @@ __msg: .asciiz "\nmy procedure\n"
 
     .ktext
 proc:
-    load_arg 1 $a0
+    load_arg 3 $a0
     #li      $a0 15
     li       $v0 1
     syscall
@@ -34,13 +34,8 @@ __start:
     li      $v0, 4              # 4 is the print_string syscall.
     syscall
     
-    mfc0    $t0, $12            # load the status register
-    ori     $t0, $t0, 0x1       # enable the interrupts
-    mtc0    $t0, $12            # push the changes back to the co-proc
-    
-#     mfc0    $t0, $9             # get the current clock value
-#     add     $t0, $t0, 1         # add 2
-#     mtc0    $t0, $11            # push to compare
+    enable_interrupts
+    enable_clock_interrupt
 {
     .kdata
 empty: .asciiz ""
@@ -52,10 +47,25 @@ empty: .asciiz ""
 }
     
     #call    print_hex
+    #call    proc
+    #wait
+    #wait
+    la      $a0, __msg          # load the addr of hello_msg into $a0.
+    li      $v0, 4              # 4 is the print_string syscall.
+    syscall
+{
+    disable_interrupts
+    li      $t1, 0xffff         # initialize loop counter
+loop:
+    addi    $t1, $t1, -1        # decrement every loop
+    bgez    $t1, loop           # if $t1 > 0: jump loop
     
-    wait
     
-    
+    la      $a0, __msg          # load the addr of hello_msg into $a0.
+    li      $v0, 4              # 4 is the print_string syscall.
+    syscall
+    enable_interrupts
+}
     load_user_programs
     la      $t0  user_program_locations
     lw      $t0  0($t0)
