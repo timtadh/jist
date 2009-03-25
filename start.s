@@ -55,17 +55,16 @@ empty: .asciiz ""
     syscall
 {
     disable_interrupts
-    li      $t1, 0xffff         # initialize loop counter
+    lui     $t1 0xffff
+    ori     $t1 0xffff          # initialize loop counter
 loop:
     addi    $t1, $t1, -1        # decrement every loop
     bgez    $t1, loop           # if $t1 > 0: jump loop
-    
-    
+    enable_interrupts
+}
     la      $a0, __msg          # load the addr of hello_msg into $a0.
     li      $v0, 4              # 4 is the print_string syscall.
     syscall
-    enable_interrupts
-}
     load_user_programs
     la      $t0  user_program_locations
     lw      $t0  0($t0)
@@ -74,5 +73,6 @@ loop:
     la      $t0  user_program_locations
     lw      $t0  0($t0)
     
+    enable_clock_interrupt
     j       $t0                 # start main program
     

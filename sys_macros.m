@@ -189,38 +189,78 @@
 
 
 #define wait global
-    la      $k0 wait_return
-    subu    $k0 $k0 4
-    mtc0    $k0 $14
-    la      $k0 exception_handler
-    jr      $k0
+    __save_args
+    la      $a0 wait_return
+    subu    $a0 $a0 4
+    mtc0    $a0 $14
+    la      $a0 exception_handler
+    jr      $a0
 wait_return:
+    __restore_args
 #end
 
 #define disable_interrupts global
-    mfc0    $t0 $12             # load the status register
-    lui     $t1 0xffff
-    ori     $t1 0xfffc
-    and     $t0 $t0 $t1         # enable the interrupts
-    mtc0    $t0 $12             # push the changes back to the co-proc
+    __save_args
+    mfc0    $a0 $12             # load the status register
+    lui     $a1 0xffff
+    ori     $a1 0xfffc
+    and     $a0 $a0 $a1         # enable the interrupts
+    mtc0    $a0 $12             # push the changes back to the co-proc
     nop
     nop
+    __restore_args
 #end
 
 #define enable_interrupts global
-    mfc0    $t0, $12            # load the status register
+    __save_args
+    mfc0    $a0 $12             # load the status register
     lui     $t1 0xffff
     ori     $t1 0xfffd
-    and     $t0 $t0 $t1         # enable the interrupts
-    ori     $t0, $t0, 0x1       # set exception level to 0 this re-enables interrupts
-    mtc0    $t0, $12            # push the changes back to the co-proc
+    and     $a0 $a0 $t1         # enable the interrupts
+    ori     $a0 $a0 0x1         # set exception level to 0 this re-enables interrupts
+    mtc0    $a0 $12             # push the changes back to the co-proc
     nop
     nop
+    __restore_args
 #end
 
 #define enable_clock_interrupt global
-    mfc0    $t0, $9             # get the current clock value
-    add     $t0, $t0, 1         # add 1
-    mtc0    $t0, $11            # push to compare
+    __save_args
+    mfc0    $a0 $9              # get the current clock value
+    add     $a0 $a0 1           # add 1
+    mtc0    $a0 $11             # push to compare
+    __restore_args
+#end
+
+# sem_wait addr_reg
+#     addr_reg = a register with the address of the semaphore
+#define sem_wait global
+    quickstore %1
+    __save_args
+    quickrestore $a1
+loop:
+    lw      $a0 0($a1)
+    bne     $a0 $0 loop
+    disable_interrupts
+    addi    $a0 $a0 1
+    sw      $a0 0($a1)
+    enable_interrupts
+    __restore_args
+#end
+
+# sem_signal addr_reg
+#     addr_reg = a register with the address of the semaphore
+#define sem_signal global
+    quickstore %1
+    __save_args
+    quickrestore $a1
+    disable_interrupts
+    lw      $a0 0($a1)
+    beq     $a0 $0 alread_zero
+    sub     $a0 $a0 1
+    sw      $a0 0($a1)
+alread_zero:
+    enable_interrupts
+    __restore_args
 #end
 
