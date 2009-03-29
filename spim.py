@@ -61,4 +61,5 @@ f.close()
 
 mpp.process(out_path, out_path)
 
-subprocess.check_call(["spim", "-ne",  "-mio",  out_path])
+#subprocess.check_call(["spim", "-ne",  "-mio",  out_path])
+subprocess.check_call(["spim", "-ne", out_path])

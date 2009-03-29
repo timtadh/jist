@@ -232,6 +232,11 @@ wait_return:
     __restore_args
 #end
 
+
+#define disable_clock_interrupt global
+    mtc0    $0 $11             # push to compare
+#end
+
 # sem_wait addr_reg
 #     addr_reg = a register with the address of the semaphore
 #define sem_wait global
@@ -269,7 +274,6 @@ alread_zero:
 #     treat this as procedure call because it is
 #
 #define initialize_heap global
-    disable_interrupts
     addu    $a0 %1 $0
     addu    $a1 %2 $0
     lui     $t0 0x8000
@@ -279,7 +283,6 @@ alread_zero:
     jr      $t0
 ret:
     __restore_frame
-    enable_interrupts
 #end
 
 # alloc(amt) --> mem_id
@@ -287,7 +290,7 @@ ret:
 #     treat this as procedure call because it is
 #
 #define alloc global
-    disable_interrupts
+
     addu    $a0 %1 $0
     lui     $t0 0x8000
     ori     $t0 0x0004
@@ -297,7 +300,6 @@ ret:
 ret:
     __restore_frame
     addu    %2 $v0 $0
-    enable_interrupts
 #end
 
 # free(mem_id) --> Null
@@ -305,7 +307,6 @@ ret:
 #     treat this as procedure call because it is
 #
 #define free global
-    disable_interrupts
     addu    $a0 %1 $0
     lui     $t0 0x8000
     ori     $t0 0x0008
@@ -314,7 +315,6 @@ ret:
     jr      $t0
 ret:
     __restore_frame
-    enable_interrupts
 #end
 
 

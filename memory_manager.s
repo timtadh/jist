@@ -244,6 +244,7 @@
     #     }
     #     sw      move_to_addr HCB_ADDR
         addu    $s7 $a0 $0          # move the amt to $s7
+        mul     $s7 $s7 4
         load_hcb
         addu    $t0 $s1 $0          # move size_HCB into $t0
         hcbtop  $t0 $s0 $t0         # move_from_addr = $t0
@@ -330,12 +331,6 @@
     #     sw      size 8(end_list)
         addu    $s6 $a0 $0
         addu    $s7 $a1 $0
-        la      $t0 ret
-        subu    $t0 $t0 4
-        mtc0    $t0 $14
-        nop
-        nop
-ret:
         load_hcb
         addu    $s2 $s2 1           # next_id += 1
         addu    $s5 $s5 1           # len_list += 1
@@ -573,15 +568,40 @@ ret:
         ## words_to_bytes $t2          # convert to bytes
         ## sbrk    $t2 $t3             # alocate the memory place the addr in $t3 (sbrk is a macro)
     #     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
-        addu    $a0 $s0 $0
-        addu    $a1 $s7 $0
+         
+
         
-        call    add_hcb_list_elem
+        addu    $s6 $s0 $0
+#         addu    $a0 $s6 $0
+#         addu    $a1 $s7 $0
+        #add_hcb_list_elem |-> replaces: call    add_hcb_list_elem
+        {
+            load_hcb
+            addu    $t1 $s2 $0
+            addu    $s2 $s2 1           # next_id += 1
+            addu    $s5 $s5 1           # len_list += 1
+            addu    $s1 $s1 3           # size_HCB += 3
+            save_hcb
+            addu    $t0 $s1 $0          # move size_HCB into $t0
+            hcbtop  $t0 $s0 $t0         # end_list = $t0
+            sw      $t1 0($t0)          # sw      mem_id 0(end_list)
+            sw      $s6 4($t0)          # sw      addr 4(end_list)
+            sw      $s7 8($t0)          # sw      size 8(end_list)
+            addu    $a0 $s6 $0
+            call    println_hex
+            addu    $a0 $s7 $0
+            call    println_hex
+            
+            addu    $v0 $t1 $0          # return mem_id
+        }
         addu    $s6 $v0 $0
         
         add     $a0 $s7 $0          # move the amt in words you want move the HCB by into arg1
         call    move_hcb_up         # move the HCB into its new location
         
+        addu    $a0 $s6 $0
+        call    println_hex
+        addu    $v0 $s6 $0
         return
     
     error:
