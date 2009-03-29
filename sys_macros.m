@@ -269,6 +269,7 @@ alread_zero:
 #     treat this as procedure call because it is
 #
 #define initialize_heap global
+    disable_interrupts
     addu    $a0 %1 $0
     addu    $a1 %2 $0
     lui     $t0 0x8000
@@ -278,7 +279,42 @@ alread_zero:
     jr      $t0
 ret:
     __restore_frame
+    enable_interrupts
+#end
+
+# alloc(amt) --> mem_id
+#
+#     treat this as procedure call because it is
+#
+#define alloc global
+    disable_interrupts
+    addu    $a0 %1 $0
+    lui     $t0 0x8000
+    ori     $t0 0x0004
+    __save_frame
+    la      $ra ret
+    jr      $t0
+ret:
+    __restore_frame
+    addu    %2 $v0 $0
+    enable_interrupts
 #end
 
 # free(mem_id) --> Null
-# alloc(amt) --> $v0 = mem_id
+#
+#     treat this as procedure call because it is
+#
+#define free global
+    disable_interrupts
+    addu    $a0 %1 $0
+    lui     $t0 0x8000
+    ori     $t0 0x0008
+    __save_frame
+    la      $ra ret
+    jr      $t0
+ret:
+    __restore_frame
+    enable_interrupts
+#end
+
+

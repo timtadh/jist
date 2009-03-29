@@ -199,21 +199,24 @@
     {
         
         addu    $s0 $a0 $0
+        addu    $s1 $a1 $0          # length of heap in $s1
         sw      $s0 HCB_ADDR        # store the location of the HCB in the HCB_ADDR label
         
-        li      $s1 5               # the HCB start out as five words long
-        sw      $s1 0($s0)          # store the size of HCB in words in the HCB
+        
+        li      $s2 5               # the HCB start out as five words long
+        sw      $s2 0($s0)          # store the size of HCB in words in the HCB
         
         li      $t0 1               # the first memory id is one
         sw      $t0 4($s0)          # store the next memory id in the HCB
         
         
-        sub     $t1 $a1 $s1         # subtract the size of the hcb from the size of the heap
+        sub     $t1 $s1 $s2         # subtract the size of the hcb from the size of the heap
         
-        calctop $t0 $s0 $s1 $t1     # calculate the addr at the top of the heap
+        sw      $t1 12($s0)          # store the initial amount, zero, of freed space in the HCB
+        lw      $t2 12($s0)
+        
+        calctop $t0 $s0 $s2 $t1     # calculate the addr at the top of the heaps
         sw      $t0 8($s0)          # put the top into the HCB
-        
-        sw      $0 12($s0)          # store the initial amount, zero, of freed space in the HCB
         
         sw      $0 16($s0)          # the intial size of the list is 0 so store it in the HCB
         
@@ -325,8 +328,15 @@
     #     sw      mem_id 0(end_list)
     #     sw      addr 4(end_list)
     #     sw      size 8(end_list)
+        addu    $s6 $a0 $0
+        addu    $s7 $a1 $0
+        la      $t0 ret
+        subu    $t0 $t0 4
+        mtc0    $t0 $14
+        nop
+        nop
+ret:
         load_hcb
-        addu    $t1 $s2 $0          # mem_id = next_id
         addu    $s2 $s2 1           # next_id += 1
         addu    $s5 $s5 1           # len_list += 1
         addu    $s1 $s1 3           # size_HCB += 3
@@ -334,8 +344,8 @@
         addu    $t0 $s1 $0          # move size_HCB into $t0
         hcbtop  $t0 $s0 $t0         # end_list = $t0
         sw      $t1 0($t0)          # sw      mem_id 0(end_list)
-        sw      $a0 4($t0)          # sw      addr 4(end_list)
-        sw      $a1 8($t0)          # sw      size 8(end_list)
+        sw      $s6 4($t0)          # sw      addr 4(end_list)
+        sw      $s7 8($t0)          # sw      size 8(end_list)
         
         addu    $v0 $t1 $0          # return mem_id
         return
@@ -535,6 +545,8 @@
         
         load_hcb                    # load the HCB into $s0 - $s5 see documentation of macro
         
+        
+        
         addu    $t0 $s1 $0          # move size_HCB into $t0
         hcbtop  $t0 $s0 $t0         # end_list = $t0
         
@@ -544,6 +556,7 @@
         # $t1 = amt_requested
         addu    $t1 $0 $0           # amt_requested = 0
         subu    $s4 $s4 $s7         # free = free - amt
+        
         j       alloc_end_if
     alloc_free_lt_amt:
         addu    $t1 $s7 3           # amt_requested = 3 + amt
@@ -551,15 +564,18 @@
         addu    $s4 $0 $0           # free = 0
     alloc_end_if:
         addu    $s3 $s3 $t1         # top = top + amt_requested #top = $s3
+        
         save_hcb
         
         bne     $t1 $0 error        # if amt_requested != 0: jump error
+        
         ## addu    $t2 $t1 $0          # amt_in_bytes = amt_requested #amt_in_bytes = $t2
         ## words_to_bytes $t2          # convert to bytes
         ## sbrk    $t2 $t3             # alocate the memory place the addr in $t3 (sbrk is a macro)
     #     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
         addu    $a0 $s0 $0
         addu    $a1 $s7 $0
+        
         call    add_hcb_list_elem
         addu    $s6 $v0 $0
         

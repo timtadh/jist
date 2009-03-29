@@ -34,8 +34,8 @@ __start:
     li      $v0, 4              # 4 is the print_string syscall.
     syscall
     
-    enable_interrupts
-    enable_clock_interrupt
+   # enable_interrupts
+    #enable_clock_interrupt
 {
     .kdata
 empty: .asciiz ""
@@ -48,7 +48,11 @@ empty: .asciiz ""
     la      $t0 kernel_data
     la      $t1 kernel_data_end
     subu    $t1 $t1 $t0
+    sra     $t1 $t1 2
     initialize_heap $t0 $t1
+    addu    $t0 $0 4
+    alloc   $t0 $t0
+    #free    $t0
     #call    print_hex
     #call    proc
     #wait
