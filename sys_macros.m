@@ -334,8 +334,8 @@ ret:
 #
 #define print_hcb global
     __save_frame
-        la      $a0 hcb_msg
-        call    println
+        #la      $a0 hcb_msg
+        #call    println
         lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
         la      $a0 hcb_addr_msg
         call    print
