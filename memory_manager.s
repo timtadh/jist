@@ -179,7 +179,7 @@
 #define get_hcb local
     __save_frame
     add     $s7 $a0 $0          # $s7 = index
-    call    println_hex
+    #call    println_hex
     load_hcb                    # load the HCB
 #     if index < len_list: jump index_in_list
     .kdata
@@ -196,7 +196,8 @@
     addi    $v1 $0 1            # error = 1
     j       end
 index_in_list:
-    addi    $t0 $s7 5           # i_bytes = index + 5
+    mul     $t1 $s7 3
+    addi    $t0 $t1 5           # i_bytes = index + 5
     words_to_bytes $t0
     add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
     add     $v1 $0 $0           # error = 0 (success!)
@@ -304,7 +305,7 @@ end:
         li      $s2 5               # the HCB start out as five words long
         sw      $s2 0($s0)          # store the size of HCB in words in the HCB
         
-        li      $t0 0               # the first memory id is one
+        li      $t0 5               # the first memory id is one
         sw      $t0 4($s0)          # store the next memory id in the HCB
         
         
@@ -441,9 +442,9 @@ end:
         sw      $s6 4($t0)          # sw      addr 4(end_list)
         sw      $s7 8($t0)          # sw      size 8(end_list)
         addu    $a0 $s6 $0
-        call    println_hex
+        #call    println_hex
         addu    $a0 $s7 $0
-        call    println_hex
+        #call    println_hex
         
         addu    $v0 $t1 $0          # return mem_id
     }
@@ -551,9 +552,9 @@ end:
     #     r = $s1
     #     len_list = $s5
     #     m = $s2
-    #     addr = $t0
+    #     addr = $s4
     #     err = $v1
-    #     val = $t1
+    #     val = $s3
     #     mem_id = $s7
     #     temp = $t2
     #     ----------------------------------
@@ -576,6 +577,10 @@ end:
         add     $s7 $a0 $0          # mem_id = $s7
         la      $a0 start_msg
         call    println
+        la      $a0 id_msg
+        call    print
+        add     $a0 $s7 $0          # arg1 = m
+        call    println_hex
         load_hcb
         add     $s0 $0 $0           # l = 0
         add     $s1 $s5 $0          # r = len_list
@@ -586,7 +591,7 @@ end:
         li      $t2 2               # temp = 2
         div     $s2 $s2 $t2         # m = m/2
         add     $s2 $s2 $s0         # m = m + l
-        la      $a0 msg
+        la      $a0 m_msg
         call    print
         add     $a0 $s2 $0          # arg1 = m
         call    println_hex
@@ -595,20 +600,29 @@ end:
         get_hcb
     #     if err != 0: jump find_index_loop_end (ie there was an error return not found)
         bne     $v1 $0 find_index_loop_end
-        add     $t0 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)
-        lw      $t1 0($t0)          # val = 0(addr of the element) ie the mem_id of m
+        add     $s4 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)
+        lw      $s3 8($s4)          # val = 0(addr of the element) ie the mem_id of m
+        la      $a0 cid_msg
+        call    print
+        add     $a0 $s3 $0          # arg1 = m
+        call    println_hex
+        #lw      $s3 0($s4)          # val = 0(addr of the element) ie the mem_id of m
     #     if val = mem_id: jump find_index_found
-        beq     $t1 $s7 find_index_found
+        beq     $s3 $s7 find_index_found
     #     if val > mem_id: jump find_index_val_gt_mem_id
-        bgt     $t1 $s7 find_index_val_gt_mem_id
+        bgt     $s3 $s7 find_index_val_gt_mem_id
     #     else: val < mem_id
+        la      $a0 bigger_msg
+        call    println
         addi    $s0 $s2 1           # l = m + 1
         j       find_index_loop
     find_index_val_gt_mem_id:
+        la      $a0 smaller_msg
+        call    println
         sub     $s1 $s2 1           # r = m - 1
         j       find_index_loop
     find_index_found:
-        la      $a0 msg
+        la      $a0 m_msg
         call    print
         add     $a0 $s2 $0          # arg1 = m
         call    println_hex
@@ -621,7 +635,12 @@ end:
         return
     .kdata
     start_msg: .asciiz "find index start"
-    msg: .asciiz "m = "
+    m_msg: .asciiz "m = "
+    id_msg: .asciiz "id = "
+    cid_msg: .asciiz "cid = "
+    bigger_msg: .asciiz "cid is bigger than m"
+    smaller_msg: .asciiz "cid is smaller than m"
+    
     .ktext
     }
     
@@ -700,7 +719,7 @@ end:
         call    move_hcb_up         # move the HCB into its new location
         
         addu    $a0 $s6 $0
-        call    println_hex
+        #call    println_hex
         addu    $v0 $s6 $0
         return
     
@@ -748,10 +767,15 @@ end:
     #     save_hcb
     #     compact(block_addr, block_amt)
         addu    $s7 $a0 $0          # mem_id = $s7
+        la      $a0 id_msg
+        call    print
+        add     $a0 $s7 $0
+        call    println_hex
+        add     $a0 $s7 $0
         call    find_index
         beqz    $v0 free_error2      # if not found: jump free_error
         addu    $s6 $v1 $0          # index = $s6
-        la      $a0 msg
+        la      $a0 index_msg
         call    print
         add     $a0 $s6 $0
         call    println_hex
@@ -769,7 +793,7 @@ end:
         addu    $a0 $s6 $0
         del_hcb
         #call    del_hcb_list_elem   # del_hcb_list_elem(index)
-        call    println_hex
+        #call    println_hex
         
         addu    $s7 $s0 $0          # $s7 = block_addr
         addu    $s6 $s1 $0          # $s6 = block_amt
@@ -781,7 +805,8 @@ end:
         addu    $a0 $s7 $0
         addu    $a1 $s6 $0
         call    compact             # compact(block_addr, block_amt)
-        
+        la      $a0 freed_msg
+        call    println
         return
     free_error:
         la      $a0 error_msg
@@ -795,7 +820,9 @@ end:
         .data
     error_msg: .asciiz "Get HCB error\n"
     error_msg2: .asciiz "Find Index Error in Free\n"
-    msg: .asciiz "$s6 = "
+    index_msg: .asciiz "index = "
+    id_msg: .asciiz "id = "
+    freed_msg: .asciiz "freed\n"
         .text
     }
 }

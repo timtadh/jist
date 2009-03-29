@@ -41,11 +41,15 @@ __start:
     initialize_heap $t0 $t1
     addu    $s0 $0 4
     alloc   $s0 $s1
-    #alloc   $s0 $s3
-    free    $s1
     alloc   $s0 $s2
+    alloc   $s0 $s3
+    alloc   $s0 $s4
+    alloc   $s0 $s5
+    free    $s1
     free    $s2
-    #free    $s3
+    free    $s3
+    free    $s4
+    free    $s5
     
     load_user_programs
     la      $s0  user_program_locations
