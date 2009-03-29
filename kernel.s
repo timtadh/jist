@@ -2,6 +2,7 @@
 # A generalized exception handler adapted from exception.s
 
 #include kernel_data.s
+#include memory_manager.s
 #include start.s
 #include interrupt_handler.s
     
