@@ -179,16 +179,54 @@
 #define get_hcb local
     add     $s7 $a0 $0          # $s0 = index
     load_hcb                    # load the HCB
-#     if index < len_list: jump get_hcb_list_elem_index_in_list
-    blt     $s7 $s5 get_hcb_list_elem_index_in_list
+#     if index < len_list: jump index_in_list
+    add     $a0 $s7 $0          # $s0 = index
+    call    println_hex
+    add     $a0 $s5 $0          # $s0 = index
+    call    println_hex
+    ble     $s7 $s5 index_in_list
     add     $v0 $0 $0           # addr = 0
     addi    $v1 $0 1            # error = 1
     j       end
-get_hcb_list_elem_index_in_list:
+index_in_list:
     addi    $t0 $s7 5           # i_bytes = index + 5
     words_to_bytes $t0
     add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
     add     $v1 $0 $0           # error = 0 (success!)
+end:
+#end
+
+#define del_hcb local
+    addu    $s7 $a0 $0          # put the index into $s7
+    call    println_hex
+    load_hcb
+    get_hcb
+    #call get_hcb_list_elem      # get the addr of the element
+#     if err: jump del_hcb_list_elem_error
+    bne     $v1 $0 del_hcb_list_elem_error
+    addu    $t0 $v0 $0          # to_addr = $t0
+    addu    $t1 $t1 12          # from_addr = to_addr + 3*4
+    addu    $t2 $s1 $0          # last_addr = size_HCB
+    hcbtop  $t2 $s0 $t2         # get the hcbtop using a macro, last_addr = $t2
+del_hcb_list_elem_loop:
+#     if from_addr > last_addr: jump del_hcb_list_elem_loop_end
+    bgt     $t1 $t2 del_hcb_list_elem_loop_end
+    lw      $t3 0($t1)          # lw      temp 0(from_addr)
+    sw      $t3 0($t0)          # sw      temp 0(to_addr)
+    addu    $t1 $t1 4           # from_addr += 4
+    addu    $t0 $t0 4           # to_addr += 4
+    j       del_hcb_list_elem_loop
+del_hcb_list_elem_loop_end:
+    subu    $s5 $s5 1           # len_list -= 1
+    subu    $s1 $s1 3           # size_HCB -= 3
+    addu    $s4 $s4 3           # free += 3
+    save_hcb
+    
+    add     $v0 $0 $0           # error = 0 success!
+    j       end
+del_hcb_list_elem_error:
+    addi    $v0 $0 1            # move error = 1 to output
+    j       end
 end:
 #end
 
@@ -221,7 +259,7 @@ end:
         li      $s2 5               # the HCB start out as five words long
         sw      $s2 0($s0)          # store the size of HCB in words in the HCB
         
-        li      $t0 1               # the first memory id is one
+        li      $t0 0               # the first memory id is one
         sw      $t0 4($s0)          # store the next memory id in the HCB
         
         
@@ -427,8 +465,9 @@ end:
     #     size_HCB -= 3
     #     free += 3
     #     save_hcb
-        load_hcb
         addu    $s7 $a0 $0          # put the index into $s7
+        call    print_hex
+        load_hcb
         call get_hcb_list_elem      # get the addr of the element
     #     if err: jump del_hcb_list_elem_error
         bne     $v1 $0 del_hcb_list_elem_error
@@ -695,7 +734,9 @@ end:
         lw      $s1 8($t0)          # block_amt = $s1
         
         addu    $a0 $s6 $0
-        call    del_hcb_list_elem   # del_hcb_list_elem(index)
+        del_hcb
+        #call    del_hcb_list_elem   # del_hcb_list_elem(index)
+        call    println_hex
         
         addu    $s7 $s0 $0          # $s7 = block_addr
         addu    $s6 $s1 $0          # $s6 = block_amt
@@ -708,8 +749,14 @@ end:
         addu    $a1 $s6 $0
         call    compact             # compact(block_addr, block_amt)
         
-    free_error:
         return
+    free_error:
+        la      $a0 error_msg
+        call    println
+        return
+        .data
+    error_msg: .asciiz "Free Error\n"
+        .text
     }
 }
 
