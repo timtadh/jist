@@ -45,7 +45,10 @@ empty: .asciiz ""
     la      $a0 empty
     call    println
 }
-    
+    la      $t0 kernel_data
+    la      $t1 kernel_data_end
+    subu    $t1 $t1 $t0
+    initialize_heap $t0 $t1
     #call    print_hex
     #call    proc
     #wait

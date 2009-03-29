@@ -115,7 +115,7 @@ println_hex:
 {
     call    print_hex
     li      $a0 10
-    li      $v0 11             # 4 is the print_char syscall.
+    li      $v0 11              # 4 is the print_char syscall.
     syscall                     # do the syscall.
     return
 }

@@ -264,3 +264,21 @@ alread_zero:
     __restore_args
 #end
 
+# initialize_heap(start, len) --> Null
+#
+#     treat this as procedure call because it is
+#
+#define initialize_heap global
+    addu    $a0 %1 $0
+    addu    $a1 %2 $0
+    lui     $t0 0x8000
+    ori     $t0 0x0000
+    __save_frame
+    la      $ra ret
+    jr      $t0
+ret:
+    __restore_frame
+#end
+
+# free(mem_id) --> Null
+# alloc(amt) --> $v0 = mem_id

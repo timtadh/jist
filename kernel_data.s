@@ -4,6 +4,8 @@
     .globl  proc_limit
     .globl  proc_list
     .globl  user_program_locations
+    .globl  kernel_data
+    .globl  kernel_data_end
     .kdata 
 user_program_locations:
             #repeat 16

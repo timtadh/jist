@@ -181,8 +181,14 @@
 {
         
         .ktext 0x80000000
-    init_heap: 
-        j    initialize_heap
+    __initialize_heap: 
+        j   initialize_heap
+        .ktext 0x80000004
+    __alloc:
+        j   alloc
+        .ktext 0x80000008
+    __free:
+        j   free
 
         .ktext
     # initialize_heap(start, len) --> Null
@@ -191,6 +197,7 @@
     #     initializes the heap and put the addr of the HCB in HCB_ADDR
     initialize_heap:
     {
+        
         addu    $s0 $a0 $0
         sw      $s0 HCB_ADDR        # store the location of the HCB in the HCB_ADDR label
         
