@@ -328,6 +328,23 @@ ret:
 #end
 
 
+# get_addr(mem_id) --> addr
+#
+#     treat this as procedure call because it is
+#
+#define get_addr global
+    addu    $a0 %1 $0
+    lui     $t0 0x8000
+    ori     $t0 0x000c
+    __save_frame
+    la      $ra ret
+    jr      $t0
+ret:
+    __restore_frame
+    addu    %2 $v1 $0
+#end
+
+
 # print_hcb
 #
 #     treat this as procedure call because it is

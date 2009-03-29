@@ -81,6 +81,9 @@ __start:
     alloc   $s0 $s1
     alloc   $s0 $s3
     
+    get_addr $s3 $a0
+    call    println_hex
+    
     free    $s3
     free    $s2
     free    $s5

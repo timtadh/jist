@@ -387,6 +387,8 @@ end:
     __free:
         j   free
         .ktext 0x8000000c
+    __get_addr:
+        j   get_addr
     
     
     # initialize_heap(start, len) --> Null
@@ -443,21 +445,32 @@ end:
     #     sw      move_to_addr HCB_ADDR
         addu    $s7 $a0 $0          # move the amt to $s7
         mul     $s7 $s7 4
+        addu    $a0 $s7 $0
+        call    println_hex
         load_hcb
         addu    $t0 $s1 $0          # move size_HCB into $t0
-        hcbtop  $t0 $s0 $t0         # move_from_addr = $t0
+        hcbtop  $t0 $s0 $0         # move_from_addr = $t0
+        addu    $s3 $t0 $s7
+        addu    $t1 $s3 $0
     move_hcb_up_loop:
-    #   if hcb_addr > move_from_addr: jump move_hcb_up_loop_end
+    #   if hcb_addr < move_from_addr: jump move_hcb_up_loop_end
         bgt     $s0 $t0 move_hcb_up_loop_end
-        addu    $t1 $t0 $s7         # move_to_addr = move_from_addr + amt
+        addu    $t1 $t1 4           # move_to_addr = move_from_addr + amt
         lw      $t2 0($t0)          # lw      temp 0(move_from_addr)
         sw      $t2 0($t1)          # sw      temp 0(move_to_addr)
         subu    $t0 $t0 4           # move_from_addr = move_from_addr - 4
         j   move_hcb_up_loop
     move_hcb_up_loop_end:
     #     sw      move_to_addr HCB_ADDR
-        sw      $t1 HCB_ADDR
-    
+        sw      $s3 HCB_ADDR
+        
+        lw      $s0 HCB_ADDR        # load the address of the HCB into $s0\
+        addu    $a0 $s0 $0
+        #call    println_hex
+        subu    $s0 $s0 32
+        lw      $a0 0($s0)          # load the size_HCB into $s1
+        #call    println_hex
+        
         return
     }
     
@@ -781,7 +794,8 @@ end:
         addu    $s7 $a0 $0          # move the amt to $s7
         
         load_hcb                    # load the HCB into $s0 - $s5 see documentation of macro
-        
+        addu    $a0 $s0 $0
+        call    println_hex
         
         
         addu    $t0 $s1 $0          # move size_HCB into $t0
@@ -814,7 +828,7 @@ end:
 
         
         #addu    $s6 $s0 $0
-        addu    $a0 $s0 $0
+        la      $a0 HCB_ADDR
         addu    $a1 $s7 $0
         #add_hcb_list_elem |-> replaces: call    add_hcb_list_elem
         add_hcb
@@ -929,6 +943,41 @@ end:
     id_msg: .asciiz "id = "
     freed_msg: .asciiz "freed\n"
         .text
+    }
+    
+    # get_addr(id) --> $v0 = found?, $v1 = addr
+    get_addr:
+    {
+        addu    $s7 $a0 $0          # mem_id = $s7
+        call    find_index
+        beqz    $v0 id_not_found      # if not found: jump free_error
+        addu    $s6 $v1 $0          # index = $s6
+        addu    $a0 $s6 $0
+        get_hcb
+        bne     $v1 $0 hcb_error   # if err: jump free_error
+        addu    $s0 $v0 $0          # addr = $s0
+        lw      $s1 4($s0)          # load the address of the memory into $s1
+        
+        addu    $v0 $0 1
+        addu    $v1 $s1 $0
+        return
+        
+    id_not_found:
+        la      $a0 id_not_found_msg
+        call    println
+        addu    $v0 $0 $0
+        addu    $v1 $0 $0
+        return
+    hcb_error:
+        la      $a0 hcb_error_msg
+        call    println
+        addu    $v0 $0 $0
+        addu    $v1 $0 $0
+        .data
+    id_not_found_msg: .asciiz "Could not find id"
+    hcb_error_msg: .asciiz "Could not get hcb element for index"
+        .text
+        return
     }
 }
 
