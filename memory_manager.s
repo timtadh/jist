@@ -197,7 +197,7 @@
     j       end
 index_in_list:
     mul     $t1 $s7 3
-    addi    $t0 $t1 5           # i_bytes = index + 5
+    addi    $t0 $t1 7           # i_bytes = index + 5
     words_to_bytes $t0
     add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
     add     $v1 $0 $0           # error = 0 (success!)
@@ -236,27 +236,60 @@ end:
 #define del_hcb local
         __save_frame
         addu    $s7 $a0 $0          # put the index into $s7
+        {
+            ##print_hcb
+            load_hcb
+            la      $a0 del_index_msg
+            call    print
+            addu    $a0 $s7 $0
+            call    println_hex
+            la      $a0 hcb_addr_start_msg
+            call    print
+            addu    $a0 $s0 $0
+            call    println_hex
+            la      $a0 hcb_addr_end_msg
+            call    print
+            addu    $t2 $s1 $0          # last_addr = size_HCB
+            hcbtop  $a0 $s0 $t2         # get the hcbtop using a macro, last_addr = $t2
+            call    println_hex
+            la      $a0 index_addr_msg
+            call    print
+            addu    $a0 $s7 $0
+            get_hcb
+            addu    $a0 $v0 $0
+            quickstore $a0
+            call    println_hex
+            la      $a0 old_index_msg
+            call    print
+            quickrestore $t0
+            quickstore $t0
+            lw      $a0 0($t0)
+            call    println_hex
+            lw      $a0 48($t0)
+            call    println_hex
+            
+            
+            #call    println_hex
+        }
         load_hcb
-        addu    $a0 $s7 $0
-        #call    println_hex
         addu    $a0 $s7 $0
         get_hcb
         #call get_hcb_list_elem      # get the addr of the element
     #     if err: jump del_hcb_list_elem_error
         bne     $v1 $0 del_hcb_list_elem_error
         addu    $t0 $v0 $0          # to_addr = $t0
-        addu    $t1 $t1 12          # from_addr = to_addr + 3*4
+        addu    $t1 $t0 12          # from_addr = to_addr + 3*4
         addu    $t2 $s1 $0          # last_addr = size_HCB
         hcbtop  $t2 $s0 $t2         # get the hcbtop using a macro, last_addr = $t2
-    del_hcb_list_elem_loop:
+    loop:
     #     if from_addr > last_addr: jump del_hcb_list_elem_loop_end
-        bgt     $t1 $t2 del_hcb_list_elem_loop_end
+        bgt     $t1 $t2 loop_end
         lw      $t3 0($t1)          # lw      temp 0(from_addr)
         sw      $t3 0($t0)          # sw      temp 0(to_addr)
         addu    $t1 $t1 4           # from_addr += 4
         addu    $t0 $t0 4           # to_addr += 4
-        j       del_hcb_list_elem_loop
-    del_hcb_list_elem_loop_end:
+        j       loop
+    loop_end:
         subu    $s5 $s5 1           # len_list -= 1
         subu    $s1 $s1 3           # size_HCB -= 3
         addu    $s4 $s4 3           # free += 3
@@ -266,6 +299,12 @@ end:
         j       end
     .kdata
     del_error_msg: .asciiz "del error"
+    del_index_msg: .asciiz "del index = "
+    hcb_addr_start_msg: .asciiz "HCB address start_addr = "
+    hcb_addr_end_msg: .asciiz "HCB address end_addr = "
+    index_addr_msg: .asciiz "Index address = "
+    new_index_msg: .asciiz "new index = "
+    old_index_msg: .asciiz "old index = "
     .ktext
     del_hcb_list_elem_error:
         la      $a0 del_error_msg
@@ -273,6 +312,11 @@ end:
         addi    $v0 $0 1            # move error = 1 to output
         j       end
     end:
+            la      $a0 new_index_msg
+            call    print
+            quickrestore $t0
+            lw      $a0 0($t0)
+            call    println_hex
     __restore_frame
 #end
 
@@ -288,8 +332,9 @@ end:
         .ktext 0x80000008
     __free:
         j   free
-
-        .ktext
+        .ktext 0x8000000c
+    
+    
     # initialize_heap(start, len) --> Null
     #     start = the start address
     #     len = the length of the heap in words
@@ -582,6 +627,10 @@ end:
         add     $a0 $s7 $0          # arg1 = m
         call    println_hex
         load_hcb
+        la      $a0 len_msg
+        call    print
+        add     $a0 $s5 $0
+        call    println_hex
         add     $s0 $0 $0           # l = 0
         add     $s1 $s5 $0          # r = len_list
     find_index_loop:
@@ -601,7 +650,7 @@ end:
     #     if err != 0: jump find_index_loop_end (ie there was an error return not found)
         bne     $v1 $0 find_index_loop_end
         add     $s4 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)
-        lw      $s3 8($s4)          # val = 0(addr of the element) ie the mem_id of m
+        lw      $s3 0($s4)          # val = 0(addr of the element) ie the mem_id of m
         la      $a0 cid_msg
         call    print
         add     $a0 $s3 $0          # arg1 = m
@@ -640,6 +689,7 @@ end:
     cid_msg: .asciiz "cid = "
     bigger_msg: .asciiz "cid is bigger than m"
     smaller_msg: .asciiz "cid is smaller than m"
+    len_msg: .asciiz "length of list = "
     
     .ktext
     }

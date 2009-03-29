@@ -328,3 +328,52 @@ ret:
 #end
 
 
+# print_hcb
+#
+#     treat this as procedure call because it is
+#
+#define print_hcb global
+    __save_frame
+        la      $a0 hcb_msg
+        call    println
+        lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
+        la      $a0 hcb_addr_msg
+        call    print
+        addu    $a0 $s0 $0
+        call    println_hex
+        la      $a0 size_HCB_msg
+        call    print
+        lw      $a0 0($s0)          # load the size_HCB into $s1
+        call    println_hex
+        la      $a0 next_id_msg
+        call    print
+        lw      $a0 4($s0)          # load the next_id into $s2
+        call    println_hex
+        la      $a0 top_msg
+        call    print
+        lw      $a0 8($s0)          # load the top into $s3
+        call    println_hex
+        la      $a0 freed_msg
+        call    print
+        lw      $a0 12($s0)         # load the free into $s4
+        call    println_hex
+        la      $a0 len_list_msg
+        call    print
+        lw      $a0 16($s0)         # load the len_list into $s5
+        call    println_hex
+        la      $a0 empty
+        call    println
+        j       end
+        .kdata
+        hcb_msg: .asciiz "\nHCB:"
+        hcb_addr_msg: .asciiz "    HCB address = "
+        size_HCB_msg: .asciiz "    size_HCB = "
+        next_id_msg: .asciiz "    next_id = "
+        top_msg: .asciiz "    top = "
+        freed_msg: .asciiz "    freed = "
+        len_list_msg: .asciiz "    len_list = "
+        empty: .asciiz ""
+        .ktext
+    end:
+    __restore_frame
+#end

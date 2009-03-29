@@ -39,12 +39,18 @@ __start:
     subu    $t1 $t1 $t0
     sra     $t1 $t1 2
     initialize_heap $t0 $t1
+    
+    #print_hcb
+    
     addu    $s0 $0 4
     alloc   $s0 $s1
     alloc   $s0 $s2
     alloc   $s0 $s3
     alloc   $s0 $s4
     alloc   $s0 $s5
+    
+    print_hcb
+    
     free    $s1
     free    $s2
     free    $s3
