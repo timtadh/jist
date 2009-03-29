@@ -64,6 +64,16 @@
     __restore_frame
 #end
 
+# call_reg reg
+#     label : label you are jumping to
+#define call_reg global
+    __save_frame
+    la      $ra ret
+    jr      %1
+ret:
+    __restore_frame
+#end
+
 # __min_save
 #     most minimal stack frame save
 #define __min_save

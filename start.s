@@ -39,6 +39,9 @@ __start:
     subu    $t1 $t1 $t0
     sra     $t1 $t1 2
     initialize_heap $t0 $t1
+    addu    $t0 $0 1
+    alloc   $t0 $t1
+    free    $t1
     
     load_user_programs
     la      $s0  user_program_locations
@@ -49,8 +52,6 @@ __start:
     lw      $s1  0($s0)
     
     disable_clock_interrupt
-    addu    $t0 $0 1
-    alloc   $t0 $t1
     enable_clock_interrupt
     j       $s1                 # start main program
     

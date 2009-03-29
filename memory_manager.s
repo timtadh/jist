@@ -176,6 +176,21 @@
     subu    %1 %1 4             # subtract 4 to get the actual last addr
 #end
 
+#define get_hcb local
+    add     $s7 $a0 $0          # $s0 = index
+    load_hcb                    # load the HCB
+#     if index < len_list: jump get_hcb_list_elem_index_in_list
+    blt     $s7 $s5 get_hcb_list_elem_index_in_list
+    add     $v0 $0 $0           # addr = 0
+    addi    $v1 $0 1            # error = 1
+    j       end
+get_hcb_list_elem_index_in_list:
+    addi    $t0 $s7 5           # i_bytes = index + 5
+    words_to_bytes $t0
+    add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
+    add     $v1 $0 $0           # error = 0 (success!)
+end:
+#end
 
 
 {
@@ -486,7 +501,22 @@
         div     $s2 $s2 $t2         # m = m/2
         add     $s2 $s2 $s0         # m = m + l
         add     $a0 $s2 $0          # arg1 = m
-        call    get_hcb_list_elem   # get the addr of that list element
+        #call    get_hcb_list_elem   # get the addr of that list element
+        {
+            add     $s7 $a0 $0          # $s0 = index
+            load_hcb                    # load the HCB
+        #     if index < len_list: jump get_hcb_list_elem_index_in_list
+            blt     $s7 $s5 get_hcb_list_elem_index_in_list
+            add     $v0 $0 $0           # addr = 0
+            addi    $v1 $0 1            # error = 1
+            j       end
+        get_hcb_list_elem_index_in_list:
+            addi    $t0 $s7 5           # i_bytes = index + 5
+            words_to_bytes $t0
+            add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
+            add     $v1 $0 $0           # error = 0 (success!)
+        end:
+        }
     #     if err != 0: jump find_index_loop_end (ie there was an error return not found)
         bne     $v1 $0 find_index_loop_end
         add     $t0 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)
@@ -657,7 +687,8 @@
         addu    $s6 $v1 $0          # index = $s6
         
         addu    $a0 $s6 $0
-        call    get_hcb_list_elem   # get_hcb_list_elem(index)s
+        #call    get_hcb_list_elem   # get_hcb_list_elem(index)s
+        get_hcb
         bne     $v1 $0 free_error   # if err: jump free_error
         addu    $t0 $v0 $0          # addr = $t0
         lw      $s0 4($t0)          # block_addr = $s0
