@@ -196,6 +196,9 @@ index_in_list:
 end:
 #end
 
+# del_hcb_list_elem(index) --> $v0 = error
+    #     mem_id : the mem_id you want to remove from the list
+    #     error : 0 if success error code otherwise
 #define del_hcb local
     addu    $s7 $a0 $0          # put the index into $s7
     call    println_hex
