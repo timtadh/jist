@@ -332,6 +332,7 @@
         addu    $s6 $a0 $0
         addu    $s7 $a1 $0
         load_hcb
+        addu    $t1 $s2 $0
         addu    $s2 $s2 1           # next_id += 1
         addu    $s5 $s5 1           # len_list += 1
         addu    $s1 $s1 3           # size_HCB += 3
@@ -341,9 +342,12 @@
         sw      $t1 0($t0)          # sw      mem_id 0(end_list)
         sw      $s6 4($t0)          # sw      addr 4(end_list)
         sw      $s7 8($t0)          # sw      size 8(end_list)
+        addu    $a0 $s6 $0
+        call    println_hex
+        addu    $a0 $s7 $0
+        call    println_hex
         
         addu    $v0 $t1 $0          # return mem_id
-        return
     }
     
     # get_hcb_list_elem(index) --> $v0 = addr, $v1 = error
