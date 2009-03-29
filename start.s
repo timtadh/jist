@@ -49,7 +49,7 @@ __start:
     alloc   $s0 $s4
     alloc   $s0 $s5
     
-    print_hcb
+#     print_hcb
     
     free    $s1
     free    $s2
