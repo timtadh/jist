@@ -178,8 +178,14 @@
 
 #define get_hcb local
     add     $s7 $a0 $0          # $s0 = index
+    call    println_hex
     load_hcb                    # load the HCB
 #     if index < len_list: jump index_in_list
+    .kdata
+    empty: .asciiz ""
+    .ktext
+    la      $a0 empty
+    call    println
     add     $a0 $s7 $0          # $s0 = index
     call    println_hex
     add     $a0 $s5 $0          # $s0 = index
@@ -200,37 +206,44 @@ end:
     #     mem_id : the mem_id you want to remove from the list
     #     error : 0 if success error code otherwise
 #define del_hcb local
-    addu    $s7 $a0 $0          # put the index into $s7
-    call    println_hex
-    load_hcb
-    get_hcb
-    #call get_hcb_list_elem      # get the addr of the element
-#     if err: jump del_hcb_list_elem_error
-    bne     $v1 $0 del_hcb_list_elem_error
-    addu    $t0 $v0 $0          # to_addr = $t0
-    addu    $t1 $t1 12          # from_addr = to_addr + 3*4
-    addu    $t2 $s1 $0          # last_addr = size_HCB
-    hcbtop  $t2 $s0 $t2         # get the hcbtop using a macro, last_addr = $t2
-del_hcb_list_elem_loop:
-#     if from_addr > last_addr: jump del_hcb_list_elem_loop_end
-    bgt     $t1 $t2 del_hcb_list_elem_loop_end
-    lw      $t3 0($t1)          # lw      temp 0(from_addr)
-    sw      $t3 0($t0)          # sw      temp 0(to_addr)
-    addu    $t1 $t1 4           # from_addr += 4
-    addu    $t0 $t0 4           # to_addr += 4
-    j       del_hcb_list_elem_loop
-del_hcb_list_elem_loop_end:
-    subu    $s5 $s5 1           # len_list -= 1
-    subu    $s1 $s1 3           # size_HCB -= 3
-    addu    $s4 $s4 3           # free += 3
-    save_hcb
-    
-    add     $v0 $0 $0           # error = 0 success!
-    j       end
-del_hcb_list_elem_error:
-    addi    $v0 $0 1            # move error = 1 to output
-    j       end
-end:
+        addu    $s7 $a0 $0          # put the index into $s7
+        load_hcb
+        addu    $a0 $s7 $0
+        call    println_hex
+        addu    $a0 $s7 $0
+        get_hcb
+        #call get_hcb_list_elem      # get the addr of the element
+    #     if err: jump del_hcb_list_elem_error
+        bne     $v1 $0 del_hcb_list_elem_error
+        addu    $t0 $v0 $0          # to_addr = $t0
+        addu    $t1 $t1 12          # from_addr = to_addr + 3*4
+        addu    $t2 $s1 $0          # last_addr = size_HCB
+        hcbtop  $t2 $s0 $t2         # get the hcbtop using a macro, last_addr = $t2
+    del_hcb_list_elem_loop:
+    #     if from_addr > last_addr: jump del_hcb_list_elem_loop_end
+        bgt     $t1 $t2 del_hcb_list_elem_loop_end
+        lw      $t3 0($t1)          # lw      temp 0(from_addr)
+        sw      $t3 0($t0)          # sw      temp 0(to_addr)
+        addu    $t1 $t1 4           # from_addr += 4
+        addu    $t0 $t0 4           # to_addr += 4
+        j       del_hcb_list_elem_loop
+    del_hcb_list_elem_loop_end:
+        subu    $s5 $s5 1           # len_list -= 1
+        subu    $s1 $s1 3           # size_HCB -= 3
+        addu    $s4 $s4 3           # free += 3
+        save_hcb
+        
+        add     $v0 $0 $0           # error = 0 success!
+        j       end
+    .kdata
+    del_error_msg: .asciiz "del error"
+    .ktext
+    del_hcb_list_elem_error:
+        la      $a0 del_error_msg
+        call    println
+        addi    $v0 $0 1            # move error = 1 to output
+        j       end
+    end:
 #end
 
 
@@ -730,7 +743,10 @@ end:
         
         addu    $a0 $s6 $0
         #call    get_hcb_list_elem   # get_hcb_list_elem(index)s
+        
+        addu    $a0 $s6 $0
         get_hcb
+        
         bne     $v1 $0 free_error   # if err: jump free_error
         addu    $t0 $v0 $0          # addr = $t0
         lw      $s0 4($t0)          # block_addr = $s0
@@ -759,6 +775,7 @@ end:
         return
         .data
     error_msg: .asciiz "Free Error\n"
+    error_msg2: .asciiz "Free Error 2\n"
         .text
     }
 }
