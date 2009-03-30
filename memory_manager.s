@@ -445,24 +445,31 @@ end:
     #     sw      move_to_addr HCB_ADDR
         addu    $s7 $a0 $0          # move the amt to $s7
         mul     $s7 $s7 4
-        addu    $a0 $s7 $0
-        call    println_hex
+        #addu    $a0 $s7 $0
+        #call    println_hex
+        
+        addu    $t0 $s1 $0
+        mul     $t0 $t0 4
+        addu    $t0 $s0 $t0
+        addu    $t1 $t0 $s7
         load_hcb
-        addu    $t0 $s1 $0          # move size_HCB into $t0
-        hcbtop  $t0 $s0 $0         # move_from_addr = $t0
-        addu    $s3 $t0 $s7
-        addu    $t1 $s3 $0
-    move_hcb_up_loop:
-    #   if hcb_addr < move_from_addr: jump move_hcb_up_loop_end
-        bgt     $s0 $t0 move_hcb_up_loop_end
-        addu    $t1 $t1 4           # move_to_addr = move_from_addr + amt
+        addu    $t0 $s1 $0
+        mul     $t0 $t0 4
+        addu    $t0 $s0 $t0
+        addu    $t1 $t0 $s7
+    loop:
+    #   if hcb_addr < move_from_addr: jump loop_end
+        bgt     $s0 $t0 loop_end
+        subu    $t1 $t1 4           # move_to_addr = move_from_addr + amt
         lw      $t2 0($t0)          # lw      temp 0(move_from_addr)
         sw      $t2 0($t1)          # sw      temp 0(move_to_addr)
         subu    $t0 $t0 4           # move_from_addr = move_from_addr - 4
-        j   move_hcb_up_loop
-    move_hcb_up_loop_end:
+        j   loop
+    loop_end:
     #     sw      move_to_addr HCB_ADDR
-        sw      $s3 HCB_ADDR
+        sw      $t1 HCB_ADDR
+        addu    $a0 $t1 $0
+#         call    println_hex
         
         lw      $s0 HCB_ADDR        # load the address of the HCB into $s0\
         addu    $a0 $s0 $0
@@ -472,6 +479,9 @@ end:
         #call    println_hex
         
         return
+        .data
+        amt_msg: .asciiz "amount = "
+        .text
     }
     
     # compact(hole_addr, hole_size) --> Null
@@ -500,8 +510,9 @@ end:
     #     }
         addu    $s6 $a0 $0          # $s6 = hole_addr
         addu    $s7 $a1 $0          # $s7 = hole_size
+        #call    println_hex
         load_hcb                    # load the control block
-        addu    $t0 $7 $0           # move hole_size into $t0
+        addu    $t0 $s7 $0           # move hole_size into $t0
         words_to_bytes $t0          # convert hole_size to bytes
         addu    $t1 $s6 $0          # to_addr = $t1
         addu    $t2 $s1 $0          # move size_HCB into $t0
@@ -795,7 +806,7 @@ end:
         
         load_hcb                    # load the HCB into $s0 - $s5 see documentation of macro
         addu    $a0 $s0 $0
-        call    println_hex
+#         call    println_hex
         
         
         addu    $t0 $s1 $0          # move size_HCB into $t0

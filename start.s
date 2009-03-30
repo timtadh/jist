@@ -43,52 +43,58 @@ __start:
     #print_hcb
     
     addu    $s0 $0 4
+    print_hcb
     alloc   $s0 $s1
-    alloc   $s0 $s2
-    alloc   $s0 $s3
-    alloc   $s0 $s4
-    alloc   $s0 $s5
+    print_hcb
+    free    $s1
+    print_hcb
+#     alloc   $s0 $s2
+#     print_hcb
+#     alloc   $s0 $s3
+#     print_hcb
+#     alloc   $s0 $s4
+#     alloc   $s0 $s5
     
+    #get_addr $s1 $a0
+    #call    println_hex
 #     print_hcb
     
-    free    $s1
-    free    $s2
-    free    $s3
-    free    $s4
-    free    $s5
+#     free    $s1
+#     free    $s2
+#     free    $s3
+#     free    $s4
+#     free    $s5
+#     
+    
+#     alloc   $s0 $s1
+#     alloc   $s0 $s2
+#     alloc   $s0 $s3
+#     alloc   $s0 $s4
+#     alloc   $s0 $s5
+    
+#     free    $s2
+#     free    $s1
+#     free    $s5
+#     free    $s3
+#     free    $s4
     
     
-    alloc   $s0 $s1
-    alloc   $s0 $s2
-    alloc   $s0 $s3
-    alloc   $s0 $s4
-    alloc   $s0 $s5
-    
-    free    $s2
-    free    $s1
-    free    $s5
-    free    $s3
-    free    $s4
+#     alloc   $s0 $s1
+#     alloc   $s0 $s2
+#     free    $s1
+#     alloc   $s0 $s3
+#     alloc   $s0 $s4
+#     free    $s3
+#     alloc   $s0 $s5
+#     alloc   $s0 $s1
+#     alloc   $s0 $s3
     
     
-    alloc   $s0 $s1
-    alloc   $s0 $s2
-    free    $s1
-    alloc   $s0 $s3
-    alloc   $s0 $s4
-    free    $s3
-    alloc   $s0 $s5
-    alloc   $s0 $s1
-    alloc   $s0 $s3
-    
-    get_addr $s3 $a0
-    call    println_hex
-    
-    free    $s3
-    free    $s2
-    free    $s5
-    free    $s4
-    free    $s1
+#     free    $s3
+#     free    $s2
+#     free    $s5
+#     free    $s4
+#     free    $s1
     
     
     load_user_programs
