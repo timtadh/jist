@@ -79,7 +79,7 @@ ret:
 #define __min_save
     sw      $fp 0($sp)          # save the old frame pointer
     addu    $fp $sp $0          # move the frame pointer to point at top of frame
-    subu    $sp $sp 12          # move the stack pointer down 32
+    subu    $sp $sp 12          # move the stack pointer down 12
     sw      $fp 8($sp)         # save the old stack pointer
     sw      $ra 4($sp)         # save the return address
 #end

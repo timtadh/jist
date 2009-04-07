@@ -1,5 +1,4 @@
-
-
+#include mappedio.s
 
     .text
 # print msg_addr

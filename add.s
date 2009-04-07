@@ -7,7 +7,11 @@
 #       $t2     - used to hold the sum of the $t1 and $t2.
 #       $v0     - syscall parameter and return value.
 #       $a0     - syscall parameter.
+
+#include stdlib.s
     .globl main
+    .data
+msg_str: .asciiz "adder entered"
     .text
 main:
         
@@ -23,7 +27,6 @@ main:
         li      $t0, 0
         li      $t1, 4
 loop:   
-        
         add     $a0, $gp, $t0
         li      $v0, 4          # load syscall print_int into $v0.
         syscall                 # make the syscall.

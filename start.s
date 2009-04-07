@@ -38,16 +38,16 @@ __start:
     la      $t1 kernel_data_end
     subu    $t1 $t1 $t0
     sra     $t1 $t1 2
-    initialize_heap $t0 $t1
-    
-    #print_hcb
-    
-    addu    $s0 $0 4
-    print_hcb
-    alloc   $s0 $s1
-    print_hcb
-    free    $s1
-    print_hcb
+    # initialize_heap $t0 $t1
+    # 
+    # #print_hcb
+    # 
+    # addu    $s0 $0 4
+    # print_hcb
+    # alloc   $s0 $s1
+    # print_hcb
+    # free    $s1
+    # print_hcb
 #     alloc   $s0 $s2
 #     print_hcb
 #     alloc   $s0 $s3
@@ -103,7 +103,7 @@ __start:
     add     $a0  $t0  $0
     call    load_process
     la      $s0  user_program_locations
-    lw      $s1  0($s0)
+    lw      $s1  4($s0)
     
     disable_clock_interrupt
     enable_clock_interrupt
