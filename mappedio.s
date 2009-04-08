@@ -16,46 +16,83 @@ read_char:
 #       return
 #     else
 #       loop
-        add   $t0 $zero $zero  # create the address we need to read - start by zeroing it out
-        lui   $t0 0xffff       # and put on the first 16 bits
-        add   $t0 $zero $zero  # 
-        addi  $t1 2            # $t1 = 2
-        sw    $t0 0($t1)          # sets the interrupt enable
-blocking_read_loop:  
-        andi  $t2 $t0 1        # read it, and it with 1, store in another temp.
-        beq   $0 $t2 blocking_read_loop # if the LSB is 0, go back to the top
-#        addi  $t0 $0 4         # else, add 4 to $t0 (one word off 0xffff0000 - 0xffff0004) - removed to access by offset
-        lw    $v0 4($t0)          # load it into the return register
-    
-        return                 #return from function call
+
+
+    li  $t0 0xffff0000 # init t0 to base address for mmio registers
+blocking_read_loop:
+    lw   $t3 0($t0)
+    andi $t3 $t3 1
+    beq  $t3 $zero blocking_read_loop
+    lw   $v0 4($t0)
+    return
 }
+
+
+#       add   $t0 $zero $zero  # create the address we need to read - start by zeroing it out
+#       lui   $t0 0xffff       # and put on the first 16 bits
+#        addi  $t1 $zero 2      # $t1 = 2
+#        sw    $t1 0($t0)       # sets the interrupt enable: 0xffff0000 = 0000 0000 0000 0000 0000 0000 0000 0010
+#        add   $t2 $zero $zero  # zero out the test reg
+#blocking_read_loop:  
+#        andi  $t2 $t0 1        # read it, and it with 1, store in the test reg.
+#        beq   $zero $t2 blocking_read_loop # if the LSB is 0, go back to the top: we only get anywhere if $t2 = 0000 0000 0000 0000 0000 0000 0000 0001
+#        lw    $v0 4($t0)       # load 0xffff0004 into the return register
+#    
+#        return                 #return from function call
+#}
 
 # write_char(char in $a0) --> Null. 
 #     
 #     char : the character to print. Blocks until a character is written.
 write_char:
 {
+
+    #load_arg 1 $t1     # get arg
+    li  $t0 0xffff0008    # init t0 to base address for mmio registers
+blocking_write_loop:
+    lw   $t3 0($t0)
+    andi $t3 $t3 1       # get ready bit
+    beq  $t3 $zero blocking_write_loop
+    sw   $a0 4($t0)     # store output into the tx register
+    return
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ## PSUEDOCODE for this function
-#     load 0xffff0006
-#     if (0xffff0000 & 1)
-#       load 0xffff0004 into $v0
+#     load 0xffff0008
+#     if (0xffff0008 & 1)
+#       load 0xffff000c into $a0
 #       return
 #     else
 #       jump back to the top.
-        add    $t0 $0 $0           # create the address we need to read - start by zeroing it out
-        lui   $t0 0xffff       # and put on the first 16 bits. we get 0xffff0000 here.
-        addi  $t0 8
-        add    $t2 $0 $0
-        addi  $t2 $t2 2
-        sw    $t0 0($t1)
-blocking_write_loop:
-        andi  $t1 $t0 1         # and it with 1, store in itself temp.
-        beq   $0  $t1 blocking_write_loop # if the LSB is 0, go back a bit
-#        addi  $t0 $t0 4        # else, add 4 to $t1 (one word off 0xffff0008 - 0xffff000c) - removed since we can access by offset
-        lw    $v0 4($t1)       # load it into the return register 
+#        add   $t0 $zero $zero # create the address we need to read - start by zeroing it out
+#        lui   $t0 0xffff      # and put on the first 16 bits. we get 0xffff0000 here.
+#        addi  $t2 $zero 2     # set mask to 2
+#        sw    $t2 8($t0)      # write the interrupt enable: 0xffff0008 = 0000 0000 0000 0000 0000 0000 0000 0010
+#        add   $t1 $zero $zero # zero out the test reg
+#blocking_write_loop:
+#	lw    $t3 0($t0)      #load contents of $t0
+#        andi  $t1 $t3 1         # and it with 1, store in the test reg.
+#        beqz  $t1 blocking_write_loop # if the LSB is 0, go back a bit: we only get anywhere if $t1 = 0000 0000 0000 0000 0000 0000 0000 0001
+#        #load_arg 0 $a0
+#        sw    $a0 12($t0)       # store it into the tx register 
     
-        return                 #return from function call
-}
+#        return                 #return from function call
+#}
 
 # end write_char
 
