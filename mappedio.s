@@ -18,10 +18,11 @@ read_char:
 #       loop
 
 
-    lui  $t0 0xffff # init t0 to base address for mmio registers
+    li  $t0 0xffff0000 # init t0 to base address for mmio registers
 blocking_read_loop:
     lw   $t3 0($t0)
-    bnez $t3 blocking_read_loop
+    andi $t3 $t3 1
+    beq  $t3 $zero blocking_read_loop
     lw   $v0 4($t0)
     return
 }
