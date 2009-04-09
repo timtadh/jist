@@ -28,8 +28,6 @@ blocking_read_loop:
 #     char : the character to print. Blocks until a character is written.
 write_char:
 {
-
-    #load_arg 1 $t1     # get arg
     li  $t0 0xffff0008    # init t0 to base address for mmio registers
 blocking_write_loop:
     lw   $t3 0($t0)
