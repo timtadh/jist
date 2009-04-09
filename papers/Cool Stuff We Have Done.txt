@@ -1,0 +1,12 @@
+ ====================================
+ = COOL THINGS WE HAVE DONE IN JIST =
+ ====================================
+
+-Kernel mode
+-Custom exception handler
+-Complex I/O functions using the memory-mapped IO interface
+-Preprocessor
+    -Complex macros with arguments
+    -Complex #includes
+    -Scoping
+    -Special labels to identify program entry points
