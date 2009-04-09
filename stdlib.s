@@ -1,29 +1,66 @@
 #include mappedio.s
 
     .text
+
+# read_char
+#       reads a character from the console into $v0. Blocking.
+read_char:
+{
+    _read_char $v0
+    return
+}
+
+# write_char char
+#       Writes char ($a0) to the console. Blocking.
+write_char:
+{
+    _write_char $a0
+    return
+}
+
+readln:
+{
+    addi $t2 $zero 10
+read_again:
+    _read_char $t3
+    _write_char $t3 #echo
+    beq $t3 $t2 end_read
+    sb $t3 0($a0)
+    addi $a0 $a0 1
+    b read_again
+end_read:
+    sb $zero 0($a0)
+    return
+}
+
 # print msg_addr
 #     msg_addr = address of the msg
 print:
 {
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
+write_again:
+    lbu $t3 0($a0)
+    addi $a0 $a0 1
+    beqz $t3 end_write
+    _write_char $t3
+    b write_again
+end_write:
     return
 }
 
-    .text
-# println msg_addr
+# print msg_addr
 #     msg_addr = address of the msg
 println:
 {
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
-    la      $a0, newline
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall            
+write_again:
+    lbu $t3 0($a0)
+    addi $a0 $a0 1
+    beqz $t3 end_write
+    _write_char $t3
+    b write_again
+end_write:
+    addi $t3 $zero 10
+    _write_char $t3
     return
-    
-    .data
-newline: .asciiz "\n"
 }
 
 
