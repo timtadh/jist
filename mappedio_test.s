@@ -4,31 +4,28 @@
 #include stdlib.s
 
 .data
-read_buffer: .space 256
-test_buffer: .asciiz "Hey hey, it works!"
+read_buffer:    .space 256
+ask_num:        .asciiz "Enter a number: "
+test_fmt_str:   .asciiz "n1: %d. n2: %d.\n"
 nl:          .asciiz "\n"
 .text
 .globl main
 main:
 {
-    # la $a0 read_buffer
-    # call readln
-    # 
-    # la $a0 read_buffer
-    # call println
-    # 
-    # la $a0 test_buffer
-    # call println
-    # 
-    # addi $a0 $zero -1054
-    # call print_int
-    
-    exec read_int
-    add $a0 $v0 $zero
-    exec print_int
-    
-    la $a0 nl
+    la $a0 ask_num
     exec print
+    exec read_int
+    add $s0 $v0 $zero
+    
+    la $a0 ask_num
+    exec print
+    exec read_int
+    add $s1 $v0 $zero
+    
+    store_arg $s1
+    store_arg $s0
+    la $a0 test_fmt_str
+    exec printf
     
     exit
 }

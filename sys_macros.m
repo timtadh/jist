@@ -56,6 +56,14 @@
     lw      %2 0(%2)
 #end
 
+# same as load_arg, but specify arg_num in a register instead
+#define load_arg_by_reg global
+    add     %2 %1 $zero
+    mul     %2 %2 4
+    addu    %2 $fp %2
+    lw      %2 0(%2)
+#end
+
 # call label
 #     label : label you are jumping to
 #define call global

@@ -20,6 +20,8 @@ write_char:
     return
 }
 
+# readln buffer_addr
+#       buffer_addr: address of a buffer to write the string to
 readln:
 {
     addi $t2 $zero 10
@@ -119,9 +121,7 @@ end_write:
 }
 
 .data
-r_int_buf: .space 256
-msg: .asciiz "w"
-__nl: .asciiz "\n"
+r_int_buf: .space 30
 .text
 read_int:
 {
@@ -165,6 +165,43 @@ read_int:
     neg_yes:
         sub $v0 $zero $t0
     neg_no:
+    return
+}
+
+# printf msg_addr
+#   msg_addr = address of the msg
+#   use store_arg to store all arguments
+printf:
+{
+    #s0: buffer
+    #s1: current char
+    #s2: 37 ('%')
+    #s3: 100 ('d')
+    #s4: current argument number
+    
+    add $s0 $a0 $zero
+    addi $s2 $zero 37   #37 = '%'
+    addi $s3 $zero 100  #100 = 'd'
+    addi $s4 $zero 1
+write_again:
+    lbu $s1 0($s0)
+    addi $s0 $s0 1
+    beqz $s1 end_write
+    
+    beq $s1 $s2 format_pattern
+        _write_char $s1
+        b end_format_pattern
+    format_pattern:
+        lbu $s1 0($s0)
+        addi $s0 $s0 1
+        beqz $s1 end_write
+        bne $s1 $s3 write_again
+        load_arg_by_reg $s4 $a0
+        exec print_int
+        addi $s4 $s4 1
+    end_format_pattern:
+    b write_again
+end_write:
     return
 }
 
