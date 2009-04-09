@@ -4,7 +4,10 @@
 #include stdlib.s
 
 .data
-read_buffer: .word 256
+read_buffer:
+#repeat 8
+.word   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+test_text: .asciiz "Fuck you, world!"
 .text
 .globl main
 main:
