@@ -103,7 +103,7 @@ __start:
     add     $a0  $t0  $0
     call    load_process
     la      $s0  user_program_locations
-    lw      $s1  4($s0)
+    lw      $s1  8($s0)
     
     disable_clock_interrupt
     enable_clock_interrupt

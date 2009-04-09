@@ -1,16 +1,19 @@
 #Steve Johnson
 #a test of memory-mapped IO
 
+#include stdlib.s
 #include mappedio.s
 
 .globl main
 main:
 {
+    addi $s0 $zero 10
+read_again:
     call read_char
-#    store_arg $v0
     add $a0 $zero $v0
-#    store_arg $a0
+    add $s1 $zero $v0
     call write_char # Echo... echo... echo... echo...
-    addi $a0 $zero 98
-    call write_char # pick a char and write it. 
+    bne $v0 $s0 read_again
+end_read:
+    exit
 }

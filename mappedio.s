@@ -1,11 +1,10 @@
 # mappedio.s
-# Daniel DeCovnick
+# Daniel DeCovnick and Steve Johnson
 # created 2/9/09
-# rewritten 3/19/09
+# rewritten 4/8/09
 
-# read_char() --> $v0 = typed. 
-#     
-#     typed : the key that was typed. Blocks until a key is typed. 
+# read_char
+#     Waits for keyboard input and stores one character in $v0. Blocking.
 read_char:
 {
     ## PSUEDOCODE for this function
@@ -16,8 +15,6 @@ read_char:
 #       return
 #     else
 #       loop
-
-
     li  $t0 0xffff0000 # init t0 to base address for mmio registers
 blocking_read_loop:
     lw   $t3 0($t0)
@@ -27,22 +24,7 @@ blocking_read_loop:
     return
 }
 
-
-#       add   $t0 $zero $zero  # create the address we need to read - start by zeroing it out
-#       lui   $t0 0xffff       # and put on the first 16 bits
-#        addi  $t1 $zero 2      # $t1 = 2
-#        sw    $t1 0($t0)       # sets the interrupt enable: 0xffff0000 = 0000 0000 0000 0000 0000 0000 0000 0010
-#        add   $t2 $zero $zero  # zero out the test reg
-#blocking_read_loop:  
-#        andi  $t2 $t0 1        # read it, and it with 1, store in the test reg.
-#        beq   $zero $t2 blocking_read_loop # if the LSB is 0, go back to the top: we only get anywhere if $t2 = 0000 0000 0000 0000 0000 0000 0000 0001
-#        lw    $v0 4($t0)       # load 0xffff0004 into the return register
-#    
-#        return                 #return from function call
-#}
-
-# write_char(char in $a0) --> Null. 
-#     
+# write_char char
 #     char : the character to print. Blocks until a character is written.
 write_char:
 {
