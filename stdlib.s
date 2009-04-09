@@ -143,11 +143,19 @@ r_int_buf: .space 30
 .text
 read_int:
 {
-    la $a0 r_int_buf        #get a string from the console
-    call readln
+    la $a0 r_int_buf        #load a buffer pointer
+    call readln             #get a string from the console
     
+    call atoi               #call atoi to scan an int
+    return                  #atoi puts the result into $v0 - return here
+    
+}
+
+.text
+atoi:
+{     
     #t0: result
-    #t1: 45 ('0') or 10 (LF)
+    #t1: 45 ('-') or 10 (LF)
     #t2: negative flag
     #t3: current char
     #t4: read buffer address
@@ -155,23 +163,23 @@ read_int:
     la $t4 r_int_buf        #init buffer position
     add $t0 $zero $zero     #init result
     
-    addi $t1 $zero 45       #t5 = '-'
+    addi $t1 $zero 45       #t1 = '-'
     lb $t3 0($t4)           #check for negativity
-    add $t2 $zero $zero
+    add $t2 $zero $zero     #zero out t2
     bne $t3 $t1 end_neg_check
-        addi $t2 $zero 1    #set bit if negative
+        addi $t2 $zero 1    #set bit in t2 if negative
     end_neg_check:
     
     addi $t1 $zero 10       #t1 = LF
     read:
-        lb $t3 0($t4)
-        addi $t4 $t4 1
+        lb $t3 0($t4)       #grab a byte from the buffer
+        addi $t4 $t4 1      #increment
         
         beqz $t3 end_read   #end if zero since string is null-terminated
         addi $t3 $t3 -48    #subtract 48 to get real decimal value
         
         bltz $t3 read       #skip if out of range
-        bgt $t3 $t1 read
+        bgt $t3 $t1 read    #else grab a byte again
         
         mul $t0 $t0 $t1     #t0 = t0 * 10
         add $t0 $t0 $t3     #t0 = t0 + t3
