@@ -219,8 +219,7 @@ bigger_than_10:
     li      $s1 0x57 # a - 10 in ascii
 print_digit:
     add     $a0 $s0 $s1
-    li      $v0, 11             # 4 is the print_char syscall.
-    syscall                     # do the syscall.
+    _write_char $a0
     return
 }
     .text
@@ -255,31 +254,8 @@ println_hex:
 {
     call    print_hex
     li      $a0 10
-    li      $v0 11              # 4 is the print_char syscall.
-    syscall                     # do the syscall.
+    _write_char $a0
     return
-}
-
-    .text
-get_int:
-{
-    li $v0, 5
-    syscall
-    return
-}
-
-    .text
-# println_int i
-println_int:
-{
-    li      $v0 1
-    syscall
-    la      $a0 newline
-    li      $v0 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
-    return
-    .data
-newline: .asciiz "\n"
 }
 
     .text
