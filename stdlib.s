@@ -176,12 +176,11 @@ printf:
     #s0: buffer
     #s1: current char
     #s2: 37 ('%')
-    #s3: 100 ('d')
+    #s3: format code identifier ('d', 'c', 'x', etc)
     #s4: current argument number
     
     add $s0 $a0 $zero
     addi $s2 $zero 37   #37 = '%'
-    addi $s3 $zero 100  #100 = 'd'
     addi $s4 $zero 1
 write_again:
     lbu $s1 0($s0)
@@ -195,10 +194,23 @@ write_again:
         lbu $s1 0($s0)
         addi $s0 $s0 1
         beqz $s1 end_write
-        bne $s1 $s3 write_again
-        load_arg_by_reg $s4 $a0
-        exec print_int
-        addi $s4 $s4 1
+        
+        addi $s3 $zero 100  #d
+        beq $s1 $s3 dec
+        addi $s3 $zero 120  #x
+        beq $s1 $s3 lhex
+        b end_format_pattern
+        
+        dec:
+            load_arg_by_reg $s4 $a0
+            exec print_int
+            addi $s4 $s4 1
+            b end_format_pattern
+        lhex:
+            load_arg_by_reg $s4 $a0
+            call print_hex
+            addi $s4 $s4 1
+            b end_format_pattern
     end_format_pattern:
     b write_again
 end_write:
