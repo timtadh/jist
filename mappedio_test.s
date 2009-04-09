@@ -6,7 +6,7 @@
 .data
 read_buffer:    .space 256
 ask_num:        .asciiz "Enter a number: "
-test_fmt_str:   .asciiz "n1: %d. n2: %x.\n"
+test_fmt_str:   .asciiz "n1: %d. n2: %x. Here is a percent sign: %%\nAnd an unsupported sign: %f\n"
 nl:          .asciiz "\n"
 .text
 .globl main

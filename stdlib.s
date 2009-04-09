@@ -199,7 +199,8 @@ write_again:
         beq $s1 $s3 dec
         addi $s3 $zero 120  #x
         beq $s1 $s3 lhex
-        b end_format_pattern
+        beq $s1 $s2 percent #%
+        b other
         
         dec:
             load_arg_by_reg $s4 $a0
@@ -209,8 +210,15 @@ write_again:
         lhex:
             load_arg_by_reg $s4 $a0
             call print_hex
+            b end_format_pattern
+        percent:
+            _write_char $s1
             addi $s4 $s4 1
             b end_format_pattern
+        other:
+            _write_char $s2
+            _write_char $s1
+            b write_again
     end_format_pattern:
     b write_again
 end_write:
