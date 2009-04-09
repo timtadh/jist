@@ -24,16 +24,34 @@ write_char:
 #       buffer_addr: address of a buffer to write the string to
 readln:
 {
-    addi $t2 $zero 10
+    #10 = LF
+    #27 = control
+    #68 = left
+    add $t2 $zero $zero    #value to chck against
 read_again:
     _read_char $t3
     _write_char $t3 #echo
+    
+    addi $t2 $zero 10
     beq $t3 $t2 end_read
-    sb $t3 0($a0)
-    addi $a0 $a0 1
-    b read_again
+    
+    li $t2 127
+    beq $t3 $t2 _delete
+    b _other
+    
+    _delete:
+        addi $t2 $zero 94
+        _write_char $t2
+        addi $t2 $zero 72
+        _write_char $t2
+        addi $a0 $a0 -1
+        b read_again
+    _other:
+        sb $t3 0($a0)
+        addi $a0 $a0 1
+        b read_again
 end_read:
-    sb $zero 0($a0)
+    #sb $zero 0($a0)
     return
 }
 
@@ -196,26 +214,40 @@ write_again:
         beqz $s1 end_write
         
         addi $s3 $zero 100  #d
-        beq $s1 $s3 dec
+        beq $s1 $s3 _dec
         addi $s3 $zero 120  #x
-        beq $s1 $s3 lhex
-        beq $s1 $s2 percent #%
-        b other
+        beq $s1 $s3 _lhex
+        addi $s3 $zero 99  #c
+        beq $s1 $s3 _char
+        addi $s3 $zero 115  #s
+        beq $s1 $s3 _str
+        beq $s1 $s2 _percent #%
+        b _other
         
-        dec:
+        _dec:
             load_arg_by_reg $s4 $a0
             exec print_int
             addi $s4 $s4 1
             b end_format_pattern
-        lhex:
+        _lhex:
             load_arg_by_reg $s4 $a0
             call print_hex
             b end_format_pattern
-        percent:
+        _char:
+            load_arg_by_reg $s4 $a0
+            _write_char $a0
+            addi $s4 $s4 1
+            b end_format_pattern
+        _str:
+            load_arg_by_reg $s4 $a0
+            exec print
+            addi $s4 $s4 1
+            b end_format_pattern
+        _percent:
             _write_char $s1
             addi $s4 $s4 1
             b end_format_pattern
-        other:
+        _other:
             _write_char $s2
             _write_char $s1
             b write_again
