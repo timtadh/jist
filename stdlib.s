@@ -146,6 +146,7 @@ read_int:
     la $a0 r_int_buf        #load a buffer pointer
     call readln             #get a string from the console
     
+    la $a0 r_int_buf    
     call atoi               #call atoi to scan an int
     return                  #atoi puts the result into $v0 - return here
     
@@ -160,7 +161,7 @@ atoi:
     #t3: current char
     #t4: read buffer address
     
-    la $t4 r_int_buf        #init buffer position
+    add $t4 $a0 $zero       #init buffer position
     add $t0 $zero $zero     #init result
     
     addi $t1 $zero 45       #t1 = '-'
