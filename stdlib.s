@@ -206,31 +206,34 @@ printf:
     #s4: current argument number
     
     add $s0 $a0 $zero
-    addi $s2 $zero 37   #37 = '%'
+    addi $s2 $zero 37   #37 = '%' stored here 'permanently' for speed
     addi $s4 $zero 1
+    
 write_again:
+    #read, move pointer, check for zero
     lbu $s1 0($s0)
     addi $s0 $s0 1
     beqz $s1 end_write
     
-    beq $s1 $s2 format_pattern
-        _write_char $s1
-        b end_format_pattern
-    format_pattern:
-        lbu $s1 0($s0)
-        addi $s0 $s0 1
-        beqz $s1 end_write
+    beq $s1 $s2 format_pattern  #if not %:
+        _write_char $s1         #   write char verbatim
+        b end_format_pattern    #   read again
+    format_pattern:             #else:
+        lbu $s1 0($s0)          #   read format code
+        addi $s0 $s0 1          #   bump pointer
         
-        addi $s3 $zero 100  #d
+        beqz $s1 _zero          #end of string
+        addi $s3 $zero 100      #d
         beq $s1 $s3 _dec
-        addi $s3 $zero 120  #x
+        addi $s3 $zero 120      #x
         beq $s1 $s3 _lhex
-        addi $s3 $zero 99  #c
+        addi $s3 $zero 99       #c
         beq $s1 $s3 _char
-        addi $s3 $zero 115  #s
+        addi $s3 $zero 115      #s
         beq $s1 $s3 _str
-        b _other
+        b _other                #everything else
         
+        #formula for these: load arg, call function, bump arg number, loop
         _dec:
             load_arg_by_reg $s4 $a0
             exec print_int
@@ -255,6 +258,9 @@ write_again:
             _write_char $s2
             _write_char $s1
             b write_again
+        _zero:
+            _write_char $s2
+            b end_write
     end_format_pattern:
     b write_again
 end_write:
