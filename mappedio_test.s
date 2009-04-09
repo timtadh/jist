@@ -6,6 +6,7 @@
 .data
 read_buffer: .space 256
 test_buffer: .asciiz "Hey hey, it works!"
+nl:          .asciiz "\n"
 .text
 .globl main
 main:
@@ -17,6 +18,12 @@ main:
     call println
     
     la $a0 test_buffer
+    call println
+    
+    addi $a0 $zero -1054
+    call print_int
+    
+    la $a0 nl
     call println
     
     exit

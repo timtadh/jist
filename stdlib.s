@@ -65,6 +65,58 @@ end_write:
     return
 }
 
+# print_int int
+#       int = integer to print
+.data
+int_buf: .space 256
+.text
+print_int:
+{
+    #t0-t1: used by _write_char
+    #t2: modifiedcopy of variable
+    #t3: character to write or store in buffer
+    #t4: the number 10
+    #t5-t6: buffer positons
+    #t7: negativity
+    add $t2 $a0 $zero   #copy integer to t2
+    addi $t4 $zero 10   #put 10 in t4 to use in division later
+    la $t5 int_buf      #init buffer in t5
+    add $t6 $t5 $zero   #copy to t6
+    
+    add $t7 $zero $zero #init negative bit to zero
+    bgez $t2 do_digit   #set negative bit if necessary, otherwise skip
+    addi $t7 $zero 1
+    
+    sub $t2 $zero $a0   #make number positive
+    add $a0 $t2 $zero
+    
+do_digit:
+    #This loop actually stores the number characters *backwards.*.
+    #It is faster that way.
+    blez $t2 end_digits #stop when t2 == 0
+    div $t2 $t4         #t2 / 10
+    mfhi $t3            #t3 = t2 % 10
+    mflo $t2            #t2 = t2 / 10
+    addi $t3 $t3 48     #t3 = t3 + 48 (48 = '0')
+    sb $t3 0($t6)       #store t3 in buffer
+    addi $t6 $t6 1      #move forward in buffer
+    b do_digit
+end_digits:
+    sb $zero 0($t6)     #terminate the string just in case
+    
+    beqz $t7 write_again    #print negative sign if necessary
+    addi $t3 $zero 45   #45 = '-'
+    _write_char $t3
+write_again:
+    addi $t6 $t6 -1     #step backwards until t6 <= t5
+    lbu $t3 0($t6)
+    blt $t6 $t5 end_write
+    _write_char $t3
+    b write_again
+end_write:
+    return
+}
+
 
     .text
 # print_arr array_addr size
@@ -162,15 +214,6 @@ println_hex:
 get_int:
 {
     li $v0, 5
-    syscall
-    return
-}
-
-    .text
-# print_int i
-print_int:
-{
-    li $v0, 1
     syscall
     return
 }

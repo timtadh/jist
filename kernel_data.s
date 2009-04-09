@@ -17,6 +17,6 @@ proc_list:
             #repeat 128
             .word   0
 kernel_data:
-    #repeat 570
+    #repeat 540
     .word   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 kernel_data_end:
