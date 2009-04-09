@@ -11,20 +11,24 @@ nl:          .asciiz "\n"
 .globl main
 main:
 {
-    la $a0 read_buffer
-    call readln
+    # la $a0 read_buffer
+    # call readln
+    # 
+    # la $a0 read_buffer
+    # call println
+    # 
+    # la $a0 test_buffer
+    # call println
+    # 
+    # addi $a0 $zero -1054
+    # call print_int
     
-    la $a0 read_buffer
-    call println
-    
-    la $a0 test_buffer
-    call println
-    
-    addi $a0 $zero -1054
-    call print_int
+    exec read_int
+    add $a0 $v0 $zero
+    exec print_int
     
     la $a0 nl
-    call println
+    exec print
     
     exit
 }

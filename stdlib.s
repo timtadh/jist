@@ -68,7 +68,7 @@ end_write:
 # print_int int
 #       int = integer to print
 .data
-int_buf: .space 256
+p_int_buf: .space 256
 .text
 print_int:
 {
@@ -80,16 +80,16 @@ print_int:
     #t7: negativity
     add $t2 $a0 $zero   #copy integer to t2
     addi $t4 $zero 10   #put 10 in t4 to use in division later
-    la $t5 int_buf      #init buffer in t5
+    la $t5 p_int_buf    #init buffer in t5
     add $t6 $t5 $zero   #copy to t6
-    
+
     add $t7 $zero $zero #init negative bit to zero
     bgez $t2 do_digit   #set negative bit if necessary, otherwise skip
     addi $t7 $zero 1
-    
+
     sub $t2 $zero $a0   #make number positive
     add $a0 $t2 $zero
-    
+
 do_digit:
     #This loop actually stores the number characters *backwards.*.
     #It is faster that way.
@@ -103,9 +103,9 @@ do_digit:
     b do_digit
 end_digits:
     sb $zero 0($t6)     #terminate the string just in case
-    
+
     beqz $t7 write_again    #print negative sign if necessary
-    addi $t3 $zero 45   #45 = '-'
+    addi $t3 $zero 45       #45 = '-'
     _write_char $t3
 write_again:
     addi $t6 $t6 -1     #step backwards until t6 <= t5
@@ -114,9 +114,59 @@ write_again:
     _write_char $t3
     b write_again
 end_write:
+    
     return
 }
 
+.data
+r_int_buf: .space 256
+msg: .asciiz "w"
+__nl: .asciiz "\n"
+.text
+read_int:
+{
+    la $a0 r_int_buf        #get a string from the console
+    call readln
+    
+    #t0: result
+    #t1: 45 ('0') or 10 (LF)
+    #t2: negative flag
+    #t3: current char
+    #t4: read buffer address
+    
+    la $t4 r_int_buf        #init buffer position
+    add $t0 $zero $zero     #init result
+    
+    addi $t1 $zero 45       #t5 = '-'
+    lb $t3 0($t4)           #check for negativity
+    add $t2 $zero $zero
+    bne $t3 $t1 end_neg_check
+        addi $t2 $zero 1    #set bit if negative
+    end_neg_check:
+    
+    addi $t1 $zero 10       #t1 = LF
+    read:
+        lb $t3 0($t4)
+        addi $t4 $t4 1
+        
+        beqz $t3 end_read   #end if zero since string is null-terminated
+        addi $t3 $t3 -48    #subtract 48 to get real decimal value
+        
+        bltz $t3 read       #skip if out of range
+        bgt $t3 $t1 read
+        
+        mul $t0 $t0 $t1     #t0 = t0 * 10
+        add $t0 $t0 $t3     #t0 = t0 + t3
+        b read
+    end_read:
+    bnez $t2 neg_yes
+        add $v0 $t0 $zero
+        b neg_no
+    neg_yes:
+        sub $v0 $zero $t0
+    neg_no:
+    return
+}
 
     .text
 # print_arr array_addr size
