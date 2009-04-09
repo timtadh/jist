@@ -14,7 +14,7 @@ read_char:
 
 # write_char char
 #       Writes char ($a0) to the console. Blocking.
-write_char:
+print_char:
 {
     _write_char $a0
     return
