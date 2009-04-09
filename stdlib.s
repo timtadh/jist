@@ -51,7 +51,7 @@ read_again:
         addi $a0 $a0 1
         b read_again
 end_read:
-    #sb $zero 0($a0)
+    sb $zero 0($a0)
     return
 }
 
@@ -88,7 +88,7 @@ end_write:
 # print_int int
 #       int = integer to print
 .data
-p_int_buf: .space 256
+p_int_buf: .space 11
 .text
 print_int:
 {
@@ -221,7 +221,6 @@ write_again:
         beq $s1 $s3 _char
         addi $s3 $zero 115  #s
         beq $s1 $s3 _str
-        beq $s1 $s2 _percent #%
         b _other
         
         _dec:
@@ -232,6 +231,7 @@ write_again:
         _lhex:
             load_arg_by_reg $s4 $a0
             call print_hex
+            addi $s4 $s4 1
             b end_format_pattern
         _char:
             load_arg_by_reg $s4 $a0
@@ -241,10 +241,6 @@ write_again:
         _str:
             load_arg_by_reg $s4 $a0
             exec print
-            addi $s4 $s4 1
-            b end_format_pattern
-        _percent:
-            _write_char $s1
             addi $s4 $s4 1
             b end_format_pattern
         _other:
