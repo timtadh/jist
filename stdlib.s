@@ -104,6 +104,12 @@ print_int:
     add $t6 $t5 $zero   #copy to t6
 
     add $t7 $zero $zero #init negative bit to zero
+    
+    bnez $t2 do_digit   #check for zero
+        addi $t2 $t2 48
+        _write_char $t2
+        return
+    
     bgez $t2 do_digit   #set negative bit if necessary, otherwise skip
     addi $t7 $zero 1
 
