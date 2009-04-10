@@ -2,6 +2,7 @@
 
 .data
 wdata:      .space 16   #for locations, etc.
+adjrooms:   .space 3
 str_buf:    .space 100
 act_choice: .asciiz "Shoot or move? (s or m)\n? "
 lose_msg:   .asciiz "HA HA HA - YOU LOSE!"
@@ -68,6 +69,30 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         exec print_char
         addi $t9 $t9 -1
         bgtz $t9 clear_loop
+#end
+
+#define load_data
+    la $s7 wdata
+    lb $s1 1($s7)
+    lb $s2 2($s7)
+    lb $s3 3($s7)
+    lb $s4 4($s7)
+    lb $s5 5($s7)
+    lb $s6 6($s7)
+#end
+
+#define print_debug
+    la $s7 wdata
+    li $s0 6
+    debugprint:
+        addi $s0 $s0 -1
+        addi $s7 $s7 1
+        lb $a0 0($s7)
+        call print_int
+        qprint_char 32
+        bgez $s0 debugprint
+    qprint_char 10
+    skipdebug:
 #end
     
 
@@ -152,15 +177,20 @@ start_game:
 
 get_room:
 {
-    la $t0 wrooms
     li $t1 3
+    la $t0 wrooms
     mul $t1 $t1 $a0
     add $t0 $t0 $t1
-    lb $v0 0($t0)
-    #add $a0 $v0 $zero
-    #call print_int
-    lb $v1 1($t0)
-    lb $t9 2($t0)
+    li $t1 3
+    la $t2 adjrooms
+    
+    another_room:
+        lb $t3 0($t0)
+        sb $t3 0($t2)
+        addi $t0 $t0 1
+        addi $t2 $t2 1
+        addi $t1 $t1 -1
+    bgez $t1 another_room
     return
 }
 
@@ -196,25 +226,8 @@ main:
         sb $s6 6($s7)
         li $s0 6
     mainloop:
-        la $s7 wdata
-        li $s0 6
-        debugprint:
-            addi $s0 $s0 -1
-            addi $s7 $s7 1
-            lb $a0 0($s7)
-            call print_int
-            qprint_char 32
-            bgez $s0 debugprint
-        qprint_char 10
-        skipdebug:
-        
-        la $s7 wdata
-        lb $s1 1($s7)
-        lb $s2 2($s7)
-        lb $s3 3($s7)
-        lb $s4 4($s7)
-        lb $s5 5($s7)
-        lb $s6 6($s7)
+        print_debug
+        load_data
         
         #s0: iteration count
         #s1: player pos
@@ -238,28 +251,33 @@ main:
             qprint_string move_msg
             add $a0 $s1 $zero
             call get_room
-            add $a0 $v0 $zero
+            
+            la $s0 adjrooms
+            lb $a0 0($s0)
             add $s6 $v0 $zero
             call print_int
             qprint_string comma
-            add $a0 $v1 $zero
-            add $s7 $v1 $zero
+            lb $a0 1($s0)
             call print_int
             qprint_string comma
-            add $a0 $t9 $zero
-            add $s8 $t9 $zero
+            lb $a0 2($s0)
             call print_int
             qprint_string prompt
             
             la $a0 str_buf
             call read_int
-            beq $v0 $s6 in_ok
-            beq $v0 $s7 in_ok
-            beq $v0 $s8 in_ok
+            li $t1 3
+            check_another_room:
+                lb $t3 0($s0)
+                beq $v0 $t3 in_ok
+                addi $s0 $s0 1
+                addi $t1 $t1 -1
+            bgez $t1 check_another_room
             qprint_char 10
             b usermove
             in_ok:
                 addi $v0 $v0 -1
+                la $s0 wdata
                 sb $v0 1($s0)
                 b mainloop
         b mainloop
