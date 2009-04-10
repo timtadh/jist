@@ -144,18 +144,15 @@ end_write:
     return
 }
 
-.data
-r_int_buf: .space 30
 .text
 read_int:
 {
-    la $a0 r_int_buf        #load a buffer pointer
+    add $s0 $a0 $zero
     call readln             #get a string from the console
     
-    la $a0 r_int_buf    
+    add $a0 $s0 $zero
     call atoi               #call atoi to scan an int
     return                  #atoi puts the result into $v0 - return here
-    
 }
 
 .text

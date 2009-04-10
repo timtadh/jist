@@ -1,10 +1,19 @@
 #include stdlib.s
 
 .data
-prompt:     .asciiz "? "
-get_move:   .asciiz "Shoot or move? (s or m)"
+wdata:      .space 16   #for locations, etc.
+str_buf:    .space 100
+act_choice: .asciiz "Shoot or move? (s or m)\n? "
 lose_msg:   .asciiz "HA HA HA - YOU LOSE!"
 win_msg:    .asciiz "HEE HEE HEE - THE WUMPUS'LL GET YOU NEXT TIME!"
+ask_instr:  .asciiz "Show instructions? (y/n)\n? "
+comma:      .asciiz ", "
+prompt:     .asciiz "\n? "
+move_msg:   .asciiz "Choose a room: "
+rooms:      .byte 2,5,8,    1,3,10,     2,4,12,     3,5,14,     1,4,6
+            .byte 5,7,15,   6,8,17,     1,7,9,      8,10,18,    2,9,11
+            .byte 10,12,19, 3,11,13,    12,14,20,   4,13,15,    6,14,16
+            .byte 15,17,20, 7,16,18,    9,17,19,    11,18,20,   13,16,19
 intro2: .ascii "Wumpus:\n"
         .ascii "    The wumpus is not bothered by hazards. (He has sucker feet and is too big\n"
         .ascii "    for a bat to lift.)  Usually he is asleep.  two things wake him up: you \n"
@@ -25,7 +34,6 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         .ascii  "   The Wumpus lives in a cave of 20 rooms. Each room has 3 tunnels leading to \n"
         .ascii  "   other rooms. (Look at a dodecahedron to see how this works-if you don't know\n"
         .ascii  "   what a dodecahedron is, ask someone.)\n\n"
-        
         .ascii "HAZARDS\n"
         .ascii "Bottomless Pits:\n"
         .ascii "    Two rooms have bottomless pits in them. If you go there, you fall into the \n"
@@ -36,59 +44,224 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         .asciiz "Hit Return.\n"
 .text
 
+#define qprint_char
+    li $a0 %1
+    call print_char
+#end
+
+#define get_char
+    call read_char
+    add $a0 $v0 $zero
+    call print_char
+    qprint_char 10
+#end
+
+#define qprint_string
+    la $a0 %1
+    call print
+#end
+    
+
+# fastrand limit
+#   returns:
+#       v0: random number
+#       stores last number in wdata[0]
 fastrand:
 {
-    add $v0 $v1 $zero
+    la $t4 wdata
+    lb $t0 0($t4)
     li $t2 33614
-    multu $v0 $t2
+    multu $t0 $t2
     mflo $t1
     srl $t1 $t1 1
     mfhi $t3
-    addu $v0 $t1 $t3
-    bltz $v0 overflow
-    b limit
+    addu $t0 $t1 $t3
+    bltz $t0 overflow
+        b limit
     overflow:
-        sll $v0 $v0 1
-        srl $v0 $v0 1
-        addiu $v0 1
+        sll $t0 $t0 1
+        srl $t0 $t0 1
+        addiu $t0 1
     limit:
-    add $v1 $v0 $zero
-    div $v0 $a1
+    sb $t0 0($t4)
+    div $t0 $a0
     mfhi $v0
+    return
+}
+
+ask_yn:
+{
+    call print
+    get_char
+    addi $t0 $zero 121
+    bne $v0 $t0 _no
+        li $v0 1
+    _no:
+        li $v0 0
+    return
+}
+
+#define choose20
+    call fastrand
+    add %1 $v0 $zero
+#end
+
+start_game:
+{
+    #s0: iteration count
+    #s1: player pos
+    #s2: wumpus pos
+    #s3: pit 1
+    #s4: pit 2
+    #s5: bat 1
+    #s6: bat 2
+    li $s0 0
+    rebuild:
+        addi $s0 $s0 1
+        #player
+        li $a0 20
+        call fastrand
+        add $s1 $v0 $zero
+        
+        #wumpus
+        choose20 $s2
+        beq $s2 $s1 rebuild
+        #pit 1
+        choose20 $s3
+        beq $s3 $s2 rebuild
+        beq $s3 $s1 rebuild 
+        #pit 2
+        choose20 $s4
+        beq $s4 $s3 rebuild
+        beq $s4 $s2 rebuild
+        beq $s4 $s1 rebuild
+        #bat 1
+        choose20 $s5
+        beq $s5 $s4 rebuild
+        beq $s5 $s3 rebuild
+        beq $s5 $s2 rebuild
+        beq $s5 $s1 rebuild
+        #bat 2
+        choose20 $s6
+        beq $s6 $s5 rebuild
+        beq $s6 $s4 rebuild
+        beq $s6 $s3 rebuild
+        beq $s6 $s2 rebuild
+        beq $s6 $s1 rebuild
+    success:
+        return
+}
+
+get_room:
+{
+    la $t0 rooms
+    li $t1 3
+    mul $t1 $t1 $a0
+    add $t0 $t0 $t1
+    lb $v0 0($t0)
+    #add $a0 $v0 $zero
+    #call print_int
+    lb $v1 1($t0)
+    lb $t9 2($t0)
     return
 }
 
 .globl main
 main:
-    li $t9 5
-    li $s0 2534
-    li $a1 10
-    li $v1 1412032
-    loop:
-        add $a0 $s0 $zero
-        exec fastrand
-        add $a0 $v0 $zero
-        add $s0 $v0 $zero
-        exec print_int
-        li $a0 10
+    li $a0 10
+    li $s0 10
+    la $t0 wdata    #seed random number generator
+    sb $s0 0($t0)
+    clear_loop:
         exec print_char
-        addi $t9 $t9 -1
-        bgtz $t9 loop
-    
-    addi $a0 $zero 10
-    exec print_char
-    exec print_char
-    exec print_char
-    exec print_char
-    exec print_char
-    exec print_char
-    exec print_char
-    exec print_char
-    exec print_char
-    la $a0 intro
-    exec print
-    exec readln
-    la $a0 intro2
-    exec print
-    exec readln
-    exit
+        addi $s0 $s0 -1
+        bgtz $s0 clear_loop
+    la $a0 ask_instr
+    call ask_yn
+    beqz $v0 init_game
+        la $a0 intro
+        exec print
+        exec readln
+        la $a0 intro2
+        exec print
+        exec readln
+    init_game:
+        exec start_game
+        la $s7 wdata
+        sb $s1 1($s7)
+        sb $s2 2($s7)
+        sb $s3 3($s7)
+        sb $s4 4($s7)
+        sb $s5 5($s7)
+        sb $s6 6($s7)
+        li $s0 6
+    mainloop:
+        la $s7 wdata
+        li $s0 6
+        debugprint:
+            addi $s0 $s0 -1
+            addi $s7 $s7 1
+            lb $a0 0($s7)
+            call print_int
+            qprint_char 32
+            bgez $s0 debugprint
+        qprint_char 10
+        skipdebug:
+        
+        la $s7 wdata
+        lb $s1 1($s7)
+        lb $s2 2($s7)
+        lb $s3 3($s7)
+        lb $s4 4($s7)
+        lb $s5 5($s7)
+        lb $s6 6($s7)
+        
+        #s0: iteration count
+        #s1: player pos
+        #s2: wumpus pos
+        #s3: pit 1
+        #s4: pit 2
+        #s5: bat 1
+        #s6: bat 2
+        
+        la $a0 act_choice
+        call print
+        get_char
+        li $t0 113  #q
+        beq $t0 $v0 userquit
+        li $t0 109
+        beq $t0 $v0 usermove
+        b mainloop
+        usermove:
+            la $s0 wdata
+            sb $s1 1($s0)
+            qprint_string move_msg
+            add $a0 $s1 $zero
+            call get_room
+            add $a0 $v0 $zero
+            add $s6 $v0 $zero
+            call print_int
+            qprint_string comma
+            add $a0 $v1 $zero
+            add $s7 $v1 $zero
+            call print_int
+            qprint_string comma
+            add $a0 $t9 $zero
+            add $s8 $t9 $zero
+            call print_int
+            qprint_string prompt
+            
+            la $a0 str_buf
+            call read_int
+            beq $v0 $s6 in_ok
+            beq $v0 $s7 in_ok
+            beq $v0 $s8 in_ok
+            qprint_char 10
+            b usermove
+            in_ok:
+                addi $v0 $v0 -1
+                sb $v0 1($s0)
+                b mainloop
+        b mainloop
+    userquit:
+        exit
