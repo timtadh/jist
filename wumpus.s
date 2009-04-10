@@ -35,8 +35,46 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         .ascii "    you to some other room at random. (which may be troublesome)\n\n"
         .asciiz "Hit Return.\n"
 .text
+
+fastrand:
+{
+    add $v0 $v1 $zero
+    li $t2 33614
+    multu $v0 $t2
+    mflo $t1
+    srl $t1 $t1 1
+    mfhi $t3
+    addu $v0 $t1 $t3
+    bltz $v0 overflow
+    b limit
+    overflow:
+        sll $v0 $v0 1
+        srl $v0 $v0 1
+        addiu $v0 1
+    limit:
+    add $v1 $v0 $zero
+    div $v0 $a1
+    mfhi $v0
+    return
+}
+
 .globl main
 main:
+    li $t9 5
+    li $s0 2534
+    li $a1 10
+    li $v1 1412032
+    loop:
+        add $a0 $s0 $zero
+        exec fastrand
+        add $a0 $v0 $zero
+        add $s0 $v0 $zero
+        exec print_int
+        li $a0 10
+        exec print_char
+        addi $t9 $t9 -1
+        bgtz $t9 loop
+    
     addi $a0 $zero 10
     exec print_char
     exec print_char

@@ -29,7 +29,7 @@ main:
     exec read_char
     add $s2 $v0 $zero
     add $a0 $s2 $zero
-    exec write_char
+    exec print_char
     
     la $a0 ask_str
     exec print
