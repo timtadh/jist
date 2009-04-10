@@ -10,7 +10,7 @@ ask_instr:  .asciiz "Show instructions? (y/n)\n? "
 comma:      .asciiz ", "
 prompt:     .asciiz "\n? "
 move_msg:   .asciiz "Choose a room: "
-rooms:      .byte 2,5,8,    1,3,10,     2,4,12,     3,5,14,     1,4,6
+wrooms:      .byte 2,5,8,    1,3,10,     2,4,12,     3,5,14,     1,4,6
             .byte 5,7,15,   6,8,17,     1,7,9,      8,10,18,    2,9,11
             .byte 10,12,19, 3,11,13,    12,14,20,   4,13,15,    6,14,16
             .byte 15,17,20, 7,16,18,    9,17,19,    11,18,20,   13,16,19
@@ -26,7 +26,7 @@ intro2: .ascii "Wumpus:\n"
         .ascii "    Arrows: You have 5 arrows. You lose when you run out.\n"
         .ascii "        Each arrow can go from 1 to 5 rooms. You aim by telling the computer the\n"
         .ascii "        room number you want the arrow to go to. If the arrow can't go that way \n"
-        .ascii "        (no tunnel) it movesat random to the next room.\n"
+        .ascii "        (no tunnel) it moves at random to the next room.\n"
         .ascii "        If the arrow hits the wumpus, you win.\n"
         .ascii "        If the arrow hits you, you lose.\n\n"
         .asciiz "Hit Return.\n"
@@ -60,6 +60,15 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
     la $a0 %1
     call print
 #end
+
+#define clear_console
+    li $t9 24
+    li $a0 10
+    clear_loop:
+        exec print_char
+        addi $t9 $t9 -1
+        bgtz $t9 clear_loop
+#end
     
 
 # fastrand limit
@@ -89,21 +98,10 @@ fastrand:
     return
 }
 
-ask_yn:
-{
-    call print
-    get_char
-    addi $t0 $zero 121
-    bne $v0 $t0 _no
-        li $v0 1
-    _no:
-        li $v0 0
-    return
-}
-
-#define choose20
+#define choose
+    addi $a0 $zero %1
     call fastrand
-    add %1 $v0 $zero
+    add %2 $v0 $zero
 #end
 
 start_game:
@@ -124,25 +122,25 @@ start_game:
         add $s1 $v0 $zero
         
         #wumpus
-        choose20 $s2
+        choose 20 $s2
         beq $s2 $s1 rebuild
         #pit 1
-        choose20 $s3
+        choose 20 $s3
         beq $s3 $s2 rebuild
         beq $s3 $s1 rebuild 
         #pit 2
-        choose20 $s4
+        choose 20 $s4
         beq $s4 $s3 rebuild
         beq $s4 $s2 rebuild
         beq $s4 $s1 rebuild
         #bat 1
-        choose20 $s5
+        choose 20 $s5
         beq $s5 $s4 rebuild
         beq $s5 $s3 rebuild
         beq $s5 $s2 rebuild
         beq $s5 $s1 rebuild
         #bat 2
-        choose20 $s6
+        choose 20 $s6
         beq $s6 $s5 rebuild
         beq $s6 $s4 rebuild
         beq $s6 $s3 rebuild
@@ -154,7 +152,7 @@ start_game:
 
 get_room:
 {
-    la $t0 rooms
+    la $t0 wrooms
     li $t1 3
     mul $t1 $t1 $a0
     add $t0 $t0 $t1
@@ -168,23 +166,25 @@ get_room:
 
 .globl main
 main:
-    li $a0 10
     li $s0 10
     la $t0 wdata    #seed random number generator
     sb $s0 0($t0)
-    clear_loop:
-        exec print_char
-        addi $s0 $s0 -1
-        bgtz $s0 clear_loop
-    la $a0 ask_instr
-    call ask_yn
-    beqz $v0 init_game
+    clear_console
+    
+    la $a0 ask_instr    #ask y/n for instructions
+    call print
+    get_char
+    addi $t0 $zero 121
+    bne $v0 $t0 init_game
+        clear_console
         la $a0 intro
         exec print
         exec readln
+        clear_console
         la $a0 intro2
         exec print
         exec readln
+        clear_console
     init_game:
         exec start_game
         la $s7 wdata
