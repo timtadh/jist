@@ -1,7 +1,7 @@
 #include stdlib.s
 
 .data
-wdata:      .space 16   #for locations, etc.
+wdata:      .space 7    #for locations, etc.
 adjrooms:   .space 3
 str_buf:    .space 100
 act_choice: .asciiz "Shoot or move? (s or m)\n? "
@@ -11,10 +11,14 @@ ask_instr:  .asciiz "Show instructions? (y/n)\n? "
 comma:      .asciiz ", "
 prompt:     .asciiz "\n? "
 move_msg:   .asciiz "Choose a room: "
-wrooms:      .byte 2,5,8,    1,3,10,     2,4,12,     3,5,14,     1,4,6
+w_msg:      .asciiz "I smell a wumpus!\n"
+p_msg:      .asciiz "I feel a draft.\n"
+b_msg:      .asciiz "Bats nearby!\n"
+wrooms:     .byte 2,5,8,    1,3,10,     2,4,12,     3,5,14,     1,4,6
             .byte 5,7,15,   6,8,17,     1,7,9,      8,10,18,    2,9,11
             .byte 10,12,19, 3,11,13,    12,14,20,   4,13,15,    6,14,16
             .byte 15,17,20, 7,16,18,    9,17,19,    11,18,20,   13,16,19
+
 intro2: .ascii "Wumpus:\n"
         .ascii "    The wumpus is not bothered by hazards. (He has sucker feet and is too big\n"
         .ascii "    for a bat to lift.)  Usually he is asleep.  two things wake him up: you \n"
@@ -194,8 +198,96 @@ get_room:
     return
 }
 
+check_room:
+{
+    add $s7 $a0 $zero
+    bne $s7 $s2 nowumpus
+        la $a0 w_msg
+        call print
+    nowumpus:
+    
+    bne $s7 $s3 nopit1
+        la $a0 p_msg
+        call print
+    nopit1:
+    
+    bne $s7 $s4 nopit2
+        la $a0 p_msg
+        call print
+    nopit2:
+    
+    bne $s7 $s5 nobat1
+        la $a0 b_msg
+        call print
+    nobat1:
+    
+    bne $s7 $s6 nobat2
+        la $a0 b_msg
+        call print
+    nobat2:
+    
+    return
+}
+
+#define print_status
+    qprint_char 10
+    load_data
+    add $a0 $s1 $zero
+    {
+        li $t3 3
+        la $t2 adjrooms
+    
+        another_room:
+            lb $a0 0($t2)
+            call check_room
+            addi $t2 $t2 1
+            addi $t3 $t3 -1
+        bgez $t3 another_room
+    }
+#end
+
+#define do_move
+{
+    la $s0 wdata
+    sb $s1 1($s0)
+    qprint_string move_msg
+    add $a0 $s1 $zero
+    call get_room
+
+    la $s0 adjrooms
+    lb $a0 0($s0)
+    add $s6 $v0 $zero
+    call print_int
+    qprint_string comma
+    lb $a0 1($s0)
+    call print_int
+    qprint_string comma
+    lb $a0 2($s0)
+    call print_int
+    qprint_string prompt
+
+    la $a0 str_buf
+    call read_int
+    li $t1 3
+    check_another_room:
+        lb $t3 0($s0)
+        beq $v0 $t3 in_ok
+        addi $s0 $s0 1
+        addi $t1 $t1 -1
+    bgez $t1 check_another_room
+    qprint_char 10
+    b usermove
+    in_ok:
+        addi $v0 $v0 -1
+        la $s0 wdata
+        sb $v0 1($s0)
+        b mainloop
+}
+#end
+
 .globl main
 main:
+{
     li $s0 10
     la $t0 wdata    #seed random number generator
     sb $s0 0($t0)
@@ -227,7 +319,7 @@ main:
         li $s0 6
     mainloop:
         print_debug
-        load_data
+        print_status
         
         #s0: iteration count
         #s1: player pos
@@ -246,40 +338,8 @@ main:
         beq $t0 $v0 usermove
         b mainloop
         usermove:
-            la $s0 wdata
-            sb $s1 1($s0)
-            qprint_string move_msg
-            add $a0 $s1 $zero
-            call get_room
-            
-            la $s0 adjrooms
-            lb $a0 0($s0)
-            add $s6 $v0 $zero
-            call print_int
-            qprint_string comma
-            lb $a0 1($s0)
-            call print_int
-            qprint_string comma
-            lb $a0 2($s0)
-            call print_int
-            qprint_string prompt
-            
-            la $a0 str_buf
-            call read_int
-            li $t1 3
-            check_another_room:
-                lb $t3 0($s0)
-                beq $v0 $t3 in_ok
-                addi $s0 $s0 1
-                addi $t1 $t1 -1
-            bgez $t1 check_another_room
-            qprint_char 10
-            b usermove
-            in_ok:
-                addi $v0 $v0 -1
-                la $s0 wdata
-                sb $v0 1($s0)
-                b mainloop
+            do_move
         b mainloop
     userquit:
         exit
+}
