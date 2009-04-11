@@ -5,15 +5,18 @@ wdata:      .space 7    #for locations, etc.
 adjrooms:   .space 3
 str_buf:    .space 100
 act_choice: .asciiz "Shoot or move? (s or m)\n? "
-lose_msg:   .asciiz "HA HA HA - YOU LOSE!"
-win_msg:    .asciiz "HEE HEE HEE - THE WUMPUS'LL GET YOU NEXT TIME!"
+death_w:    .asciiz "OM NOM NOM, WUMPUS HUNGRY!!! (you die)\n"
+death_p:    .asciiz "AAAAAaaaaaaaahhhhh... *splat*\n"
+win_msg:    .asciiz "*Whoosh!* *splat* MMRRROOOWWWWWWW! *thud* (you win)"
 ask_instr:  .asciiz "Show instructions? (y/n)\n? "
 comma:      .asciiz ", "
 prompt:     .asciiz "\n? "
-move_msg:   .asciiz "Choose a room: "
+room_msg:   .asciiz "Current room: "
+move_msg:   .asciiz "\nAdjacent rooms: "
 w_msg:      .asciiz "I smell a wumpus!\n"
 p_msg:      .asciiz "I feel a draft.\n"
 b_msg:      .asciiz "Bats nearby!\n"
+msg_fly:    .asciiz "You are grabbed by a giant bat and flown to another room..."
 wrooms:     .byte 2,5,8,    1,3,10,     2,4,12,     3,5,14,     1,4,6
             .byte 5,7,15,   6,8,17,     1,7,9,      8,10,18,    2,9,11
             .byte 10,12,19, 3,11,13,    12,14,20,   4,13,15,    6,14,16
@@ -92,10 +95,10 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         addi $s0 $s0 -1
         addi $s7 $s7 1
         lb $a0 0($s7)
+        addi $a0 $a0 1  #positions start at 0 internally, 1 externally
         call print_int
         qprint_char 32
-        bgez $s0 debugprint
-    qprint_char 10
+        bgtz $s0 debugprint
     skipdebug:
 #end
     
@@ -198,61 +201,100 @@ get_room:
     return
 }
 
-check_room:
-{
-    add $s7 $a0 $zero
-    bne $s7 $s2 nowumpus
+#define check_room
+    addi $s0 $a0 0
+    bne $s0 $s2 nowumpus
         la $a0 w_msg
         call print
     nowumpus:
     
-    bne $s7 $s3 nopit1
+    bne $s0 $s3 nopit1
         la $a0 p_msg
         call print
     nopit1:
     
-    bne $s7 $s4 nopit2
+    bne $s0 $s4 nopit2
         la $a0 p_msg
         call print
     nopit2:
     
-    bne $s7 $s5 nobat1
+    bne $s0 $s5 nobat1
         la $a0 b_msg
         call print
     nobat1:
     
-    bne $s7 $s6 nobat2
+    bne $s0 $s6 nobat2
         la $a0 b_msg
         call print
     nobat2:
+#end
+
+check_status:
+{
+    load_data
+    #s1: player pos
+    #s2: wumpus pos
+    #s3: pit 1
+    #s4: pit 2
+    #s5: bat 1
+    #s6: bat 2
+    #s7: data array address
+    
+    beq $s1 $s2 wump_death
+    beq $s1 $s3 pit_death
+    beq $s1 $s4 pit_death
+    
+    beq $s1 $s5 omgbat
+    beq $s1 $s6 omgbat
     
     return
+    
+    omgbat:
+    la $a0 msg_fly
+    call print
+    choose 20 $t0
+    sb $t0 1($s7)
+    return
+    
+    pit_death:
+        la $a0 death_p
+        b game_over
+    wump_death:
+        la $a0 death_w
+    game_over:
+    call print
+    exit
 }
 
 #define print_status
     qprint_char 10
     load_data
+    
     add $a0 $s1 $zero
+    call get_room
     {
-        li $t3 3
-        la $t2 adjrooms
+        la $s7 adjrooms
+        li $s8 3
     
         another_room:
-            lb $a0 0($t2)
-            call check_room
-            addi $t2 $t2 1
-            addi $t3 $t3 -1
-        bgez $t3 another_room
+            lb $a0 0($s7)
+            check_room
+            addi $s7 $s7 1
+            addi $s8 $s8 -1
+        bgtz $s8 another_room
     }
 #end
 
-#define do_move
-{
-    la $s0 wdata
-    sb $s1 1($s0)
-    qprint_string move_msg
+#define print_rooms
+    la $a0 room_msg
+    call print
+    addi $a0 $s1 1
+    call print_int
+    
     add $a0 $s1 $zero
     call get_room
+    
+    qprint_string move_msg
 
     la $s0 adjrooms
     lb $a0 0($s0)
@@ -264,23 +306,33 @@ check_room:
     qprint_string comma
     lb $a0 2($s0)
     call print_int
+#end
+
+#define do_move
+{
+    move_again:
+    print_rooms
     qprint_string prompt
 
     la $a0 str_buf
     call read_int
-    li $t1 3
-    check_another_room:
-        lb $t3 0($s0)
-        beq $v0 $t3 in_ok
-        addi $s0 $s0 1
-        addi $t1 $t1 -1
-    bgez $t1 check_another_room
-    qprint_char 10
-    b usermove
+    add $s7 $v0 $zero
+    
+    add $a0 $s1 $zero
+    call get_room
+    la $s0 adjrooms
+    lb $a0 0($s0)
+    beq $v0 $a0 in_ok
+    lb $a0 1($s0)
+    beq $v0 $a0 in_ok
+    lb $a0 2($s0)
+    beq $v0 $a0 in_ok
+    
+    b move_again
     in_ok:
-        addi $v0 $v0 -1
+        addi $s7 $s7 -1
         la $s0 wdata
-        sb $v0 1($s0)
+        sb $s7 1($s0)
         b mainloop
 }
 #end
@@ -316,18 +368,12 @@ main:
         sb $s4 4($s7)
         sb $s5 5($s7)
         sb $s6 6($s7)
-        li $s0 6
     mainloop:
         print_debug
+        call check_status
         print_status
-        
-        #s0: iteration count
-        #s1: player pos
-        #s2: wumpus pos
-        #s3: pit 1
-        #s4: pit 2
-        #s5: bat 1
-        #s6: bat 2
+        print_rooms
+        qprint_char 10
         
         la $a0 act_choice
         call print
