@@ -8,9 +8,10 @@
 #   2: $fp
 #   3: $sp
 _saved_stacks: .space 1024
+_current_stack: .word -1
 .text
 
-#define find_stack
+#define _find_stack
     la $v0 _saved_stacks
     #find the PID in the array
     _next_item:
@@ -41,23 +42,29 @@ save_stack:
     return
 }
 
-close_stack:
-{
-    find_stack $a0
-    li $t1 1
-    sw $t1 0($v0)   #available = 1
-    return
-}
-
+#change_stack PID $fp $sp
 change_stack:
 {
-    exec save_stack
-    load_arg 1 $a0
-    find_stack $a0
+    #save old stack if there is one
+    add $s0 $a0 $zero
+    la $t2 _current_stack
+    lw $s1 0($t2)
+    bltz $t0 _skip_save
+        add $a0 $s1 $zero
+        exec save_stack
+    _skip_save:
+    
+    #find slot for new stack, fill it
+    add $a0 $s0 $zero
+    _find_stack $a0
     lw $fp 8($v0)
     lw $sp 12($v0)
     li $t0 1
     sw $t0 0($v0)   #old stack slot is now available
+    
+    #update current_stack so next call of change_stack will work
+    la $t2 _current_stack
+    sw $a0 0($t2)   #current_stack = PID
     return
 }
 
