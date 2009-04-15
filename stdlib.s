@@ -14,7 +14,7 @@ read_char:
 
 # write_char char
 #       Writes char ($a0) to the console. Blocking.
-write_char:
+print_char:
 {
     _write_char $a0
     return
@@ -104,6 +104,12 @@ print_int:
     add $t6 $t5 $zero   #copy to t6
 
     add $t7 $zero $zero #init negative bit to zero
+    
+    bnez $t2 do_digit   #check for zero
+        addi $t2 $t2 48
+        _write_char $t2
+        return
+    
     bgez $t2 do_digit   #set negative bit if necessary, otherwise skip
     addi $t7 $zero 1
 
@@ -138,18 +144,15 @@ end_write:
     return
 }
 
-.data
-r_int_buf: .space 30
 .text
 read_int:
 {
-    la $a0 r_int_buf        #load a buffer pointer
+    add $s0 $a0 $zero
     call readln             #get a string from the console
     
-    la $a0 r_int_buf    
+    add $a0 $s0 $zero
     call atoi               #call atoi to scan an int
     return                  #atoi puts the result into $v0 - return here
-    
 }
 
 .text

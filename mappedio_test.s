@@ -16,20 +16,23 @@ main:
 {
     la $a0 ask_num
     exec print
+    la $a0 read_buffer
     exec read_int
     add $s0 $v0 $zero
     
     la $a0 ask_num
     exec print
+    la $a0 read_buffer
     exec read_int
     add $s1 $v0 $zero
     
     la $a0 ask_char
     exec print
+    la $a0 read_buffer
     exec read_char
     add $s2 $v0 $zero
     add $a0 $s2 $zero
-    exec write_char
+    exec print_char
     
     la $a0 ask_str
     exec print
