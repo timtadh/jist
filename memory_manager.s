@@ -195,10 +195,10 @@
     #call    println_hex
     load_hcb                    # load the HCB
 #     if index < len_list: jump index_in_list
-    .data
-    empty: .asciiz ""
-    .text
-    la      $a0 empty
+#     .data
+#     empty: .asciiz ""
+#     .text
+#     la      $a0 empty
     #call    println
     add     $a0 $s7 $0          # $s7 = index
     #call    println_hex
