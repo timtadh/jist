@@ -97,15 +97,15 @@ __start:
 #     free    $s4
 #     free    $s1
     
-    enable_interrupts
-    enable_clock_interrupt
+    #enable_interrupts
+    #enable_clock_interrupt
     load_user_programs
 #     la      $s0  user_program_locations
 #     lw      $t0  0($s0)
 #     add     $a0  $t0  $0
 #     call    load_process
     la      $s0  user_program_locations
-    lw      $s1  12($s0)
+    lw      $s1  16($s0)
     jr      $s1
 #     
 #     disable_clock_interrupt
