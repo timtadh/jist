@@ -1,6 +1,7 @@
 # Tim Henderson
 # start.s - header for user programs
 
+#include memory_manager.s
 #include proc_manager.s
 #include stdlib.s
 
@@ -34,20 +35,20 @@ __start:
     li      $v0, 4              # 4 is the print_string syscall.
     syscall
     
-    la      $t0 kernel_data
-    la      $t1 kernel_data_end
+    sbrk_imm   1024 $t0 
+    addu    $t1 $t0 1024
     subu    $t1 $t1 $t0
     sra     $t1 $t1 2
-    # initialize_heap $t0 $t1
+    initialize_heap $t0 $t1
     # 
-    # #print_hcb
+#     print_hcb
     # 
-    # addu    $s0 $0 4
-    # print_hcb
-    # alloc   $s0 $s1
-    # print_hcb
-    # free    $s1
-    # print_hcb
+    addu    $s0 $0 4
+    print_hcb
+    alloc   $s0 $s1
+    print_hcb
+    free    $s1
+    print_hcb
 #     alloc   $s0 $s2
 #     print_hcb
 #     alloc   $s0 $s3
@@ -107,5 +108,6 @@ __start:
     
     disable_clock_interrupt
     enable_clock_interrupt
-    j       $s1                 # start main program
+    exit
+#     j       $s1                 # start main program
     

@@ -4,8 +4,6 @@
     .globl  proc_limit
     .globl  proc_list
     .globl  user_program_locations
-    .globl  kernel_data
-    .globl  kernel_data_end
     .globl  HCB_ADDR
     .kdata 
 user_program_locations:
@@ -16,7 +14,3 @@ proc_limit: .word   0x80
 proc_list:
             #repeat 128
             .word   0
-kernel_data:
-    #repeat 540
-    .word   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-kernel_data_end:
