@@ -35,20 +35,20 @@ __start:
     li      $v0, 4              # 4 is the print_string syscall.
     syscall
     
-    sbrk_imm   1024 $t0 
-    addu    $t1 $t0 1024
-    subu    $t1 $t1 $t0
-    sra     $t1 $t1 2
-    initialize_heap $t0 $t1
-    # 
+#     sbrk_imm   1024 $t0 
+#     addu    $t1 $t0 1024
+#     subu    $t1 $t1 $t0
+#     sra     $t1 $t1 2
+#     initialize_heap $t0 $t1
+#     # 
+# #     print_hcb
+#     # 
+#     addu    $s0 $0 4
 #     print_hcb
-    # 
-    addu    $s0 $0 4
-    print_hcb
-    alloc   $s0 $s1
-    print_hcb
-    free    $s1
-    print_hcb
+#     alloc   $s0 $s1
+#     print_hcb
+#     free    $s1
+#     print_hcb
 #     alloc   $s0 $s2
 #     print_hcb
 #     alloc   $s0 $s3
@@ -98,16 +98,16 @@ __start:
 #     free    $s1
     
     
-    load_user_programs
-    la      $s0  user_program_locations
-    lw      $t0  0($s0)
-    add     $a0  $t0  $0
-    call    load_process
-    la      $s0  user_program_locations
-    lw      $s1  12($s0)
-    
-    disable_clock_interrupt
-    enable_clock_interrupt
+#     load_user_programs
+#     la      $s0  user_program_locations
+#     lw      $t0  0($s0)
+#     add     $a0  $t0  $0
+#     call    load_process
+#     la      $s0  user_program_locations
+#     lw      $s1  12($s0)
+#     
+#     disable_clock_interrupt
+#     enable_clock_interrupt
     exit
 #     j       $s1                 # start main program
     
