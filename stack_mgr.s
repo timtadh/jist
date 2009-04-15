@@ -1,3 +1,24 @@
+#Steve Johnson
+#Stack Manager
+
+# ===============
+# = Basic Usage =
+# ===============
+
+# You should only need to call 2 functions here, ever:
+# change_stack new_pid old_fp old_sp
+#     returns the new stack pointer and frame pointer as v0 and v1 respectively
+# clear_stack pid_to_clear
+#     returns nothing
+# 
+# If you call change_stack and it doesn't find the new stack, it will create a new one.
+# (Actually it won't, but it will when we have a memory manager.)
+
+
+
+
+
+
 #include stdlib.s
 #include sys_macros.m
 
@@ -35,25 +56,7 @@ _find_stack:
     return
 }
 
-#define _find_free_space
-    #find a free slot in the array
-    la $v0 _saved_stacks
-    addi $t1 $zero 2
-    _next_item:
-        lw $t0 0($v0)
-        beqz $t0 _slot_found
-        beq $t0 $t1 _not_found
-        addi $v0 $v0 16
-        b _next_item
-    _slot_found:
-    return
-    
-    _not_found:
-    add $v0 $zero $zero
-    return
-#end
-
-#save_stack PID $fp $sp
+#save_stack new_PID old_fp old_sp
 #   Finds an available slot and stores PID($a0), $fp($a1), and $sp($a2)
 save_stack:
 {
@@ -80,14 +83,15 @@ save_stack:
 #   v1 = sp
 init_stack:
 {
+    #ALLOCATE MEMORY HERE OR SOME SHIT
     addi $v0 $a0 100
     addi $v1 $a0 1000
     return
 }
 
-#change_stack PID $fp $sp
-#   v0 = fp
-#   v1 = sp
+#change_stack new_PID old_fp old_sp
+#   v0 = new_fp
+#   v1 = new_sp
 change_stack:
 {
     #save old stack if there is one
@@ -105,9 +109,9 @@ change_stack:
     call _find_stack
     beqz $v0 _new_stack
         add $s4 $v0 $zero
-        lw $v0 8($s4)
-        lw $v1 12($s4)
-        sw $zero 0($s4)   #old stack slot is now available
+        lw $v0 8($s4)       #v0 = fp
+        lw $v1 12($s4)      #v1 = sp
+        sw $zero 0($s4)     #used = 0
         b _update_current
     _new_stack:
         add $a0 $s0 $zero
@@ -116,6 +120,16 @@ change_stack:
     #update current_stack so next call of change_stack will work
     la $t2 _current_stack
     sw $s0 0($t2)   #current_stack = PID
+    return
+}
+
+#clear_stack PID
+clear_stack:
+{
+    call _find_stack
+    beqz $v0 _done
+        sw $zero 0($v0)     #used = 0...that is all
+    _done:
     return
 }
 
@@ -149,42 +163,35 @@ print_stack:
     return
 }
 
-#define print_current_stack
-    la $t0 _current_stack
-    lw $a0 0($t0)
-    call print_int
-    li $a0 10
-    call print_char
-#end
-
 .text
 .globl main
 main:
+    li $a0 1
+    call change_stack
+    call print_stack
+    
+    li $a0 2            #2 is the NEW PID
+    li $a1 11           #11 is the OLD FRAME POINTER for stack 1 to be saved
+    li $a2 111          #111 is the OLD STACK POINTER for stack 1  to be saved
+    call change_stack
+    call print_stack
+    
+    li $a0 1
+    li $a1 22
+    li $a2 222
+    call change_stack
     addi $a0 $zero 1
+    call print_stack
+    
+    li $a0 3
+    li $a1 12
+    li $a2 121
     call change_stack
     call print_stack
     
-    addi $a0 $zero 2    #2 is the NEW PID
-    addi $a1 $zero 11   #11 is the OLD FRAME POINTER for stack 1 to be saved
-    addi $a2 $zero 111  #111 is the OLD STACK POINTER for stack 1  to be saved
-    call change_stack
-    call print_stack
-    
-    addi $a0 $zero 1
-    addi $a1 $zero 22
-    addi $a2 $zero 222
-    call change_stack
-    call print_stack
-    
-    addi $a0 $zero 3
-    addi $a1 $zero 12
-    addi $a2 $zero 121
-    call change_stack
-    call print_stack
-    
-    addi $a0 $zero 4
-    addi $a1 $zero 33
-    addi $a2 $zero 333
+    li $a0 4
+    li $a1 33
+    li $a2 333
     call change_stack
     call print_stack
     exit
