@@ -245,15 +245,28 @@ end:
     save_hcb
     addu    $t0 $s1 $0          # move size_HCB into $t0
     hcbtop  $t0 $s0 $t0         # end_list = $t0
+    addu    $s0 $t0 $0
     sw      $t1 0($t0)          # sw      mem_id 0(end_list)
     sw      $s6 4($t0)          # sw      addr 4(end_list)
     sw      $s7 8($t0)          # sw      size 8(end_list)
-    addu    $a0 $s6 $0
-    #call    println_hex
-    addu    $a0 $s7 $0
-    #call    println_hex
     
+    la      $a0 addr_msg
+    call    print
+    lw      $a0 4($s0)
+    call    println_hex
+    la      $a0 amt_msg
+    call    print
+    lw      $a0 8($s0)
+    call    println_hex
+    
+    lw      $t1 0($s0)
     addu    $v0 $t1 $0          # return mem_id
+    b       end
+    .kdata
+    addr_msg: .asciiz "         addhcb -> addr = "
+    amt_msg:  .asciiz "         addhcb -> amt = "
+    .ktext
+end:
     __restore_frame
 #end
 
@@ -374,6 +387,60 @@ end:
     __restore_frame
 #end
 
+#define compact local
+    #     from_addr = $t0
+    #     to_addr = $t1
+    #     last_addr = $t2
+    #     temp = $t3
+    #     hcb_addr = $s0
+    #     while (from_addr <= last_addr)
+    #     {
+    #         lw  temp 0(from_addr)
+    #         sw  temp 0(to_addr)
+    #         if (from_addr == hcb_addr)
+    #         {
+    #             hcb_addr = to_addr
+    #             sw  hcb_addr HCB_ADDR
+    #         }
+    #         to_addr += 4
+    #         from_addr += 4
+    #     }
+        addu    $s6 $a0 $0          # $s6 = hole_addr
+        addu    $s7 $a1 $0          # $s7 = hole_size
+        la      $a0 hole_addr_msg
+        call    print
+        addu    $a0 $s6 $0
+        call    println_hex
+        la      $a0 hole_size_msg
+        call    print
+        addu    $a0 $s7 $0
+        call    println_hex
+        #call    println_hex
+        load_hcb                    # load the control block
+        addu    $t0 $s7 $0           # move hole_size into $t0
+        words_to_bytes $t0          # convert hole_size to bytes
+        addu    $t1 $s6 $0          # to_addr = $t1
+        addu    $t2 $s1 $0          # move size_HCB into $t0
+        hcbtop  $t2 $s0 $t2         # last_addr = $t1
+    compact_loop:
+    #   if from_addr > last_addr: jump compact_loop_end
+        bgt     $t0 $t2 compact_loop_end
+        lw      $t3 0($t0)          # lw  temp 0(from_addr)
+        sw      $t3 0($t1)          # sw  temp 0(to_addr)
+    #         if (from_addr == hcb_addr)
+        bne     $t0 $s0 compact_loop_endif
+        addu    $s0 $t1 $0          # hcb_addr = to_addr
+        sw      $s0 HCB_ADDR        # save the hcb_addr in HCB_ADDR
+    compact_loop_endif:
+        addu    $t1 $t1 4           # to_addr += 4
+        addu    $t0 $t0 4           # from_addr += 4
+    compact_loop_end:
+        return
+    .kdata
+    hole_addr_msg: .asciiz "hole_addr = "
+    hole_size_msg: .asciiz "hole_size = "
+    .ktext
+#end
 
 {
         
@@ -466,6 +533,9 @@ end:
         subu    $t0 $t0 4           # move_from_addr = move_from_addr - 4
         j   loop
     loop_end:
+        subu    $t1 $t1 4           # move_to_addr = move_from_addr + amt
+        lw      $t2 0($t0)          # lw      temp 0(move_from_addr)
+        sw      $t2 0($t1)          # sw      temp 0(move_to_addr)
     #     sw      move_to_addr HCB_ADDR
         sw      $t1 HCB_ADDR
         addu    $a0 $t1 $0
@@ -510,6 +580,14 @@ end:
     #     }
         addu    $s6 $a0 $0          # $s6 = hole_addr
         addu    $s7 $a1 $0          # $s7 = hole_size
+        la      $a0 hole_addr_msg
+        call    print
+        addu    $a0 $s6 $0
+        call    println_hex
+        la      $a0 hole_size_msg
+        call    print
+        addu    $a0 $s6 $0
+        call    println_hex
         #call    println_hex
         load_hcb                    # load the control block
         addu    $t0 $s7 $0           # move hole_size into $t0
@@ -531,6 +609,10 @@ end:
         addu    $t0 $t0 4           # from_addr += 4
     compact_loop_end:
         return
+    .kdata
+    hole_addr_msg: .asciiz "hole_addr = "
+    hole_size_msg: .asciiz "hole_size = "
+    .ktext
     }
     
     # add_hcb_list_elem(addr, size) --> $v0 = mem_id
@@ -897,18 +979,18 @@ end:
     #     save_hcb
     #     compact(block_addr, block_amt)
         addu    $s7 $a0 $0          # mem_id = $s7
-#         la      $a0 id_msg
-#         call    print
-#         add     $a0 $s7 $0
-#         call    println_hex
+        la      $a0 id_msg
+        call    print
+        add     $a0 $s7 $0
+        call    println_hex
         add     $a0 $s7 $0
         call    find_index
         beqz    $v0 free_error2      # if not found: jump free_error
         addu    $s6 $v1 $0          # index = $s6
-#         la      $a0 index_msg
-#         call    print
-#         add     $a0 $s6 $0
-#         call    println_hex
+        la      $a0 index_msg
+        call    print
+        add     $a0 $s6 $0
+        call    println_hex
         addu    $a0 $s6 $0
         #call    get_hcb_list_elem   # get_hcb_list_elem(index)s
         
@@ -920,6 +1002,11 @@ end:
         lw      $s0 4($t0)          # block_addr = $s0
         lw      $s1 8($t0)          # block_amt = $s1
         
+        la      $a0 amt_msg
+        call    print
+        add     $a0 $s0 $0
+        call    println_hex
+        
         addu    $a0 $s6 $0
         del_hcb
         #call    del_hcb_list_elem   # del_hcb_list_elem(index)
@@ -928,13 +1015,19 @@ end:
         addu    $s7 $s0 $0          # $s7 = block_addr
         addu    $s6 $s1 $0          # $s6 = block_amt
         
+        la      $a0 amt_msg
+        call    print
+        add     $a0 $s6 $0
+        call    println_hex
+        
         load_hcb
         addu    $s4 $s4 $s6         # free += block_amt
         save_hcb
         
+        
         addu    $a0 $s7 $0
         addu    $a1 $s6 $0
-        call    compact             # compact(block_addr, block_amt)
+        compact             # compact(block_addr, block_amt)
 #         la      $a0 freed_msg
 #         call    println
         return
@@ -952,6 +1045,7 @@ end:
     error_msg2: .asciiz "Find Index Error in Free\n"
     index_msg: .asciiz "index = "
     id_msg: .asciiz "id = "
+    amt_msg: .asciiz "amt = "
     freed_msg: .asciiz "freed\n"
         .text
     }
