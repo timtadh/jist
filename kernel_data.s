@@ -7,7 +7,7 @@
     .globl  kernel_data
     .globl  kernel_data_end
     .globl  HCB_ADDR
-    .kdata 
+    .data 
 user_program_locations:
             #repeat 16
             .word   0

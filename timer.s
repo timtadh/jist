@@ -60,14 +60,14 @@ newline:
 # end of add2.asm.
 
 
-    .kdata                      # stores the save values of these reg's since the stack
+    .data                      # stores the save values of these reg's since the stack
                                 # may be unsafe
 save0:  .word 0
 save1:  .word 0
 exception_msg: .asciiz "exception handler entered\n"
 
     
-    .ktext 0x80000180           # must go at this address
+    .text 0x80000180           # must go at this address
 exception_handler:              # exception handler
     # first store state
     .set noat                   # stops spim from complaining that you are touching $at

@@ -189,9 +189,9 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
     for line in in_lines:
         kw = string.lower(line.strip())
         if kernel and kw.startswith('.text'):
-            scopes[-1].append(' '*4 + '.ktext')
+            scopes[-1].append(' '*4 + '.text')
         elif kernel and kw.startswith('.data'):
-            scopes[-1].append(' '*4 + '.kdata')
+            scopes[-1].append(' '*4 + '.data')
         elif kw.startswith('#define'):
             #start defining macro, get its name and init a list of its lines
             if in_macro: print "Macro error."

@@ -195,9 +195,9 @@
     #call    println_hex
     load_hcb                    # load the HCB
 #     if index < len_list: jump index_in_list
-    .kdata
+    .data
     empty: .asciiz ""
-    .ktext
+    .text
     la      $a0 empty
     #call    println
     add     $a0 $s7 $0          # $s7 = index
@@ -351,7 +351,7 @@ end:
         
         add     $v0 $0 $0           # error = 0 success!
         j       end
-    .kdata
+    .data
     del_error_msg: .asciiz "del error"
     del_index_msg: .asciiz "del index = "
     hcb_addr_start_msg: .asciiz "HCB address start_addr = "
@@ -359,7 +359,7 @@ end:
     index_addr_msg: .asciiz "Index address = "
     new_index_msg: .asciiz "new index = "
     old_index_msg: .asciiz "old index = "
-    .ktext
+    .text
     del_hcb_list_elem_error:
         la      $a0 del_error_msg
         call    println
@@ -377,16 +377,16 @@ end:
 
 {
         
-        .ktext 0x80000000
+        .text 0x80000000
     __initialize_heap: 
         j   initialize_heap
-        .ktext 0x80000004
+        .text 0x80000004
     __alloc:
         j   alloc
-        .ktext 0x80000008
+        .text 0x80000008
     __free:
         j   free
-        .ktext 0x8000000c
+        .text 0x8000000c
     __get_addr:
         j   get_addr
     
@@ -761,7 +761,7 @@ end:
         add     $v0 $0 $0           # found = 0
         add     $v1 $0 $0           # index = 0
         return
-    .kdata
+    .data
     start_msg: .asciiz "find index start"
     m_msg: .asciiz "m = "
     id_msg: .asciiz "id = "
@@ -770,7 +770,7 @@ end:
     smaller_msg: .asciiz "cid is smaller than m"
     len_msg: .asciiz "length of list = "
     
-    .ktext
+    .text
     }
     
     # alloc(amt) --> $v0 = mem_id

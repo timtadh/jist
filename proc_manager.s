@@ -4,7 +4,7 @@
 
 #include proc_storage.s
 
-    .ktext
+    .text
     # load_process(start_addr) --> v0 = pcb_addr
 load_process:
 {
@@ -13,6 +13,6 @@ load_process:
     
     add     $v0 $s0 $0          # move the pcb addr into the return reg
     return
-    .kdata
+    .data
 default_data_amt: .word 0x00004000
 }
