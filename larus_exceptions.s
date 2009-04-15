@@ -24,7 +24,7 @@
 
 # Define the exception handling code.  This must go first!
 
-	.kdata
+	.data
 __m1_:	.asciiz "  Exception "
 __m2_:	.asciiz " occurred and ignored\n"
 __e0_:	.asciiz "  [Interrupt] "
@@ -74,9 +74,9 @@ s2:	.word 0
 # saving their old values.
 
 # This is the exception vector address for MIPS-1 (R2000):
-#	.ktext 0x80000080
+#	.text 0x80000080
 # This is the exception vector address for MIPS32:
-	.ktext 0x80000180
+	.text 0x80000180
 # Select the appropriate one for the mode in which SPIM is compiled.
 	.set noat
 	move $k1 $at		# Save $at

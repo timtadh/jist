@@ -389,7 +389,7 @@ ret:
         la      $a0 empty
         call    println
         j       end
-        .kdata
+        .data
         hcb_msg: .asciiz "\nHCB:"
         hcb_addr_msg: .asciiz "    HCB address = "
         size_HCB_msg: .asciiz "    size_HCB = "
@@ -398,7 +398,7 @@ ret:
         freed_msg: .asciiz "    freed = "
         len_list_msg: .asciiz "    len_list = "
         empty: .asciiz ""
-        .ktext
+        .text
     end:
     __restore_frame
 #end

@@ -5,7 +5,7 @@
     .globl  proc_list
     .globl  user_program_locations
     .globl  HCB_ADDR
-    .kdata 
+    .data 
 user_program_locations:
             #repeat 16
             .word   0

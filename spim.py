@@ -2,7 +2,7 @@
 
 '''
 This is meant to be used to build a full mips program from multiple file sources. The labels
-"__start" and "main" should be in the first file. The exception handler at ".ktext 0x80000180"
+"__start" and "main" should be in the first file. The exception handler at ".text 0x80000180"
 should be the last thing in the last file.
 '''
 

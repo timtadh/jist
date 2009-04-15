@@ -13,7 +13,7 @@
 # #     .globl __save_s1
 # #     .globl __save_s2
 # #     .globl __save_s3
-    .kdata
+    .data
 __save_gp:  .word 0
 __save_sp:  .word 0
 __save_fp:  .word 0
@@ -31,7 +31,7 @@ __save_HCB_ADDR: .word 0
 __k_HCB_ADDR: .word 0
 
 
-    .ktext
+    .text
 save_state:
 {
     sw      $gp __save_gp       # save the pointer registers
@@ -82,10 +82,10 @@ restore_state:
     j       restore_state_return
 }
 
-    .kdata
+    .data
 __int_msg: .asciiz "interrupt handler entered\n"
 
-    .ktext
+    .text
 interrupt_handler:
     la      $a0, __int_msg      # load the addr of exception_msg into $a0.
     li      $v0, 4              # 4 is the print_string syscall.

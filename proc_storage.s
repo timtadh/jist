@@ -48,11 +48,11 @@
 # 4 -> halted
 # 5 -> marked for clean up
 
-    .kdata
+    .data
 pcb_size: .word 0x8c            # 140 = 35 * 4
 next_proc_num: .word 0x0        # start proccess number at 0
 
-    .ktext
+    .text
     # create_pcb() return $v0 -> addr of pcb
 create_pcb:
     sbrk_addr pcb_size $v0
