@@ -18,10 +18,15 @@ kernel_files = [
 if __name__ != '__main__': sys.exit(0)
 
 if len(sys.argv) < 2:
-    print "Usage: python spim.py file1.s file2.s file3.s ... fileN.s"
+    print "Usage: python spim.py [--stripcomments] file1.s file2.s file3.s ... fileN.s"
     sys.exit(0)
 
 filenames = sys.argv[1:]
+if filenames[0] == '--stripcomments':
+    cstrip = True
+    filenames = filenames[1:]
+else:
+    cstrip = True
 filenames_processed = []
 files = []
 
@@ -29,20 +34,20 @@ if os.path.exists('build'):
     for f in os.listdir('build'):
         os.remove(os.path.join('build', f))
     os.rmdir('build')
-    os.makedirs('build')
+os.makedirs('build')
 
 kernel_started = False
 
 for filename in filenames:
     new_path = os.path.join('build', filename.split('/')[-1])
     if filename not in kernel_files:
-        mpp.process(filename, new_path, replace_labels=True)
+        mpp.process(filename, new_path, replace_labels=True, cstrip=cstrip)
     elif not kernel_started:
         kernel_started = True
         mpp.make_kernel_macros()
-        mpp.process(filename, new_path, True, False, True)
+        mpp.process(filename, new_path, True, False, True, cstrip)
     else:
-        mpp.process(filename, new_path, True, False, True)
+        mpp.process(filename, new_path, True, False, True, cstrip)
     filenames_processed.append(new_path)
 
 for filename in filenames_processed:

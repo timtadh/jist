@@ -53,8 +53,9 @@ def get_file_text(f1):
             if arg not in included:
                 included.append(arg)
                 f3 = open(arg, 'r')
-                text = '\n###'+arg+'###\n' + get_file_text(f3)
-                text = text + '\n###end '+arg+'###\n'
+                text = get_file_text(f3)
+                if not strip_comments:
+                    text = '\n###'+arg+'###\n' + text + '\n###end '+arg+'###\n'
                 f3.close()
                 in_lines.append(text)
         else:
@@ -65,21 +66,27 @@ def make_kernel_macros():
     '''creates specialized macros'''
     global kernel_macros
     
-    number_user_programs = ' '*4 + '#'*16 + ' start number_user_programs '  + '#'*16 + '\n'
+    number_user_programs = ''
+    if not strip_comments:
+        number_user_programs += ' '*4 + '#'*16 + ' start number_user_programs '  + '#'*16 + '\n'
     number_user_programs += ' '*4 + 'li      %1 @main_count@'
-    number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs '  + '#'*17 + '\n'
+    if not strip_comments:
+        number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs '  + '#'*17 + '\n'
     number_user_programs = ''.join(
         process_lines(number_user_programs, True, False)
     )
     
-    load_user_programs = ' '*4 + '#'*16 + ' start load_user_programs ' +  '#'*16 + '\n'
+    load_user_programs = ''
+    if not strip_comments:
+        load_user_programs += ' '*4 + '#'*16 + ' start load_user_programs ' +  '#'*16 + '\n'
     load_user_programs += ' '*4 + '__save_frame\n'
     load_user_programs += ' '*4 + 'la      $s0 user_program_locations\n'
     for i in range(main_count):
         load_user_programs += ' '*4 + 'la      $s1 @main_labels['+str(i)+']@\n'
         load_user_programs += ' '*4 + 'sw      $s1 '+str(i*4)+'($s0)\n'
     load_user_programs += ' '*4 + '__restore_frame\n'
-    load_user_programs += ' '*4 + '#'*17 + ' end load_user_programs ' + '#'*17 + '\n'
+    if not strip_comments:
+        load_user_programs += ' '*4 + '#'*17 + ' end load_user_programs ' + '#'*17 + '\n'
     load_user_programs = ''.join(
         process_lines(load_user_programs, True, False)
     )
@@ -196,7 +203,10 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
             linesplit = line.split()
             macro_name = string.lower(linesplit[1])
             is_global = False
-            start_text = ' '*4 + '#'*16 + ' start ' + macro_name + ' ' + '#'*16
+            if strip_comments:
+                start_text = ''
+            else:
+                start_text = ' '*4 + '#'*16 + ' start ' + macro_name + ' ' + '#'*16
             if len(linesplit) > 2 and string.lower(linesplit[2]) == 'global':
                 is_global = True
             if is_global:
@@ -206,7 +216,10 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
         elif kw.startswith('#end'):
             #concatenate the lines and stop defining the macro
             in_macro = False
-            end_text = ' '*4 + '#'*17 + ' end ' + macro_name + ' ' + '#'*17
+            if strip_comments:
+                end_text = ''
+            else:
+                end_text = ' '*4 + '#'*17 + ' end ' + macro_name + ' ' + '#'*17
             if macro_name in local_macros:
                 local_macros[macro_name].append(end_text)
                 local_macros[macro_name] = "\n".join(local_macros[macro_name])
@@ -240,7 +253,12 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
                 scopes[-1] += rep_line(line, local_macros, use_kernel_macros) * repetitions
                 repetitions = 1
     if len(scopes) == 1:
-        return '\n'.join(scopes[0])
+        if strip_comments:
+            return '\n'.join([
+                l for l in scopes[0] if not l.strip().startswith('#') and l.strip() != ''
+            ])
+        else:
+            return '\n'.join(scopes[0])
     else:
         raise Exception, "Scoping Error"
 
