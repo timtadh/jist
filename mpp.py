@@ -38,6 +38,7 @@ max_user_programs = 16
 main_count = 0
 label_count = 0
 main_labels = list()
+strip_comments = False
 
 def get_file_text(f1):
     #process includes
@@ -243,8 +244,9 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
     else:
         raise Exception, "Scoping Error"
 
-def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False):
-    global global_macros
+def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False, cstrip=False):
+    global global_macros, strip_comments
+    strip_comments = cstrip
     
     f1 = open(path, 'r')
     s = get_file_text(f1)
