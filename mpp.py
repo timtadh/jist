@@ -39,7 +39,7 @@ main_count = 0
 label_count = 0
 main_labels = list()
 
-def get_file_text(f1):
+def get_file_text(f1, strip_comments=False):
     #process includes
     s = ""
     in_lines = []
@@ -52,8 +52,9 @@ def get_file_text(f1):
             if arg not in included:
                 included.append(arg)
                 f3 = open(arg, 'r')
-                text = '\n###'+arg+'###\n' + get_file_text(f3)
-                text = text + '\n###end '+arg+'###\n'
+                text = get_file_text(f3)
+                if not strip_comments:
+                    text = '\n###'+arg+'###\n' + text + '\n###end '+arg+'###\n'
                 f3.close()
                 in_lines.append(text)
         else:
@@ -173,7 +174,7 @@ def rep_line(line, local_macros, use_kernel_macros):
         out_lines.append(line)
     return out_lines
 
-def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
+def process_lines(s, kernel, use_kernel_macros, local_macros=dict(), strip_comments=False):
     global global_macros
     
     in_lines = s.split('\n')
@@ -239,18 +240,23 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
                 scopes[-1] += rep_line(line, local_macros, use_kernel_macros) * repetitions
                 repetitions = 1
     if len(scopes) == 1:
-        return '\n'.join(scopes[0])
+        if strip_comments:
+            return '\n'.join([
+                l for l in scopes[0] if not l.strip().startswith('#') and l.strip() != ''
+            ])
+        else:
+            return '\n'.join(scopes[0])
     else:
         raise Exception, "Scoping Error"
 
-def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False):
+def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False, strip_comments=False):
     global global_macros
     
     f1 = open(path, 'r')
-    s = get_file_text(f1)
+    s = get_file_text(f1, strip_comments)
     if replace_labels:
         s = substitute_labels(s)
-    s = process_lines(s, kernel, use_kernel_macros)
+    s = process_lines(s, kernel, use_kernel_macros, strip_comments)
     
     f1.close()
     #write giant string to file

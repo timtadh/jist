@@ -18,10 +18,15 @@ kernel_files = [
 if __name__ != '__main__': sys.exit(0)
 
 if len(sys.argv) < 2:
-    print "Usage: python spim.py file1.s file2.s file3.s ... fileN.s"
+    print "Usage: python spim.py [--stripcomments] file1.s file2.s file3.s ... fileN.s"
     sys.exit(0)
 
 filenames = sys.argv[1:]
+if filenames[0] == '--stripcomments':
+    strip_comments = True
+    filenames = filenames[1:]
+else:
+    strip_comments = True
 filenames_processed = []
 files = []
 
@@ -40,9 +45,9 @@ for filename in filenames:
     elif not kernel_started:
         kernel_started = True
         mpp.make_kernel_macros()
-        mpp.process(filename, new_path, True, False, True)
+        mpp.process(filename, new_path, True, False, True, True)
     else:
-        mpp.process(filename, new_path, True, False, True)
+        mpp.process(filename, new_path, True, False, True, True)
     filenames_processed.append(new_path)
 
 for filename in filenames_processed:
