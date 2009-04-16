@@ -287,118 +287,80 @@ alread_zero:
     __restore_args
 #end
 
-# initialize_heap(start, len) --> Null
-#
-#     treat this as procedure call because it is
-#
-#define initialize_heap global
-    addu    $a0 %1 $0
-    addu    $a1 %2 $0
-    lui     $t0 0x8000
-    ori     $t0 0x0000
-    __save_frame
-    la      $ra ret
-    jr      $t0
-ret:
-    __restore_frame
-#end
+# # initialize_heap(start, len) --> Null
+# #
+# #     treat this as procedure call because it is
+# #
+# #define initialize_heap global
+#     addu    $a0 %1 $0
+#     addu    $a1 %2 $0
+#     lui     $t0 0x0400
+#     ori     $t0 0x0000
+#     __save_frame
+#     la      $ra ret
+#     jr      $t0
+# ret:
+#     __restore_frame
+# #end
 
-# alloc(amt) --> mem_id
-#
-#     treat this as procedure call because it is
-#
-#define alloc global
+# # alloc(amt) --> mem_id
+# #
+# #     treat this as procedure call because it is
+# #
+# #define alloc global
+# #     addu    $a0 %1 $0
+# #     call    alloc
+# #     addu    %2 $v0 $0
+#     addu    $a0 %1 $0
+#     lui     $t0 0x4000
+#     ori     $t0 0x0004
+#     __save_frame
+#     la      $ra ret
+#     jr      $t0
+# ret:
+#     __restore_frame
+#     addu    %2 $v0 $0
+# #     
+# #         addu    $a0 %1 $0
+# #         lui     $t0 0x8000
+# #         ori     $t0 0x0004
+# #         __save_frame
+# #         la      $ra ret
+# #         jr      $t0
+# #     ret:
+# #         __restore_frame
+# #         addu    %2 $v0 $0
+# #end
 
-    addu    $a0 %1 $0
-    lui     $t0 0x8000
-    ori     $t0 0x0004
-    __save_frame
-    la      $ra ret
-    jr      $t0
-ret:
-    __restore_frame
-    addu    %2 $v0 $0
-#end
-
-# free(mem_id) --> Null
-#
-#     treat this as procedure call because it is
-#
-#define free global
-    addu    $a0 %1 $0
-    lui     $t0 0x8000
-    ori     $t0 0x0008
-    __save_frame
-    la      $ra ret
-    jr      $t0
-ret:
-    __restore_frame
-#end
-
-
-# get_addr(mem_id) --> addr
-#
-#     treat this as procedure call because it is
-#
-#define get_addr global
-    addu    $a0 %1 $0
-    lui     $t0 0x8000
-    ori     $t0 0x000c
-    __save_frame
-    la      $ra ret
-    jr      $t0
-ret:
-    __restore_frame
-    addu    %2 $v1 $0
-#end
+# # free(mem_id) --> Null
+# #
+# #     treat this as procedure call because it is
+# #
+# #define free global
+#     addu    $a0 %1 $0
+#     lui     $t0 0x8000
+#     ori     $t0 0x0008
+#     __save_frame
+#     la      $ra ret
+#     jr      $t0
+# ret:
+#     __restore_frame
+# #end
 
 
-# print_hcb
-#
-#     treat this as procedure call because it is
-#
-#define print_hcb global
-    __save_frame
-        #la      $a0 hcb_msg
-        #call    println
-        lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
-        la      $a0 hcb_addr_msg
-        call    print
-        addu    $a0 $s0 $0
-        call    println_hex
-        la      $a0 size_HCB_msg
-        call    print
-        lw      $a0 0($s0)          # load the size_HCB into $s1
-        call    println_hex
-        la      $a0 next_id_msg
-        call    print
-        lw      $a0 4($s0)          # load the next_id into $s2
-        call    println_hex
-        la      $a0 top_msg
-        call    print
-        lw      $a0 8($s0)          # load the top into $s3
-        call    println_hex
-        la      $a0 freed_msg
-        call    print
-        lw      $a0 12($s0)         # load the free into $s4
-        call    println_hex
-        la      $a0 len_list_msg
-        call    print
-        lw      $a0 16($s0)         # load the len_list into $s5
-        call    println_hex
-        la      $a0 empty
-        call    println
-        j       end
-        .data
-        hcb_msg: .asciiz "\nHCB:"
-        hcb_addr_msg: .asciiz "    HCB address = "
-        size_HCB_msg: .asciiz "    size_HCB = "
-        next_id_msg: .asciiz "    next_id = "
-        top_msg: .asciiz "    top = "
-        freed_msg: .asciiz "    freed = "
-        len_list_msg: .asciiz "    len_list = "
-        empty: .asciiz ""
-        .text
-    end:
-    __restore_frame
-#end
+# # get_addr(mem_id) --> addr
+# #
+# #     treat this as procedure call because it is
+# #
+# #define get_addr global
+#     addu    $a0 %1 $0
+#     lui     $t0 0x0400
+#     ori     $t0 0x000c
+#     __save_frame
+#     la      $ra ret
+#     jr      $t0
+# ret:
+#     __restore_frame
+#     addu    %2 $v1 $0
+# #end
+

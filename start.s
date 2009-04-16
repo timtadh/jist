@@ -1,14 +1,12 @@
 # Tim Henderson
 # start.s - header for user programs
 
-#include memory_manager.s
-#include proc_manager.s
 #include stdlib.s
 
-    .kdata
+    .data
 __msg: .asciiz "\nmy procedure\n"
 
-    .ktext
+    .text
 proc:
     load_arg 3 $a0
     #li      $a0 15
@@ -35,78 +33,18 @@ __start:
     li      $v0, 4              # 4 is the print_string syscall.
     syscall
     
-#     sbrk_imm   1024 $t0 
-#     addu    $t1 $t0 1024
-#     subu    $t1 $t1 $t0
-#     sra     $t1 $t1 2
-#     initialize_heap $t0 $t1
-#     # 
-# #     print_hcb
-#     # 
-#     addu    $s0 $0 4
-#     print_hcb
-#     alloc   $s0 $s1
-#     print_hcb
-#     free    $s1
-#     print_hcb
-#     alloc   $s0 $s2
-#     print_hcb
-#     alloc   $s0 $s3
-#     print_hcb
-#     alloc   $s0 $s4
-#     alloc   $s0 $s5
     
-    #get_addr $s1 $a0
-    #call    println_hex
-#     print_hcb
-    
-#     free    $s1
-#     free    $s2
-#     free    $s3
-#     free    $s4
-#     free    $s5
-#     
-    
-#     alloc   $s0 $s1
-#     alloc   $s0 $s2
-#     alloc   $s0 $s3
-#     alloc   $s0 $s4
-#     alloc   $s0 $s5
-    
-#     free    $s2
-#     free    $s1
-#     free    $s5
-#     free    $s3
-#     free    $s4
-    
-    
-#     alloc   $s0 $s1
-#     alloc   $s0 $s2
-#     free    $s1
-#     alloc   $s0 $s3
-#     alloc   $s0 $s4
-#     free    $s3
-#     alloc   $s0 $s5
-#     alloc   $s0 $s1
-#     alloc   $s0 $s3
-    
-    
-#     free    $s3
-#     free    $s2
-#     free    $s5
-#     free    $s4
-#     free    $s1
-    
-    enable_interrupts
-    enable_clock_interrupt
-    load_user_programs
+#     enable_interrupts
+#     enable_clock_interrupt
+#     load_user_programs
 #     la      $s0  user_program_locations
 #     lw      $t0  0($s0)
 #     add     $a0  $t0  $0
 #     call    load_process
+    load_user_programs
     la      $s0  user_program_locations
-    lw      $s1  12($s0)
-    jr      $s1
+    lw      $s1  0($s0)
+#     jr      $s1
 #     
 #     disable_clock_interrupt
 #     enable_clock_interrupt
