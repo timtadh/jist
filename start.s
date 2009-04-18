@@ -104,8 +104,11 @@ __start:
 #     lw      $t0  0($s0)
 #     add     $a0  $t0  $0
 #     call    load_process
-    la      $s0  user_program_locations
-    lw      $s1  12($s0)
+
+    #this is a sneaky kernel macro:
+    run_first_program
+    #la      $s0  user_program_locations
+    #lw      $s1  12($s0)
     jr      $s1
 #     
 #     disable_clock_interrupt

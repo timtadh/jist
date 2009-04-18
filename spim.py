@@ -11,22 +11,68 @@ import subprocess
 import string
 import mpp
 
-kernel_files = [
-    'kernel.s'
-]
+kernel_files = ['kernel.s']
+start_files = ['sys_macros.m']
+end_files = ['kernel.s']
 
 if __name__ != '__main__': sys.exit(0)
 
 if len(sys.argv) < 2:
-    print "Usage: python spim.py [--stripcomments] file1.s file2.s file3.s ... fileN.s"
+    help_string = """Usage: python spim.py [options] [extra files]
+
+Options:
+--stripcomments or -s:
+    Strip comments from output file
+
+--jistfile or -j:
+    Load program list from file 'jistfile'
+
+--out or -o:
+    Specify an output file (untested)"""
+    print help_string
     sys.exit(0)
 
-filenames = sys.argv[1:]
-if filenames[0] == '--stripcomments':
-    cstrip = True
-    filenames = filenames[1:]
-else:
-    cstrip = True
+first_prog = 0
+
+def process_jistfile(jf_path):
+    global first_prog
+    location_table = {}
+    load_location = 0
+    filenames = start_files[:]
+    f = open(jf_path, 'r')
+    for line in f:
+        try:
+            left, right = [s.strip() for s in line.split(":")]
+            if left == 'init_with':
+                first_prog = location_table[right]
+        except:
+            s = line.strip()
+            if s != '':
+                filenames.append(s)
+                location_table[s] = load_location
+                load_location += 4
+    f.close()
+    filenames.extend(end_files)
+    return filenames
+
+cstrip = False
+out_path = os.path.join('build', '__spim_py_out')
+filenames = []
+
+next_is_output = False
+for arg in sys.argv[1:]:
+    if next_is_output:
+        next_is_output = False
+        out_path = arg
+    else:
+        if arg == '--stripcomments' or arg == '-s':
+            cstrip = True
+        elif arg == '--jistfile' or arg == '-f':
+            filenames = process_jistfile('jistfile')
+        elif arg == '--out' or arg == '-o':
+            next_is_output = True
+        else:
+            filenames.append(arg)
 filenames_processed = []
 files = []
 
@@ -41,7 +87,7 @@ kernel_started = False
 for filename in filenames:
     new_path = os.path.join('build', filename.split('/')[-1])
     if filename not in kernel_files:
-        mpp.process(filename, new_path, replace_labels=True, cstrip=cstrip)
+        mpp.process(filename, new_path, replace_labels=True, cstrip=cstrip, first=first_prog)
     elif not kernel_started:
         kernel_started = True
         mpp.make_kernel_macros()
@@ -52,14 +98,14 @@ for filename in filenames:
 
 for filename in filenames_processed:
     f = open(filename, 'r')
-    t = '#'*12 + ' ' + filename + ' ' + '#'*12 + '\n'
-    t += f.read()
-    t += '\n' + '#'*12 + ' ' + filename + ' ' + '#'*12 + '\n'
+    t = f.read()
+    if not cstrip:
+        t = '#'*12 + ' ' + filename + ' ' + '#'*12 + '\n' + t
+        t += '\n' + '#'*12 + ' ' + filename + ' ' + '#'*12 + '\n'
     files.append(t)
     f.close()
 
 s = '\n\n'.join(files)
-out_path = os.path.join('build', '__spim_py_out')
 f = open(out_path, 'w')
 f.write(s)
 f.close()

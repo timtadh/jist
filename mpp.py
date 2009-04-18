@@ -39,6 +39,7 @@ main_count = 0
 label_count = 0
 main_labels = list()
 strip_comments = False
+first_prog = 0
 
 def get_file_text(f1):
     #process includes
@@ -91,9 +92,18 @@ def make_kernel_macros():
         process_lines(load_user_programs, True, False)
     )
     
+    run_first_program = ''
+    if not strip_comments:
+        run_first_program += '    '+"#"*16+' start run_first_program '+'#'*16+'\n'
+    run_first_program += "    la      $s0  user_program_locations\n"
+    run_first_program += "    lw      $s1  %s($s0)\n" % str(first_prog)
+    if not strip_comments:
+        run_first_program += ' '*4 + '#'*17 + ' end run_first_program ' + '#'*17 + '\n'
+    
     kernel_macros.update({
         'number_user_programs':number_user_programs, 
-        'load_user_programs':load_user_programs
+        'load_user_programs':load_user_programs,
+        'run_first_program':run_first_program
     })
 
 def post_process_kernel_macro(macro_text):
@@ -262,9 +272,10 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
     else:
         raise Exception, "Scoping Error"
 
-def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False, cstrip=False):
-    global global_macros, strip_comments
+def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False, cstrip=False, first=0):
+    global global_macros, strip_comments, first_prog
     strip_comments = cstrip
+    first_prog = first
     
     f1 = open(path, 'r')
     s = get_file_text(f1)
