@@ -71,7 +71,7 @@ def make_kernel_macros():
     number_user_programs = ''
     if not strip_comments:
         number_user_programs += ' '*4 + '#'*16 + ' start number_user_programs '  + '#'*16 + '\n'
-    number_user_programs += ' '*4 + 'li      %1 @main_count@'
+    number_user_programs += ' '*4 + 'li      %1 &main_count&'
     if not strip_comments:
         number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs '  + '#'*17 + '\n'
     number_user_programs = ''.join(
@@ -84,7 +84,7 @@ def make_kernel_macros():
     load_user_programs += ' '*4 + '__save_frame\n'
     load_user_programs += ' '*4 + 'la      $s0 user_program_locations\n'
     for i in range(main_count):
-        load_user_programs += ' '*4 + 'la      $s1 @main_labels['+str(i)+']@\n'
+        load_user_programs += ' '*4 + 'la      $s1 &main_labels['+str(i)+']&\n'
         load_user_programs += ' '*4 + 'sw      $s1 '+str(i*4)+'($s0)\n'
     load_user_programs += ' '*4 + '__restore_frame\n'
     if not strip_comments:
@@ -109,7 +109,7 @@ def make_kernel_macros():
 
 def post_process_kernel_macro(macro_text):
     '''to be called after arg replacement is finished'''
-    r = re.compile(r'\@.*\@')
+    r = re.compile(r'\&.*\&')
     exprs = r.findall(macro_text)
     for expr in exprs:
         exec "rep = " + expr[1:-1] in globals()
@@ -210,7 +210,7 @@ def rep_names(lines, names):
     
     return lines;
 
-def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
+def process_lines(s, kernel, use_kernel_macros, local_macros=dict(), toplevel=False):
     global global_macros
     
     in_lines = s.split('\n')
@@ -267,17 +267,18 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
             if len(linesplit) == 2:
                 repetitions = int(linesplit[1])
         elif kw.startswith('{'):
-            #print '{'
+            print '{'
             scopes.append(list())
             varnames.append(dict())
         elif kw.startswith('}'):
-            #print '}'
+            print '}'
             l = scopes.pop()
             names = varnames.pop()
             #print l
             lines = substitute_labels('\n'.join(l)).split('\n')
             lines = rep_names(lines, names)
             scopes[-1].extend(lines)
+            print lines
             #print scopes[-1][-3:]
         elif kw.startswith('@'): #variable name
             name = var_split.split(line.lstrip().rstrip())
@@ -286,6 +287,9 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
                 if cm_varnames.has_key(name[0]):
                     raise Exception, 'Syntax Error name "%s" already defined in current macro "%s"'%\
                                                                                 (name[0], macro_name)
+                if name[1] in cm_varnames.values():
+                    raise Exception, 'Syntax Error reg "%s" already named in current macro "%s"'%\
+                                                                                (name[1], macro_name)
                 cm_varnames[name[0]] = name[1]
                 if macro_name in local_macros:
                     local_macros[macro_name].append('#' + line)
@@ -293,7 +297,13 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
                     global_macros[macro_name].append('#' + line)
             else:
                 if varnames[-1].has_key(name[0]):
-                    raise Exception, 'Syntax Error name "%s" already defined in current scope' % name[0]
+                    raise Exception, \
+                    'Syntax Error name "%s" already defined in current scope\n line = "%s"'\
+                                                                                   % (name[0], line)
+                if name[1] in varnames[-1].values():
+                    raise Exception, \
+                    'Syntax Error reg "%s" already named in current scope "%s"\n line = "%s"'%\
+                                                                                (name[1], line)
                 varnames[-1][name[0]] = name[1]
                 scopes[-1].append('#' + line)
         else:
@@ -314,13 +324,15 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
         for i, line in enumerate(lines):
             atsign = line.find('@')
             hashsign = line.find('#')
-            if atsign != -1 and (atsign < hashsign or hashsign == -1):
+            if toplevel and atsign != -1 and (atsign < hashsign or hashsign == -1):
                 raise Warning, "Syntax error name unconverted on line = '%s'" % line
             if line and line[-1] == '>': lines[i] = line[:-1]
+            lines[i] = ' '*4 + lines[i].lstrip().rstrip()
         if strip_comments:
             return '\n'.join([l for l in lines if not l.strip().startswith('#') and l.strip() != ''])
         else:
             return '\n'.join(lines)
+        
     else:
         raise Exception, "Scoping Error"
 
@@ -333,7 +345,7 @@ def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=Fal
     s = get_file_text(f1)
     if replace_labels:
         s = substitute_labels(s)
-    s = process_lines(s, kernel, use_kernel_macros)
+    s = process_lines(s, kernel, use_kernel_macros, toplevel=True)
     
     f1.close()
     #write giant string to file
@@ -354,4 +366,4 @@ if __name__ == "__main__":
     except:
         raise Exception, "use 'python mpp.py in_file out_file"
     
-    process(infile, outfile)
+    process(infile, outfile, cstrip=True)
