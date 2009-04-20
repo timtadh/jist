@@ -124,27 +124,25 @@
     mul     %1 %1 4             # multiply the number of words by four and store in same reg
 #end
 
-# load_hcb
+# load_hcb hcb_addr
 #     loads the HCB into $s0 - $s5 see the comments for what is in what reg
 #define load_hcb local
-    lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
-    lw      $s1 0($s0)          # load the size_HCB into $s1
-    lw      $s2 4($s0)          # load the next_id into $s2
-    lw      $s3 8($s0)          # load the top into $s3
-    lw      $s4 12($s0)         # load the free into $s4
-    lw      $s5 16($s0)         # load the len_list into $s5
+    lw      $s1 0(%1)          # load the size_HCB into $s1
+    lw      $s2 4(%1)          # load the next_id into $s2
+    lw      $s3 8(%1)          # load the top into $s3
+    lw      $s4 12(%1)         # load the free into $s4
+    lw      $s5 16(%1)         # load the len_list into $s5
 #end
 
-# save_hcb
+# save_hcb hcb_addr
 #     save the HCB
 #     assumes the variables are in the same position that load_hcb left them
 #define save_hcb local
-    lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
-    sw      $s1 0($s0)          # save the size_HCB
-    sw      $s2 4($s0)          # save the next_id
-    sw      $s3 8($s0)          # save the top
-    sw      $s4 12($s0)         # save the free
-    sw      $s5 16($s0)         # save the len_list
+    sw      $s1 0(%1)           # save the size_HCB
+    sw      $s2 4(%1)           # save the next_id
+    sw      $s3 8(%1)           # save the top
+    sw      $s4 12(%1)          # save the free
+    sw      $s5 16(%1)          # save the len_list
 #end
 
 # calctop dst hcb_addr size_HCB amt_freed
@@ -171,12 +169,11 @@
 #     
 #     MODIFIES: size_HCB
 #define hcbtop local
-    words_to_bytes %3           # multiply the size of the hcb by 4 and store in size
-    addu    %1 %2 %3            # add the size of the hcb to the addr
-    subu    %1 %1 4             # subtract 4 to get the actual last addr
+    sll     %1 %3 2
+    addu    %1 %2 %1            # add the size of the hcb to the addr
 #end
 
-# get_hcb_list_elem(index) --> $v0 = addr, $v1 = error
+# get_hcb_list_elem(index, hcb_addr) --> $v0 = addr, $v1 = error
 #     index : the index the element you want
 #     addr : the address of the element
 #     error : 0 if not error, error number otherwise
@@ -192,8 +189,9 @@
     #     return i_bytes, 0
     __save_frame
     add     $s7 $a0 $0          # $s7 = index
+    addu    $s0 $a1 $0
     #call    println_hex
-    load_hcb                    # load the HCB
+    load_hcb $s0                # load the HCB
 #     if index < len_list: jump index_in_list
 #     .data
 #     empty: .asciiz ""
@@ -218,7 +216,7 @@ end:
     __restore_frame
 #end
 
-# add_hcb_list_elem(addr, size) --> $v0 = mem_id
+# add_hcb_list_elem(addr, size, hcb_addr) --> $v0 = mem_id
 #define add_hcb local#     addr = $a0
     #     size = $a1
     #     next_id = $s2
@@ -234,43 +232,68 @@ end:
     #     sw      mem_id 0(end_list)
     #     sw      addr 4(end_list)
     #     sw      size 8(end_list)
+    .text
     __save_frame
     addu    $s6 $a0 $0
     addu    $s7 $a1 $0
-    load_hcb
-    addu    $t1 $s2 $0
-    addu    $s2 $s2 1           # next_id += 1
-    addu    $s5 $s5 1           # len_list += 1
-    addu    $s1 $s1 3           # size_HCB += 3
-    save_hcb
-    addu    $t0 $s1 $0          # move size_HCB into $t0
-    hcbtop  $t0 $s0 $t0         # end_list = $t0
-    addu    $s0 $t0 $0
-    sw      $t1 0($t0)          # sw      mem_id 0(end_list)
-    sw      $s6 4($t0)          # sw      addr 4(end_list)
-    sw      $s7 8($t0)          # sw      size 8(end_list)
+    addu    $s0 $a2 $0
     
     la      $a0 addr_msg
     call    print
-    lw      $a0 4($s0)
+    addu    $a0 $s6 $0
     call    println_hex
-    la      $a0 amt_msg
+    
+    
+    la      $a0 addr_msg
     call    print
-    lw      $a0 8($s0)
+    la      $a0 HCB_ADDR
+    call    println_hex
+    
+    load_hcb $s0
+    
+    la      $a0 size_msg
+    call    print
+    addu    $a0 $s1 $0
+    call    println_hex
+    
+    sw      $s2 0($t0)          # sw      mem_id 0(end_list)
+    sw      $s6 4($t0)          # sw      addr 4(end_list)
+    sw      $s7 8($t0)          # sw      size 8(end_list)
+    
+    
+    load_hcb $s0
+    addu    $t1 $s2 $0
+    addu    $s2 $s2 1           # next_id += 1
+    addu    $s5 $s5 1           # len_list += 1
+    
+    addu    $t0 $s1 $0          # move size_HCB into $t0
+    addu    $s1 $s1 3           # size_HCB += 3
+    
+    sll     $t0 $t0 2
+    addu    $t0 $s0 $t0            # add the size of the hcb to the addr
+    addu    $s0 $t0 $0
+    save_hcb $s0
+    
+    
+    la      $a0 addr_msg
+    call    print
+    la      $a0 HCB_ADDR
     call    println_hex
     
     lw      $t1 0($s0)
     addu    $v0 $t1 $0          # return mem_id
     b       end
-    .kdata
+    .data
     addr_msg: .asciiz "         addhcb -> addr = "
     amt_msg:  .asciiz "         addhcb -> amt = "
-    .ktext
+    size_msg:  .asciiz "         addhcb -> size = "
+    
+    .text
 end:
     __restore_frame
 #end
 
-# del_hcb_list_elem(index) --> $v0 = error
+# del_hcb_list_elem(index, addr) --> $v0 = error
 #     mem_id : the mem_id you want to remove from the list
 #     error : 0 if success error code otherwise
 #define del_hcb local
@@ -303,6 +326,7 @@ end:
     #     save_hcb
         __save_frame
         addu    $s7 $a0 $0          # put the index into $s7
+        addu    $s0 $a1 $0
 #         {
 #             ##print_hcb
 #             load_hcb
@@ -338,7 +362,7 @@ end:
 #             
 #             #call    println_hex
 #         }
-        load_hcb
+        load_hcb $s0
         addu    $a0 $s7 $0
         get_hcb
         #call get_hcb_list_elem      # get the addr of the element
@@ -360,7 +384,7 @@ end:
         subu    $s5 $s5 1           # len_list -= 1
         subu    $s1 $s1 3           # size_HCB -= 3
         addu    $s4 $s4 3           # free += 3
-        save_hcb
+        save_hcb $s0
         
         add     $v0 $0 $0           # error = 0 success!
         j       end
@@ -387,6 +411,7 @@ end:
     __restore_frame
 #end
 
+# compact (hole_addr, hole_size, hcb_addr) --> new_hcb_addr
 #define compact local
     #     from_addr = $t0
     #     to_addr = $t1
@@ -405,8 +430,10 @@ end:
     #         to_addr += 4
     #         from_addr += 4
     #     }
+    .text
         addu    $s6 $a0 $0          # $s6 = hole_addr
         addu    $s7 $a1 $0          # $s7 = hole_size
+        addu    $s0 $a2 $0
         la      $a0 hole_addr_msg
         call    print
         addu    $a0 $s6 $0
@@ -416,7 +443,7 @@ end:
         addu    $a0 $s7 $0
         call    println_hex
         #call    println_hex
-        load_hcb                    # load the control block
+        load_hcb $s0                # load the control block
         addu    $t0 $s7 $0           # move hole_size into $t0
         words_to_bytes $t0          # convert hole_size to bytes
         addu    $t1 $s6 $0          # to_addr = $t1
@@ -430,31 +457,29 @@ end:
     #         if (from_addr == hcb_addr)
         bne     $t0 $s0 compact_loop_endif
         addu    $s0 $t1 $0          # hcb_addr = to_addr
-        sw      $s0 HCB_ADDR        # save the hcb_addr in HCB_ADDR
     compact_loop_endif:
         addu    $t1 $t1 4           # to_addr += 4
         addu    $t0 $t0 4           # from_addr += 4
     compact_loop_end:
-        return
-    .kdata
+        j       end
+    .data
     hole_addr_msg: .asciiz "hole_addr = "
     hole_size_msg: .asciiz "hole_size = "
-    .ktext
+    .text
+end:
+        addu    $v0 $s0 $0
 #end
 
-
+    .text
     .globl initialize_heap
-    # initialize_heap(start, len) --> Null
+    # initialize_heap(start, len, addr) --> Null
     #     start = the start address
     #     len = the length of the heap in words
     #     initializes the heap and put the addr of the HCB in HCB_ADDR
     initialize_heap:
     {
-        
         addu    $s0 $a0 $0
         addu    $s1 $a1 $0          # length of heap in $s1
-        sw      $s0 HCB_ADDR        # store the location of the HCB in the HCB_ADDR label
-        
         
         li      $s2 5               # the HCB start out as five words long
         sw      $s2 0($s0)          # store the size of HCB in words in the HCB
@@ -473,15 +498,24 @@ end:
         
         sw      $0 16($s0)          # the intial size of the list is 0 so store it in the HCB
         
+        la      $a0 addr_msg
+        call    print
+        la      $a0 HCB_ADDR
+        call    println_hex
+        
         return
+        .data
+        addr_msg: .asciiz " init_heap addr: "
+        .text
     }
     
     
-    .globl move_hcb_up
-    # move_hcb_up(amt) --> Null
+    # move_hcb_up(amt, addr) --> Null
     #     amt : amt you want to move the HCB up in words
     #     moves the HCB up by amt in words
     #     save the new location of HCB in HCB_ADDR
+    .text
+    .globl move_hcb_up
     move_hcb_up:
     {
     #     hcb_addr = $s0
@@ -498,15 +532,12 @@ end:
     #     }
     #     sw      move_to_addr HCB_ADDR
         addu    $s7 $a0 $0          # move the amt to $s7
+        addu    $s0 $a1 $0 
         mul     $s7 $s7 4
         #addu    $a0 $s7 $0
         #call    println_hex
         
-        addu    $t0 $s1 $0
-        mul     $t0 $t0 4
-        addu    $t0 $s0 $t0
-        addu    $t1 $t0 $s7
-        load_hcb
+        load_hcb $s0
         addu    $t0 $s1 $0
         mul     $t0 $t0 4
         addu    $t0 $s0 $t0
@@ -524,17 +555,9 @@ end:
         lw      $t2 0($t0)          # lw      temp 0(move_from_addr)
         sw      $t2 0($t1)          # sw      temp 0(move_to_addr)
     #     sw      move_to_addr HCB_ADDR
-        sw      $t1 HCB_ADDR
-        addu    $a0 $t1 $0
-#         call    println_hex
+#         sw      $t1 HCB_ADDR
         
-        lw      $s0 HCB_ADDR        # load the address of the HCB into $s0\
-        addu    $a0 $s0 $0
-        #call    println_hex
-        subu    $s0 $s0 32
-        lw      $a0 0($s0)          # load the size_HCB into $s1
-        #call    println_hex
-        
+        addu    $v0 $t1 $0
         return
         .data
         amt_msg: .asciiz "amount = "
@@ -542,11 +565,12 @@ end:
     }
 
     
-    # find_index(mem_id) --> $v0 = found?, $v2 = index if found
+    # find_index(mem_id, addr) --> $v0 = found?, $v2 = index if found
     #     mem_id : the memory_id you want to find the addr
     #     found? : zero if not found one if found
     #     index : the index in the hcb list of that mem_id's control block
     
+    .text
     .globl find_index
     find_index:
     {
@@ -583,7 +607,7 @@ end:
 #         call    print
 #         add     $a0 $s7 $0          # arg1 = m
 #         call    println_hex
-        load_hcb
+        load_hcb $a1
         la      $a0 len_msg
         call    print
         add     $a0 $s5 $0
@@ -653,7 +677,7 @@ end:
     }
     
     .globl alloc
-    # alloc(amt) --> $v0 = mem_id
+    # alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
     #     amt : the amount in words of memory you are requesting
     #     mem_id : the id you will use to access your memory
     alloc:
@@ -683,13 +707,18 @@ end:
     #     
     #     return $s6
         addu    $s7 $a0 $0          # move the amt to $s7
+        addu    $s0 $a1 $0
+        
         la      $a0 start_msg
         call    println
-        load_hcb                    # load the HCB into $s0 - $s5 see documentation of macro
+        
+        
+        load_hcb  $s0               # load the HCB into $s0 - $s5 see documentation of macro
         addu    $a0 $s0 $0
 #         call    println_hex
         
         
+    
         addu    $t0 $s1 $0          # move size_HCB into $t0
         hcbtop  $t0 $s0 $t0         # end_list = $t0
         
@@ -708,7 +737,7 @@ end:
     alloc_end_if:
         addu    $s3 $s3 $t1         # top = top + amt_requested #top = $s3
         
-        save_hcb
+        save_hcb $s0
         
         bne     $t1 $0 error        # if amt_requested != 0: jump error
         
@@ -725,10 +754,16 @@ end:
         #add_hcb_list_elem |-> replaces: call    add_hcb_list_elem
         add_hcb
         addu    $s6 $v0 $0
+        call    print_hcb
         #call    print_hcb
         
         add     $a0 $s7 $0          # move the amt in words you want move the HCB by into arg1
         call    move_hcb_up         # move the HCB into its new location
+        
+        la      $a0 addr_msg
+        call    print
+        la      $a0 HCB_ADDR
+        call    println_hex
         
         addu    $a0 $s6 $0
         #call    println_hex
@@ -743,6 +778,7 @@ end:
         .globl start_msg
     error_msg: .asciiz "Out of memory.\n"
     start_msg: .asciiz "start alloc.\n"
+    addr_msg: .asciiz "->addr = "
         .text
     }
     

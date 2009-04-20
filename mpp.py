@@ -38,6 +38,7 @@ max_user_programs = 16
 main_count = 0
 label_count = 0
 main_labels = list()
+var_split = re.compile(r'\s*=\s*')
 
 def get_file_text(f1):
     #process includes
@@ -173,6 +174,21 @@ def rep_line(line, local_macros, use_kernel_macros):
         out_lines.append(line)
     return out_lines
 
+def rep_names(lines, names):
+    
+    for i, line in enumerate(lines):
+        rep = False
+        for name in names.keys():
+            nameloc = lines[i].find(name)
+            hashsign = lines[i].find('#')
+            if nameloc != -1 and (nameloc < hashsign or hashsign == -1):
+                rep = True
+                lines[i] = lines[i].replace(name, names[name], 1)
+        if rep and lines[i][-1] != '>': lines[i] += ' # orgline = ' + line.lstrip().rstrip() + '>'
+        
+    
+    return lines;
+
 def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
     global global_macros
     
@@ -186,6 +202,7 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
     
     macro_name = ""
     scopes = [[]]
+    varnames = [dict()]
     for line in in_lines:
         kw = string.lower(line.strip())
         if kw.startswith('#define'):
@@ -219,12 +236,24 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
         elif kw.startswith('{'):
             #print '{'
             scopes.append(list())
+            varnames.append(dict())
         elif kw.startswith('}'):
             #print '}'
             l = scopes.pop()
+            names = varnames.pop()
             #print l
-            scopes[-1].extend(substitute_labels('\n'.join(l)).split('\n'))
+            lines = substitute_labels('\n'.join(l)).split('\n')
+            lines = rep_names(lines, names)
+            scopes[-1].extend(lines)
             #print scopes[-1][-3:]
+        elif kw.startswith('@'): #variable name
+            name = var_split.split(line.lstrip().rstrip())
+            if len(name) != 2: raise Exception, 'Syntax Error in variable name line = \n' + line
+            if varnames[-1].has_key(name[0]):
+                raise Exception, 'Syntax Error name "%s" already defined in current scope' % name[0]
+            varnames[-1][name[0]] = name[1]
+            print varnames[-1]
+            scopes[-1].append('#' + line)
         else:
             if in_macro:
                 #check for macro-in-macro
@@ -238,8 +267,15 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
                 #check for regular ol' macro
                 scopes[-1] += rep_line(line, local_macros, use_kernel_macros) * repetitions
                 repetitions = 1
-    if len(scopes) == 1:
-        return '\n'.join(scopes[0])
+    if len(scopes) == 1 and len(varnames) == 1:
+        lines = rep_names(scopes[0], varnames[0])
+        for i, line in enumerate(lines):
+            atsign = line.find('@')
+            hashsign = line.find('#')
+            if atsign != -1 and (atsign < hashsign or hashsign == -1):
+                raise Warning, "Syntax error name unconverted on line = '%s'" % line
+            if line and line[-1] == '>': lines[i] = line[:-1]
+        return '\n'.join(lines)
     else:
         raise Exception, "Scoping Error"
 
@@ -266,6 +302,9 @@ def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=Fal
 if __name__ == "__main__":
     #if called from the cl, process with default args
     try:
-        process(sys.argv[1], sys.argv[2])
+        infile = sys.argv[1]
+        outfile = sys.argv[2]
     except:
-        print "use 'python mpp.py in_file out_file"
+        raise Exception, "use 'python mpp.py in_file out_file"
+    
+    process(infile, outfile)

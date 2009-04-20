@@ -2,6 +2,14 @@
 
 #include mappedio.s
 
+# println_hex msg reg
+#define println_hex global
+    la      $a0 %1
+    call    print
+    addu    $a0 %2 $0
+    call    println_hex
+#end
+
     .text
 
 # read_char

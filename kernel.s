@@ -78,7 +78,7 @@ exception_handler:              # exception handler
     
     
     mfc0    $a0, $14            # get the EPC register
-    call    println_hex
+#     call    println_hex
     
     # print a message to the screen
     
@@ -107,7 +107,7 @@ exception_handler:              # exception handler
     syscall
     
     
-
+    .globl interrupt_return
 interrupt_return:
 exception_finished:
     mfc0    $k0, $14            # get the EPC register

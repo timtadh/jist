@@ -56,7 +56,7 @@ save_state:
     
     j       save_state_return
 }
-    
+    .text
 restore_state:
 {
     #load user heap address
@@ -94,4 +94,6 @@ interrupt_handler:
 save_state_return:
     j       restore_state
 restore_state_return:
-    j       interrupt_return
+    la      $a0 interrupt_return
+    jr      $a0
+#     j       interrupt_return

@@ -43,8 +43,8 @@ __start:
 #     call    load_process
     load_user_programs
     la      $s0  user_program_locations
-    lw      $s1  0($s0)
-#     jr      $s1
+    lw      $s1  4($s0)
+    jr      $s1
 #     
 #     disable_clock_interrupt
 #     enable_clock_interrupt
