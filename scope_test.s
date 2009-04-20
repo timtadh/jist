@@ -1,5 +1,10 @@
 #scope test not real program
 
+#define mactest
+    @t = $t0
+    addu @t @t @t
+#end
+
 @a = $t0
     {
         @b = $t0
@@ -11,3 +16,4 @@
         }
     }
     #addu @longc @a @a
+    mactest

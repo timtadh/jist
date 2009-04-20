@@ -199,10 +199,13 @@ def rep_names(lines, names):
         for name in names.keys():
             nameloc = lines[i].find(name)
             hashsign = lines[i].find('#')
-            if nameloc != -1 and (nameloc < hashsign or hashsign == -1):
-                rep = True
-                lines[i] = lines[i].replace(name, names[name], 1)
-        if rep and lines[i][-1] != '>': lines[i] += ' # orgline = ' + line.lstrip().rstrip() + '>'
+            while nameloc != -1 and (nameloc < hashsign or hashsign == -1):
+                if nameloc != -1 and (nameloc < hashsign or hashsign == -1):
+                    rep = True
+                    lines[i] = lines[i].replace(name, names[name], 1)
+                nameloc = lines[i].find(name)
+                hashsign = lines[i].find('#')
+            if rep and lines[i][-1] != '>': lines[i] += ' # orgline = ' + line.lstrip().rstrip() + '>'
         
     
     return lines;
@@ -221,6 +224,7 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
     macro_name = ""
     scopes = [[]]
     varnames = [dict()]
+    cm_varnames = None #current macro variable names
     for line in in_lines:
         kw = string.lower(line.strip())
         if kw.startswith('#define'):
@@ -240,6 +244,7 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
                 global_macros[macro_name] = [start_text]
             else:
                 local_macros[macro_name] = [start_text]
+            cm_varnames = dict()
         elif kw.startswith('#end'):
             #concatenate the lines and stop defining the macro
             in_macro = False
@@ -249,10 +254,14 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
                 end_text = ' '*4 + '#'*17 + ' end ' + macro_name + ' ' + '#'*17
             if macro_name in local_macros:
                 local_macros[macro_name].append(end_text)
+                local_macros[macro_name] = rep_names(local_macros[macro_name], cm_varnames)
                 local_macros[macro_name] = "\n".join(local_macros[macro_name])
             if macro_name in global_macros:
                 global_macros[macro_name].append(end_text)
+                global_macros[macro_name] = rep_names(global_macros[macro_name], cm_varnames)
                 global_macros[macro_name] = "\n".join(global_macros[macro_name])
+            
+            cm_varnames = None
         elif kw.startswith('#repeat'):
             linesplit = line.split()
             if len(linesplit) == 2:
@@ -273,11 +282,20 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict()):
         elif kw.startswith('@'): #variable name
             name = var_split.split(line.lstrip().rstrip())
             if len(name) != 2: raise Exception, 'Syntax Error in variable name line = \n' + line
-            if varnames[-1].has_key(name[0]):
-                raise Exception, 'Syntax Error name "%s" already defined in current scope' % name[0]
-            varnames[-1][name[0]] = name[1]
-            print varnames[-1]
-            scopes[-1].append('#' + line)
+            if in_macro:
+                if cm_varnames.has_key(name[0]):
+                    raise Exception, 'Syntax Error name "%s" already defined in current macro "%s"'%\
+                                                                                (name[0], macro_name)
+                cm_varnames[name[0]] = name[1]
+                if macro_name in local_macros:
+                    local_macros[macro_name].append('#' + line)
+                elif macro_name in global_macros:
+                    global_macros[macro_name].append('#' + line)
+            else:
+                if varnames[-1].has_key(name[0]):
+                    raise Exception, 'Syntax Error name "%s" already defined in current scope' % name[0]
+                varnames[-1][name[0]] = name[1]
+                scopes[-1].append('#' + line)
         else:
             if in_macro:
                 #check for macro-in-macro
