@@ -20,6 +20,11 @@ Add 'global' to the #define line if this macro should be accessible from all oth
 ==USING MACROS IN MACROS==
 You can use macros inside other macros as long as the first is defined above the second.
 
+==REGISTER RENAMING==
+Define an alias like this:
+@my_alias = $t0
+Then you can use them just like a register.
+
 ==REPETITIONS==
 Put "#repeat n" above a line to repeat that line n times. See kernel_data.s for an example.
 """

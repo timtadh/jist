@@ -141,46 +141,47 @@ fastrand:
 
 start_game:
 {
-    #s0: iteration count
-    #s1: player pos
-    #s2: wumpus pos
-    #s3: pit 1
-    #s4: pit 2
-    #s5: bat 1
-    #s6: bat 2
-    li $s0 0
+    @i = $s0
+    @player = $s1
+    @wumpus = $s2
+    @pit_1 = $s3
+    @pit_2 = $s4
+    @bat_1 = $s5
+    @bat_2 = $s6
+    
+    li @i 0
     rebuild:
-        addi $s0 $s0 1
+        addi @i @i 1
         #player
         li $a0 20
         call fastrand
-        add $s1 $v0 $zero
+        add @player $v0 $zero
         
         #wumpus
         choose 20 $s2
-        beq $s2 $s1 rebuild
+        beq @wumpus @player rebuild
         #pit 1
         choose 20 $s3
-        beq $s3 $s2 rebuild
-        beq $s3 $s1 rebuild 
+        beq @pit_1 @wumpus rebuild
+        beq @pit_1 @player rebuild 
         #pit 2
         choose 20 $s4
-        beq $s4 $s3 rebuild
-        beq $s4 $s2 rebuild
-        beq $s4 $s1 rebuild
+        beq @pit_2 @pit_1 rebuild
+        beq @pit_2 @wumpus rebuild
+        beq @pit_2 @player rebuild
         #bat 1
         choose 20 $s5
-        beq $s5 $s4 rebuild
-        beq $s5 $s3 rebuild
-        beq $s5 $s2 rebuild
-        beq $s5 $s1 rebuild
+        beq @bat_1 @pit_2 rebuild
+        beq @bat_1 @pit_1 rebuild
+        beq @bat_1 @wumpus rebuild
+        beq @bat_1 @player rebuild
         #bat 2
         choose 20 $s6
-        beq $s6 $s5 rebuild
-        beq $s6 $s4 rebuild
-        beq $s6 $s3 rebuild
-        beq $s6 $s2 rebuild
-        beq $s6 $s1 rebuild
+        beq @bat_2 @bat_1 rebuild
+        beq @bat_2 @pit_2 rebuild
+        beq @bat_2 @pit_1 rebuild
+        beq @bat_2 @wumpus rebuild
+        beq @bat_2 @player rebuild
     success:
         return
 }

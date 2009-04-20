@@ -55,27 +55,30 @@ readln:
     #10 = LF
     #27 = control
     #68 = left
-    add $t2 $zero $zero    #value to chck against
+    add $t2 $zero $zero    #value to check against
 read_again:
-    _read_char $t3
-    _write_char $t3 #echo
+    @in_char = $t3
+    @test_char = $t2
     
-    addi $t2 $zero 10
-    beq $t3 $t2 end_read
+    _read_char @in_char
+    _write_char @in_char #echo
     
-    li $t2 127
-    beq $t3 $t2 _delete
+    addi @test_char $zero 10
+    beq @in_char @test_char end_read
+    
+    li @test_char 127
+    beq @in_char @test_char _delete
     b _other
     
     _delete:
-        addi $t2 $zero 94
-        _write_char $t2
-        addi $t2 $zero 72
-        _write_char $t2
+        addi @test_char $zero 94
+        _write_char @test_char
+        addi @test_char $zero 72
+        _write_char @test_char
         addi $a0 $a0 -1
         b read_again
     _other:
-        sb $t3 0($a0)
+        sb @in_char 0($a0)
         addi $a0 $a0 1
         b read_again
 end_read:
