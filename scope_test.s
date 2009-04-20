@@ -2,12 +2,14 @@
 
 #define mactest
     @t = $t0
+    @arg = %1
     addu @t @t @t
     addu %1 %1 %1
+    addu @arg
     lw  @t 0(%1)
 #end
 
-@a = $t0
+    @a = $t0
     {
         @b = $t0
         @a = $t2
@@ -21,3 +23,8 @@
         
     }
     #addu @longc @a @a
+    
+    @start = $t9
+    @start_ = $t1
+    
+    addu    @start @start_

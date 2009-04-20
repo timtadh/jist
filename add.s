@@ -21,7 +21,7 @@ main:
     addu    $a0 @addr $0
     addu    $a1 @end $0
     call    initialize_heap
-    println_hex msg @addr
+    println_hex addr_msg @addr
     
     addu    @amt $0 4
 #     sw      @amt 16(@addr) #hack to check last word is moved
@@ -34,7 +34,6 @@ main:
     addu    @mem_id0 $v0 $0
     addu    @addr $v1 $0
     
-    print_hcb @addr
     
 #     alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
     addu    $a0 @amt $0
@@ -49,47 +48,67 @@ main:
     addu    @mem_id2 $v0 $0
     addu    @addr $v1 $0
     
-    
     print_hcb @addr
     
-    addu    @index $0 1
     {
-        @item_addr = $t3
-        @err = $t4
-        addu    $a0 @index $0
-        addu    $a1 @addr $0
-        call    get_hcb_item
-        addu    @item_addr $v0 $0
-        addu    @err $v1 $0
+        @found = $s5
+        @index = $s6
         
-        bne     @err $0 error
-        addu    $a0 @item_addr $0
-        call    print_hcb_item
-        j       endblock
-        error:
-            println error_msg
-    endblock:
+        addu $a0 $0 $0
+        addu $a1 @addr $0
+        call find_index
+        addu @found $v0 $0
+        addu @index $v1 $0
+        
+        println_hex addr_msg @addr
+        println_hex mem_id_msg @mem_id2
+        println_hex found_msg @found
+        println_hex index_msg @index
     }
     
-    
-#     del_hcb_item(index, addr) --> $v0 = error
-    addu    @index $0 2
-    {
-        @err = $t4
-        addu    $a0 @index $0
-        addu    $a1 @addr $0
-        call    del_hcb_item
-        addu    @err $v0 $0
-        println_hex err_equal_msg @err
-    }
-    
-    print_hcb @addr
+#     print_hcb @addr
+#     
+#     addu    @index $0 1
+#     {
+#         @item_addr = $t3
+#         @err = $t4
+#         addu    $a0 @index $0
+#         addu    $a1 @addr $0
+#         call    get_hcb_item
+#         addu    @item_addr $v0 $0
+#         addu    @err $v1 $0
+#         
+#         bne     @err $0 error
+#         addu    $a0 @item_addr $0
+#         call    print_hcb_item
+#         j       endblock
+#         error:
+#             println error_msg
+#     endblock:
+#     }
+#     
+#     
+# #     del_hcb_item(index, addr) --> $v0 = error
+#     addu    @index $0 2
+#     {
+#         @err = $t4
+#         addu    $a0 @index $0
+#         addu    $a1 @addr $0
+#         call    del_hcb_item
+#         addu    @err $v0 $0
+#         println_hex err_equal_msg @err
+#     }
+#     
+#     print_hcb @addr
     
     exit
     .data
-    msg: .asciiz "addr = "
+    addr_msg: .asciiz "addr = "
     error_msg: .asciiz "error"
     err_equal_msg: .asciiz " error = "
+    found_msg: .asciiz " found = "
+    index_msg: .asciiz " index = "
+    mem_id_msg: .asciiz " mem_id = "
     .text
 }
 #     addu    $s0 $0 4

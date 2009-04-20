@@ -357,23 +357,6 @@ end:
 #     error : 0 if success error code otherwise
 del_hcb_item:
 {
-# index = $s7
-# 
-#     @to_addr = $t0
-#     @from_addr = $t1
-#     @last_addr = $t2
-#     @temp = $t3
-# err = $v1
-# HCB_ADDR = $s0
-# size_HCB = $s1
-# free = $s4
-# len_list = $s5
-# @hcb_size = $s1
-#     @hcb_next_id = $s2
-#     @hcb_top = $s3 
-#     @hcb_free = $s4
-#     @hcb_len_list = $s5
-# -------------------------------
 # load_hcb
 # to_addr, err = \
 #         get_hcb_list_elem(mem_id)
@@ -513,92 +496,63 @@ loop_end:
     .globl find_index
     find_index:
     {
-    #     l = $s0
-    #     r = $s1
-    #     len_list = $s5
-    #     m = $s2
-    #     addr = $s4
-    #     err = $v1
-    #     val = $s3
-    #     mem_id = $s7
-    #     temp = $t2
-    #     ----------------------------------
-    #     l = 0
-    #     r = len_list
-    #     while (l <= r) 
-    #     {
-    #         m = l + (r - l) / 2  // Note: not (l + r) / 2  may overflow!!
-    #         addr, err = get_hcb_list_elem(m)
-    #         if err: break;
-    #         lw  val 0(addr)
-    #         if (val > mem_id)
-    #             r = m - 1
-    #         else if (val < mem_id)
-    #             l = m + 1
-    #         else
-    #             return 1, addr, m // found
-    #     }
-    #     return 0, 0, 0 // not found
-        add     $s7 $a0 $0          # mem_id = $s7
-        #la      $a0 start_msg
-        #call    println
-#         la      $a0 id_msg
-#         call    print
-#         add     $a0 $s7 $0          # arg1 = m
-#         call    println_hex
-        load_hcb $a1
-        la      $a0 len_msg
-        call    print
-        add     $a0 $s5 $0
-        call    println_hex
-        add     $s0 $0 $0           # l = 0
-        add     $s1 $s5 $0          # r = len_list
-    find_index_loop:
+        @l = $s0
+        @r = $s1
+        @m = $s2
+        @cur_id = $s3
+        @item_addr = $s4
+        @len = $s5
+        @hcb_addr = $s6
+        @mem_id = $s7
+        
+        @err = $v1
+        
+        addu    @mem_id $a0 $0
+        addu    @hcb_addr $a1 $0
+        load_hcb @hcb_addr
+        
+        println start_msg
+        
+        add     @l $0 $0           # l = 0
+        add     @r @len $0          # r = len_list
+    loop:
     #     if l > r: jump find_index_loop_end
-        bgt     $s0 $s1 find_index_loop_end
-        sub     $s2 $s1 $s0         # m = r - l
-        li      $t2 2               # temp = 2
-        div     $s2 $s2 $t2         # m = m/2
-        add     $s2 $s2 $s0         # m = m + l
-#         la      $a0 m_msg
-#         call    print
-#         add     $a0 $s2 $0          # arg1 = m
-#         call    println_hex
-        add     $a0 $s2 $0
-        #call    get_hcb_list_elem   # get the addr of that list element
-#         get_hcb
-    #     if err != 0: jump find_index_loop_end (ie there was an error return not found)
-        bne     $v1 $0 find_index_loop_end
-        add     $s4 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)
-        lw      $s3 0($s4)          # val = 0(addr of the element) ie the mem_id of m
-#         la      $a0 cid_msg
-#         call    print
-#         add     $a0 $s3 $0          # arg1 = m
-#         call    println_hex
-        #lw      $s3 0($s4)          # val = 0(addr of the element) ie the mem_id of m
-    #     if val = mem_id: jump find_index_found
-        beq     $s3 $s7 find_index_found
-    #     if val > mem_id: jump find_index_val_gt_mem_id
-        bgt     $s3 $s7 find_index_val_gt_mem_id
-    #     else: val < mem_id
-#         la      $a0 bigger_msg
-#         call    println
-        addi    $s0 $s2 1           # l = m + 1
-        j       find_index_loop
-    find_index_val_gt_mem_id:
-#         la      $a0 smaller_msg
-#         call    println
-        sub     $s1 $s2 1           # r = m - 1
-        j       find_index_loop
-    find_index_found:
-#         la      $a0 m_msg
-#         call    print
-#         add     $a0 $s2 $0          # arg1 = m
-#         call    println_hex
-        addi    $v0 $0 1            # found = 1
-        add     $v1 $0 $s2          # return index = m
+        bgt     @l @r loop_end
+        sub     @m @r @l           # m = r - l
+        sra     @m @m 1            # div m by 2
+        add     @m @m @l           # m = m + l
+        
+        println_hex m_msg @m
+        addu    $a0 @m $0
+        addu    $a1 @hcb_addr $0
+        call    get_hcb_item
+        addu    @item_addr $v0 $0
+        
+        bne     @err $0 loop_end
+        lw      @cur_id 0(@item_addr)
+        println_hex cid_msg @cur_id
+        println_hex mem_id_msg @mem_id
+        
+    
+    #     if cur_id == mem_id
+        beq     @cur_id @mem_id index_found
+        #     if cur_id > mem_id: jump find_index_val_gt_mem_id
+            bgt     @cur_id @mem_id curid_gt_memid
+        #     else: cur_id < mem_id
+            addi    @l @m 1           # l = m + 1
+            j       loop
+        curid_gt_memid:
+            sub     @r @m 1           # r = m - 1
+            j       loop
+    
+    index_found:
+        println found_msg
+        println_hex m_msg @m
+        addu    $v0 $0 1            # found = 1
+        addu    $v1 @m $0           # return index = m
         return
-    find_index_loop_end:
+    loop_end:
+        println notfound_msg
         add     $v0 $0 $0           # found = 0
         add     $v1 $0 $0           # index = 0
         return
@@ -608,9 +562,12 @@ loop_end:
     m_msg: .asciiz "m = "
     id_msg: .asciiz "id = "
     cid_msg: .asciiz "cid = "
+    mem_id_msg: .asciiz "mem_id = "
     bigger_msg: .asciiz "cid is bigger than m"
     smaller_msg: .asciiz "cid is smaller than m"
     len_msg: .asciiz "length of list = "
+    found_msg: .asciiz "found!!"
+    notfound_msg: .asciiz "not found :'("
     
     .text
     }
