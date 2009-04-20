@@ -9,6 +9,7 @@ main:
     @addr = $s0
     @end = $t1
     @amt = $s1
+    @mem_id = $s2
     
     sbrk_imm   1024 @addr 
     addu    @end @addr 1024
@@ -23,10 +24,28 @@ main:
 #     sw      @amt 16(@addr) #hack to check last word is moved
     print_hcb @addr
     
+    
+    addu    $a0 @addr $0
+    addu    $a1 @amt $0
+    addu    $a2 @addr $0
+    call    add_to_hcb
+    addu    @mem_id $v0 $0
+    
+    print_hcb @addr
+    
     addu    $a0 @amt $0
     addu    $a1 @addr $0
     call    move_hcb_up
     addu    @addr $v0 $0
+    
+    print_hcb @addr
+    
+#     alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
+    addu    $a0 @amt $0
+    addu    $a1 @addr $0
+    call    alloc
+    addu    @mem_id $v0 $0
+    addu    @addr $v1 $0
     
     print_hcb @addr
     
