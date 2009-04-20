@@ -357,6 +357,40 @@ end:
 #     error : 0 if success error code otherwise
 del_hcb_item:
 {
+# index = $s7
+# 
+#     @to_addr = $t0
+#     @from_addr = $t1
+#     @last_addr = $t2
+#     @temp = $t3
+# err = $v1
+# HCB_ADDR = $s0
+# size_HCB = $s1
+# free = $s4
+# len_list = $s5
+# @hcb_size = $s1
+#     @hcb_next_id = $s2
+#     @hcb_top = $s3 
+#     @hcb_free = $s4
+#     @hcb_len_list = $s5
+# -------------------------------
+# load_hcb
+# to_addr, err = \
+#         get_hcb_list_elem(mem_id)
+# if err: jump get_hcb_list_elem_error
+# from_addr = to_addr + 3*4
+# hcbtop  last_addr HCB_ADDR size_HCB
+# while (from_addr <= last_addr)
+# {
+#     lw      temp 0(from_addr)
+#     sw      temp 0(to_addr)
+#     from_addr += 4
+#     to_addr += 4
+# }
+# len_list -= 1
+# size_HCB -= 3
+# free += 3
+# save_hcb
     @hcb_addr = $s0
     @hcb_size = $s1
     @hcb_next_id = $s2
