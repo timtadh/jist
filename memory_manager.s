@@ -162,59 +162,6 @@
     subu    %1 %1 4             # subtract 4 to get the actual last addr
 #end
 
-# hcbtop dst hcb_addr size_HCB
-#     dst : the register you want the result stored in
-#     hcb_addr : a register with the addr of the hcb in it
-#     size_HCB : the size of the hcb in words it should be in a reg
-#     
-#define hcbtop local
-    sll     %1 %3 2
-    addu    %1 %2 %1            # add the size of the hcb to the addr
-#end
-
-# get_hcb_list_elem(index, hcb_addr) --> $v0 = addr, $v1 = error
-#     index : the index the element you want
-#     addr : the address of the element
-#     error : 0 if not error, error number otherwise
-#define get_hcb local
-    #     $s7 = index
-    #     $s5 = len_list
-    #     $s0 = hcb_addr
-    #     $t0 = i_byte
-    #     if index >= len_list: return 0, 1
-    #     i_bytes = index + 5 (to account for the size of the control block
-    #     words_to_bytes i_bytes
-    #     
-    #     return i_bytes, 0
-    __save_frame
-    add     $s7 $a0 $0          # $s7 = index
-    addu    $s0 $a1 $0
-    #call    println_hex
-    load_hcb $s0                # load the HCB
-#     if index < len_list: jump index_in_list
-#     .data
-#     empty: .asciiz ""
-#     .text
-#     la      $a0 empty
-    #call    println
-    add     $a0 $s7 $0          # $s7 = index
-    #call    println_hex
-    add     $a0 $s5 $0          # $s7 = index
-    #call    println_hex
-    ble     $s7 $s5 index_in_list
-    add     $v0 $0 $0           # addr = 0
-    addi    $v1 $0 1            # error = 1
-    j       end
-index_in_list:
-    mul     $t1 $s7 3
-    addi    $t0 $t1 7           # i_bytes = index + 5
-    words_to_bytes $t0
-    add     $v0 $s0 $t0         # addr = hcb_addr + i_bytes
-    add     $v1 $0 $0           # error = 0 (success!)
-end:
-    __restore_frame
-#end
-
 # del_hcb_list_elem(index, addr) --> $v0 = error
 #     mem_id : the mem_id you want to remove from the list
 #     error : 0 if success error code otherwise
@@ -333,64 +280,64 @@ end:
     __restore_frame
 #end
 
-# compact (hole_addr, hole_size, hcb_addr) --> new_hcb_addr
-#define compact local
-    #     from_addr = $t0
-    #     to_addr = $t1
-    #     last_addr = $t2
-    #     temp = $t3
-    #     hcb_addr = $s0
-    #     while (from_addr <= last_addr)
-    #     {
-    #         lw  temp 0(from_addr)
-    #         sw  temp 0(to_addr)
-    #         if (from_addr == hcb_addr)
-    #         {
-    #             hcb_addr = to_addr
-    #             sw  hcb_addr HCB_ADDR
-    #         }
-    #         to_addr += 4
-    #         from_addr += 4
-    #     }
-    .text
-        addu    $s6 $a0 $0          # $s6 = hole_addr
-        addu    $s7 $a1 $0          # $s7 = hole_size
-        addu    $s0 $a2 $0
-        la      $a0 hole_addr_msg
-        call    print
-        addu    $a0 $s6 $0
-        call    println_hex
-        la      $a0 hole_size_msg
-        call    print
-        addu    $a0 $s7 $0
-        call    println_hex
-        #call    println_hex
-        load_hcb $s0                # load the control block
-        addu    $t0 $s7 $0           # move hole_size into $t0
-        words_to_bytes $t0          # convert hole_size to bytes
-        addu    $t1 $s6 $0          # to_addr = $t1
-        addu    $t2 $s1 $0          # move size_HCB into $t0
-        hcbtop  $t2 $s0 $t2         # last_addr = $t1
-    compact_loop:
-    #   if from_addr > last_addr: jump compact_loop_end
-        bgt     $t0 $t2 compact_loop_end
-        lw      $t3 0($t0)          # lw  temp 0(from_addr)
-        sw      $t3 0($t1)          # sw  temp 0(to_addr)
-    #         if (from_addr == hcb_addr)
-        bne     $t0 $s0 compact_loop_endif
-        addu    $s0 $t1 $0          # hcb_addr = to_addr
-    compact_loop_endif:
-        addu    $t1 $t1 4           # to_addr += 4
-        addu    $t0 $t0 4           # from_addr += 4
-    compact_loop_end:
-        j       end
-    .data
-    hole_addr_msg: .asciiz "hole_addr = "
-    hole_size_msg: .asciiz "hole_size = "
-    .text
-end:
-        addu    $v0 $s0 $0
-#end
+# # compact (hole_addr, hole_size, hcb_addr) --> new_hcb_addr
+# #define compact local
+#     #     from_addr = $t0
+#     #     to_addr = $t1
+#     #     last_addr = $t2
+#     #     temp = $t3
+#     #     hcb_addr = $s0
+#     #     while (from_addr <= last_addr)
+#     #     {
+#     #         lw  temp 0(from_addr)
+#     #         sw  temp 0(to_addr)
+#     #         if (from_addr == hcb_addr)
+#     #         {
+#     #             hcb_addr = to_addr
+#     #             sw  hcb_addr HCB_ADDR
+#     #         }
+#     #         to_addr += 4
+#     #         from_addr += 4
+#     #     }
+#     .text
+#         addu    $s6 $a0 $0          # $s6 = hole_addr
+#         addu    $s7 $a1 $0          # $s7 = hole_size
+#         addu    $s0 $a2 $0
+#         la      $a0 hole_addr_msg
+#         call    print
+#         addu    $a0 $s6 $0
+#         call    println_hex
+#         la      $a0 hole_size_msg
+#         call    print
+#         addu    $a0 $s7 $0
+#         call    println_hex
+#         #call    println_hex
+#         load_hcb $s0                # load the control block
+#         addu    $t0 $s7 $0           # move hole_size into $t0
+#         words_to_bytes $t0          # convert hole_size to bytes
+#         addu    $t1 $s6 $0          # to_addr = $t1
+#         addu    $t2 $s1 $0          # move size_HCB into $t0
+#         hcbtop  $t2 $s0 $t2         # last_addr = $t1
+#     compact_loop:
+#     #   if from_addr > last_addr: jump compact_loop_end
+#         bgt     $t0 $t2 compact_loop_end
+#         lw      $t3 0($t0)          # lw  temp 0(from_addr)
+#         sw      $t3 0($t1)          # sw  temp 0(to_addr)
+#     #         if (from_addr == hcb_addr)
+#         bne     $t0 $s0 compact_loop_endif
+#         addu    $s0 $t1 $0          # hcb_addr = to_addr
+#     compact_loop_endif:
+#         addu    $t1 $t1 4           # to_addr += 4
+#         addu    $t0 $t0 4           # from_addr += 4
+#     compact_loop_end:
+#         j       end
+#     .data
+#     hole_addr_msg: .asciiz "hole_addr = "
+#     hole_size_msg: .asciiz "hole_size = "
+#     .text
+# end:
+#         addu    $v0 $s0 $0
+# #end
 
 .text
 .globl initialize_heap
@@ -480,6 +427,44 @@ add_to_hcb:
     amt_msg:  .asciiz "         addhcb -> amt = "
     size_msg:  .asciiz "         addhcb -> size = "
     .text
+}
+
+# get_hcb_item(index, hcb_addr) --> $v0 = addr, $v1 = error
+#     index : the index the element you want
+#     addr : the address of the element
+#     error : 0 if not error, error number otherwise
+get_hcb_item:
+{
+    @hcb_addr = $s0
+    @hcb_size = $s1
+    @hcb_next_id = $s2
+    @hcb_top = $s3 
+    @hcb_free = $s4
+    @hcb_len_list = $s5
+    
+    @index = $s7
+    
+    @i_byte = $t0
+    @temp   = $t1
+    
+    add     @index $a0 $0          # $s7 = index
+    addu    @hcb_addr $a1 $0
+    
+    load_hcb @hcb_addr
+    
+    ble     @index @hcb_len_list index_in_list
+    #index not in list
+        add     $v0 $0 $0           # addr = 0
+        addi    $v1 $0 1            # error = 1
+        j       end
+    index_in_list:
+        mul     @temp @index 3      # because the item size is 3 words
+        addi    @i_byte @temp 5     # i_bytes = index + 5
+        sll     @i_byte @i_byte 2   # mul by 4
+        add     $v0 @hcb_addr @i_byte   # addr = hcb_addr + i_bytes
+        add     $v1 $0 $0               # error = 0 (success!)
+end:
+    return
 }
 
 # move_hcb_up(amt, addr) --> $v0 = new_addr
@@ -594,7 +579,7 @@ loop_end:
 #         call    println_hex
         add     $a0 $s2 $0
         #call    get_hcb_list_elem   # get the addr of that list element
-        get_hcb
+#         get_hcb
     #     if err != 0: jump find_index_loop_end (ie there was an error return not found)
         bne     $v1 $0 find_index_loop_end
         add     $s4 $v0 $0          # addr = $v0 (the address returned by get_hcb_list_elem)

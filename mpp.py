@@ -302,7 +302,7 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict(), toplevel=Fa
                                                                                    % (name[0], line)
                 if name[1] in varnames[-1].values():
                     raise Exception, \
-                    'Syntax Error reg "%s" already named in current scope "%s"\n line = "%s"'%\
+                    'Syntax Error reg "%s" already named in current scope\n line = "%s"'%\
                                                                                 (name[1], line)
                 varnames[-1][name[0]] = name[1]
                 scopes[-1].append('#' + line)

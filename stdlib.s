@@ -435,7 +435,7 @@ print_hcb:
     loop:
         beq     @count $0 loop_end
         
-        println_hex count_msg @count
+#         println_hex count_msg @count
         println_addr mem_id_msg @cur_addr 0
         println_addr addr_msg   @cur_addr 4
         println_addr amt_msg    @cur_addr 8
@@ -454,10 +454,28 @@ print_hcb:
         top_msg: .asciiz "    top = "
         freed_msg: .asciiz "    freed = "
         len_list_msg: .asciiz "    len_list = "
-        mem_id_msg: .asciiz "    mem_id = "
+        mem_id_msg: .asciiz "\n    mem_id = "
         addr_msg: .asciiz "    addr = "
         amt_msg: .asciiz "    amt = "
         count_msg: .asciiz "\n    count = "
         empty: .asciiz "\n"
         .text
+}
+
+# print_hcb_item(addr) --> Null
+print_hcb_item:
+{
+    @addr = $s0
+    addu    @addr $a0 $0
+    
+    println_addr mem_id_msg @addr 0
+    println_addr addr_msg   @addr 4
+    println_addr amt_msg    @addr 8
+    
+    return
+    .data
+    mem_id_msg: .asciiz "\n    mem_id = "
+    addr_msg: .asciiz "    addr = "
+    amt_msg: .asciiz "    amt = "
+    .text
 }
