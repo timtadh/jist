@@ -2,12 +2,32 @@
 
 #include mappedio.s
 
+# println_addr msg reg offset
+#define println_addr global
+    la      $a0 %1
+    call    print
+    lw      $a0 %3(%2)
+    call    println_hex
+#end
+
 # println_hex msg reg
 #define println_hex global
     la      $a0 %1
     call    print
     addu    $a0 %2 $0
     call    println_hex
+#end
+
+# println msg
+#define println global
+    la      $a0 %1
+    call    println
+#end
+
+# print_hcb hcb_addr
+#define print_hcb global
+    addu    $a0 %1 $0
+    call    print_hcb
 #end
 
     .text
@@ -396,64 +416,35 @@ get:
     return
 }
 
+# print_hcb (hcb_addr) --> Null
 print_hcb:
 {
-        lw      $s0 HCB_ADDR        # load the address of the HCB into $s0
-        la      $a0 hcb_addr_msg
-        call    print
-        addu    $a0 $s0 $0
-        call    println_hex
-        la      $a0 size_HCB_msg
-        call    print
-        lw      $a0 0($s0)          # load the size_HCB into $s1
-        call    println_hex
-        la      $a0 next_id_msg
-        call    print
-        lw      $a0 4($s0)          # load the next_id into $s2
-        call    println_hex
-        la      $a0 top_msg
-        call    print
-        lw      $a0 8($s0)          # load the top into $s3
-        call    println_hex
-        la      $a0 freed_msg
-        call    print
-        lw      $a0 12($s0)         # load the free into $s4
-        call    println_hex
-        la      $a0 len_list_msg
-        call    print
-        lw      $a0 16($s0)         # load the len_list into $s5
-        call    println_hex
+        @hcb_addr = $s0
+        addu    @hcb_addr $a0 $0
+        println_hex  hcb_addr_msg @hcb_addr
+        println_addr size_HCB_msg @hcb_addr 0
+        println_addr next_id_msg  @hcb_addr 4
+        println_addr top_msg      @hcb_addr 8
+        println_addr freed_msg    @hcb_addr 12
+        println_addr len_list_msg @hcb_addr 16
         
-        la      $s1 16($s0)
-        addu    $s2 $0 $0
-        addu    $s3 $s0 20
+        @count = $s1
+        @cur_addr = $s2
+        lw      @count 16(@hcb_addr) #init count to length of list
+        addu    @cur_addr @hcb_addr 20
     loop:
-        beq     $s1 $0 loop_end
+        beq     @count $0 loop_end
         
-        la      $a0 mem_id_msg
-        call    print
-        lw      $a0 0($s3)         # load the len_list into $s5
-        call    println_hex
+        println_hex count_msg @count
+        println_addr mem_id_msg @cur_addr 0
+        println_addr addr_msg   @cur_addr 4
+        println_addr amt_msg    @cur_addr 8
         
-        
-        la      $a0 addr_msg
-        call    print
-        lw      $a0 4($s3)         # load the len_list into $s5
-        call    println_hex
-        
-        
-        la      $a0 amt_msg
-        call    print
-        lw      $a0 8($s3)         # load the len_list into $s5
-        call    println_hex
-        
-        subu    $s1 $0 0x1
-        addu    $s3 $0 0xc
+        subu    @count @count 0x1
+        addu    @cur_addr @cur_addr 0xc
+        j       loop
     loop_end:
-        la      $a0 empty
-        call    println
-        la      $a0 empty
-        call    println
+        println empty
         return
         .data
         hcb_msg: .asciiz "\nHCB:"
@@ -463,9 +454,10 @@ print_hcb:
         top_msg: .asciiz "    top = "
         freed_msg: .asciiz "    freed = "
         len_list_msg: .asciiz "    len_list = "
-        mem_id_msg: .asciiz "\n    mem_id = "
+        mem_id_msg: .asciiz "    mem_id = "
         addr_msg: .asciiz "    addr = "
         amt_msg: .asciiz "    amt = "
-        empty: .asciiz ""
+        count_msg: .asciiz "\n    count = "
+        empty: .asciiz "\n"
         .text
 }

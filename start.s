@@ -47,9 +47,9 @@ __start:
     load_user_programs
     #this is a sneaky kernel macro:
     run_first_program
+    jr      $s1
     #la      $s0  user_program_locations
     #lw      $s1  12($s0)
-#     jr      $s1
 #     
 #     disable_clock_interrupt
 #     enable_clock_interrupt

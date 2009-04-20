@@ -267,18 +267,18 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict(), toplevel=Fa
             if len(linesplit) == 2:
                 repetitions = int(linesplit[1])
         elif kw.startswith('{'):
-            print '{'
+            #print '{'
             scopes.append(list())
             varnames.append(dict())
         elif kw.startswith('}'):
-            print '}'
+            #print '}'
             l = scopes.pop()
             names = varnames.pop()
             #print l
             lines = substitute_labels('\n'.join(l)).split('\n')
             lines = rep_names(lines, names)
             scopes[-1].extend(lines)
-            print lines
+            #print lines
             #print scopes[-1][-3:]
         elif kw.startswith('@'): #variable name
             name = var_split.split(line.lstrip().rstrip())

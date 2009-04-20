@@ -167,7 +167,6 @@
 #     hcb_addr : a register with the addr of the hcb in it
 #     size_HCB : the size of the hcb in words it should be in a reg
 #     
-#     MODIFIES: size_HCB
 #define hcbtop local
     sll     %1 %3 2
     addu    %1 %2 %1            # add the size of the hcb to the addr
@@ -472,36 +471,38 @@ end:
 
     .text
     .globl initialize_heap
-    # initialize_heap(start, len, addr) --> Null
+    # initialize_heap(addr, len) --> Null
     #     start = the start address
     #     len = the length of the heap in words
     #     initializes the heap and put the addr of the HCB in HCB_ADDR
     initialize_heap:
     {
-        addu    $s0 $a0 $0
-        addu    $s1 $a1 $0          # length of heap in $s1
+        @hcb_addr = $s0
+        @heap_len = $s1
+        @hcb_len = $s2
         
-        li      $s2 5               # the HCB start out as five words long
-        sw      $s2 0($s0)          # store the size of HCB in words in the HCB
+        addu    @hcb_addr $a0 $0
+        addu    @heap_len $a1 $0    # length of heap into @heap_len
+        println_hex addr_msg @hcb_addr
         
-        li      $t0 5               # the first memory id is one
-        sw      $t0 4($s0)          # store the next memory id in the HCB
+        li      @hcb_len 5               # the HCB start out as five words long
+        sw      @hcb_len 0(@hcb_addr)    # store the size of HCB in words in the HCB
         
+        {
+            @mem_id = $t1
+            li      @mem_id 5               # the first memory id is one
+            sw      @mem_id 4(@hcb_addr)    # store the next memory id in the HCB
+        }
         
-        sub     $t1 $s1 $s2         # subtract the size of the hcb from the size of the heap
+        @free = $t1
+        sub     @free @heap_len @hcb_len # subtract the size of the hcb from the size of the heap
+        sw      @free 12(@hcb_addr)   
         
-        sw      $t1 12($s0)          # store the initial amount, zero, of freed space in the HCB
-        lw      $t2 12($s0)
-        
-        calctop $t0 $s0 $s2 $t1     # calculate the addr at the top of the heaps
-        sw      $t0 8($s0)          # put the top into the HCB
+        @top = $t0
+        calctop @top @hcb_addr @hcb_len @free     # calculate the addr at the top of the heaps
+        sw      @top 8($s0)          # put the top into the HCB
         
         sw      $0 16($s0)          # the intial size of the list is 0 so store it in the HCB
-        
-        la      $a0 addr_msg
-        call    print
-        la      $a0 HCB_ADDR
-        call    println_hex
         
         return
         .data
@@ -510,7 +511,7 @@ end:
     }
     
     
-    # move_hcb_up(amt, addr) --> Null
+    # move_hcb_up(amt, addr) --> $v0 = new_addr
     #     amt : amt you want to move the HCB up in words
     #     moves the HCB up by amt in words
     #     save the new location of HCB in HCB_ADDR
@@ -518,46 +519,32 @@ end:
     .globl move_hcb_up
     move_hcb_up:
     {
-    #     hcb_addr = $s0
-    #     amt = $s7
-    #     move_from_addr = $t0
-    #     move_to_addr = $t1
-    #     temp = $t2
-    #     while (hcb_addr <= move_from_addr)
-    #     {
-    #         move_to_addr = move_from_addr + amt
-    #         lw      temp 0(move_from_addr)
-    #         sw      temp 0(move_to_addr)
-    #         move_from_addr = move_from_addr - 4
-    #     }
-    #     sw      move_to_addr HCB_ADDR
-        addu    $s7 $a0 $0          # move the amt to $s7
-        addu    $s0 $a1 $0 
-        mul     $s7 $s7 4
-        #addu    $a0 $s7 $0
-        #call    println_hex
+        @hcb_addr = $s0
         
-        load_hcb $s0
-        addu    $t0 $s1 $0
-        mul     $t0 $t0 4
-        addu    $t0 $s0 $t0
-        addu    $t1 $t0 $s7
+        @amt = $s7
+        @move_from = $s1
+        @move_to = $s2
+        @temp = $s3
+        
+        addu    @amt $a0 $0          # move the amt to $s7
+        addu    @hcb_addr $a1 $0 
+        sll     @amt @amt 2          # multiply the amt by 4
+        
+        addu    @move_from $s1 $0
+        sll     @move_from @move_from 2
+        addu    @move_from @hcb_addr @move_from
+        addu    @move_to @move_from @amt
     loop:
     #   if hcb_addr < move_from_addr: jump loop_end
-        bgt     $s0 $t0 loop_end
-        subu    $t1 $t1 4           # move_to_addr = move_from_addr + amt
-        lw      $t2 0($t0)          # lw      temp 0(move_from_addr)
-        sw      $t2 0($t1)          # sw      temp 0(move_to_addr)
-        subu    $t0 $t0 4           # move_from_addr = move_from_addr - 4
+        bgt     @hcb_addr @move_from loop_end
+            subu    @move_to @move_to 4
+            lw      @temp 0(@move_from)
+            sw      @temp 0(@move_to)
+            subu    @move_from @move_from 4
         j   loop
     loop_end:
-        subu    $t1 $t1 4           # move_to_addr = move_from_addr + amt
-        lw      $t2 0($t0)          # lw      temp 0(move_from_addr)
-        sw      $t2 0($t1)          # sw      temp 0(move_to_addr)
-    #     sw      move_to_addr HCB_ADDR
-#         sw      $t1 HCB_ADDR
         
-        addu    $v0 $t1 $0
+        addu    $v0 @move_to $0
         return
         .data
         amt_msg: .asciiz "amount = "
@@ -682,92 +669,76 @@ end:
     #     mem_id : the id you will use to access your memory
     alloc:
     {
-        ## PSUEDOCODE for this function
-    #     size_hcb_bytes = size_HCB
-    #     words_to_bytes size_hcb_bytes
-    #     end_list = HCB_ADDR + size_hcb_bytes
-    #     
-    #     if free < amt:
-    #         amt_requested = 3 + amt - free
-    #         free = 0
-    #     else if free >= amt:
-    #         amt_requested = 0
-    #         free = free - amt
-    #     top = top + amt_requested
-    #     save_hcb
-    #     
-    #     if amt_requested != 0: raise error
-    #     # amt_in_bytes = amt_requested
-    #     # words_to_bytes amt_in_bytes
-    #     # sbrk amt_in_bytes addr
-    #
-    #     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
-    #     
-    #     move_hcb_up(amt)
-    #     
-    #     return $s6
-        addu    $s7 $a0 $0          # move the amt to $s7
-        addu    $s0 $a1 $0
+            ## PSUEDOCODE for this function
+#     size_hcb_bytes = size_HCB
+#     words_to_bytes size_hcb_bytes
+#     end_list = HCB_ADDR + size_hcb_bytes
+#     
+#     if free < amt:
+#         amt_requested = 3 + amt - free
+#         free = 0
+#     else if free >= amt:
+#         amt_requested = 0
+#         free = free - amt
+#     top = top + amt_requested
+#     save_hcb
+#     
+#     if amt_requested != 0: raise error
+#     
+#     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
+#     
+#     move_hcb_up(amt)
+#     
+#     return $s6
+        @hcb_addr = $s0
+        @hcb_size = $s1
+        @hcb_next_id = $s2
+        @hcb_top = $s3 
+        @hcb_free = $s4
+        @hcb_len_list = $s5
         
-        la      $a0 start_msg
-        call    println
+        @mem_id = $s6
+        @amt = $s7
+        
+        addu    @amt $a0 $0                 # move the amt to $s7
+        addu    @hcb_addr $a1 $0
+        
+        println start_msg
         
         
-        load_hcb  $s0               # load the HCB into $s0 - $s5 see documentation of macro
-        addu    $a0 $s0 $0
-#         call    println_hex
+        load_hcb  @hcb_addr                 # load the HCB into $s0 - $s5 see macro
         
+        blt     @hcb_free @amt alloc_free_lt_amt
+        #                                   # if free < amt: jump alloc_free_lt_amt
         
-    
-        addu    $t0 $s1 $0          # move size_HCB into $t0
-        hcbtop  $t0 $s0 $t0         # end_list = $t0
-        
-        blt     $s4 $s7 alloc_free_lt_amt
-        #                           # if free < amt: jump alloc_free_lt_amt
-        
-        # $t1 = amt_requested
-        addu    $t1 $0 $0           # amt_requested = 0
-        subu    $s4 $s4 $s7         # free = free - amt
+        @amt_requested = $t1
+        addu    @amt_requested $0 $0 
+        subu    @hcb_free @hcb_free @amt                 # free = free - amt
         
         j       alloc_end_if
     alloc_free_lt_amt:
-        addu    $t1 $s7 3           # amt_requested = 3 + amt
-        subu    $t1 $t1 $s4         # amt_requested = amt_requested - free
-        addu    $s4 $0 $0           # free = 0
+        addu    @amt_requested @amt 3        # amt_requested = 3 + amt
+        subu    @amt_requested @amt_requested @hcb_free  
+        addu    @hcb_free $0 $0              # free = 0
     alloc_end_if:
-        addu    $s3 $s3 $t1         # top = top + amt_requested #top = $s3
+        addu    @hcb_top @hcb_top $t1        # top = top + amt_requested #top = $s3
         
-        save_hcb $s0
+        bne     @amt_requested $0 error      # if amt_requested != 0: jump error
         
-        bne     $t1 $0 error        # if amt_requested != 0: jump error
+        save_hcb @hcb_addr
         
-        ## addu    $t2 $t1 $0          # amt_in_bytes = amt_requested #amt_in_bytes = $t2
-        ## words_to_bytes $t2          # convert to bytes
-        ## sbrk    $t2 $t3             # alocate the memory place the addr in $t3 (sbrk is a macro)
-    #     $s6 = add_hcb_list_elem(HCB_ADDR, amt)
-         
-
         
-        #addu    $s6 $s0 $0
-        la      $a0 HCB_ADDR
-        addu    $a1 $s7 $0
-        #add_hcb_list_elem |-> replaces: call    add_hcb_list_elem
+        addu    $a0 @hcb_addr $0
+        addu    $a1 @amt $0
         add_hcb
-        addu    $s6 $v0 $0
-        call    print_hcb
-        #call    print_hcb
+        addu    @mem_id $v0 $0
         
-        add     $a0 $s7 $0          # move the amt in words you want move the HCB by into arg1
+        add     $a0 @amt $0          # move the amt in words you want move the HCB by into arg1
         call    move_hcb_up         # move the HCB into its new location
+        addu    @hcb_addr $v0 $0
         
-        la      $a0 addr_msg
-        call    print
-        la      $a0 HCB_ADDR
-        call    println_hex
-        
-        addu    $a0 $s6 $0
-        #call    println_hex
-        addu    $v0 $s6 $0
+        addu    $v0 @mem_id $0
+        addu    $v1 @hcb_addr $0
         return
     
     error:
@@ -792,137 +763,137 @@ end:
     #     freed += amt freed
     #     saves the HCB
     #     compacts the heap using the compact method DONE
-    .globl free
-    free:
-    {
-    #     mem_id = $s7
-    #     index = $s6
-    #     found = $v0
-    #     addr = $t0
-    #     err = $v1
-    #     block_addr = $s0, $s7
-    #     block_amt = $s1, $s6
-    #     free = $s4
-    #     -----------------------------------------
-    #     found, index = find_index(mem_id)
-    #     if not found: jump free_error
-    #     addr, err = get_hcb_list_elem(index)
-    #     if err: jump free_error
-    #     lw block_addr 4(addr)
-    #     lw block_amt 8(addr)
-    #     del_hcb_list_elem(index)
-    #     $s7 = block_addr
-    #     $s6 = block_amt
-    #     load_hcb
-    #     free += block_amt
-    #     save_hcb
-    #     compact(block_addr, block_amt)
-        addu    $s7 $a0 $0          # mem_id = $s7
-        la      $a0 id_msg
-        call    print
-        add     $a0 $s7 $0
-        call    println_hex
-        add     $a0 $s7 $0
-        call    find_index
-        beqz    $v0 free_error2      # if not found: jump free_error
-        addu    $s6 $v1 $0          # index = $s6
-        la      $a0 index_msg
-        call    print
-        add     $a0 $s6 $0
-        call    println_hex
-        addu    $a0 $s6 $0
-        #call    get_hcb_list_elem   # get_hcb_list_elem(index)s
-        
-        addu    $a0 $s6 $0
-        get_hcb
-        
-        bne     $v1 $0 free_error   # if err: jump free_error
-        addu    $t0 $v0 $0          # addr = $t0
-        lw      $s0 4($t0)          # block_addr = $s0
-        lw      $s1 8($t0)          # block_amt = $s1
-        
-        la      $a0 amt_msg
-        call    print
-        add     $a0 $s0 $0
-        call    println_hex
-        
-        addu    $a0 $s6 $0
-        del_hcb
-        #call    del_hcb_list_elem   # del_hcb_list_elem(index)
-        #call    println_hex
-        
-        addu    $s7 $s0 $0          # $s7 = block_addr
-        addu    $s6 $s1 $0          # $s6 = block_amt
-        
-        la      $a0 amt_msg
-        call    print
-        add     $a0 $s6 $0
-        call    println_hex
-        
-        load_hcb
-        addu    $s4 $s4 $s6         # free += block_amt
-        save_hcb
-        
-        
-        addu    $a0 $s7 $0
-        addu    $a1 $s6 $0
-        compact             # compact(block_addr, block_amt)
-#         la      $a0 freed_msg
+#     .globl free
+#     free:
+#     {
+#     #     mem_id = $s7
+#     #     index = $s6
+#     #     found = $v0
+#     #     addr = $t0
+#     #     err = $v1
+#     #     block_addr = $s0, $s7
+#     #     block_amt = $s1, $s6
+#     #     free = $s4
+#     #     -----------------------------------------
+#     #     found, index = find_index(mem_id)
+#     #     if not found: jump free_error
+#     #     addr, err = get_hcb_list_elem(index)
+#     #     if err: jump free_error
+#     #     lw block_addr 4(addr)
+#     #     lw block_amt 8(addr)
+#     #     del_hcb_list_elem(index)
+#     #     $s7 = block_addr
+#     #     $s6 = block_amt
+#     #     load_hcb
+#     #     free += block_amt
+#     #     save_hcb
+#     #     compact(block_addr, block_amt)
+#         addu    $s7 $a0 $0          # mem_id = $s7
+#         la      $a0 id_msg
+#         call    print
+#         add     $a0 $s7 $0
+#         call    println_hex
+#         add     $a0 $s7 $0
+#         call    find_index
+#         beqz    $v0 free_error2      # if not found: jump free_error
+#         addu    $s6 $v1 $0          # index = $s6
+#         la      $a0 index_msg
+#         call    print
+#         add     $a0 $s6 $0
+#         call    println_hex
+#         addu    $a0 $s6 $0
+#         #call    get_hcb_list_elem   # get_hcb_list_elem(index)s
+#         
+#         addu    $a0 $s6 $0
+#         get_hcb
+#         
+#         bne     $v1 $0 free_error   # if err: jump free_error
+#         addu    $t0 $v0 $0          # addr = $t0
+#         lw      $s0 4($t0)          # block_addr = $s0
+#         lw      $s1 8($t0)          # block_amt = $s1
+#         
+#         la      $a0 amt_msg
+#         call    print
+#         add     $a0 $s0 $0
+#         call    println_hex
+#         
+#         addu    $a0 $s6 $0
+#         del_hcb
+#         #call    del_hcb_list_elem   # del_hcb_list_elem(index)
+#         #call    println_hex
+#         
+#         addu    $s7 $s0 $0          # $s7 = block_addr
+#         addu    $s6 $s1 $0          # $s6 = block_amt
+#         
+#         la      $a0 amt_msg
+#         call    print
+#         add     $a0 $s6 $0
+#         call    println_hex
+#         
+#         load_hcb 
+#         addu    $s4 $s4 $s6         # free += block_amt
+#         save_hcb
+#         
+#         
+#         addu    $a0 $s7 $0
+#         addu    $a1 $s6 $0
+#         compact             # compact(block_addr, block_amt)
+# #         la      $a0 freed_msg
+# #         call    println
+#         return
+#     free_error:
+#         la      $a0 error_msg
 #         call    println
-        return
-    free_error:
-        la      $a0 error_msg
-        call    println
-        return
-    free_error2:
-        la      $a0 error_msg2
-        call    println
-        return
-    
-        .data
-    error_msg: .asciiz "Get HCB error\n"
-    error_msg2: .asciiz "Find Index Error in Free\n"
-    index_msg: .asciiz "index = "
-    id_msg: .asciiz "id = "
-    amt_msg: .asciiz "amt = "
-    freed_msg: .asciiz "freed\n"
-        .text
-    }
-    
-    # get_addr(id) --> $v0 = found?, $v1 = addr
-    get_addr:
-    {
-        addu    $s7 $a0 $0          # mem_id = $s7
-        call    find_index
-        beqz    $v0 id_not_found      # if not found: jump free_error
-        addu    $s6 $v1 $0          # index = $s6
-        addu    $a0 $s6 $0
-        get_hcb
-        bne     $v1 $0 hcb_error   # if err: jump free_error
-        addu    $s0 $v0 $0          # addr = $s0
-        lw      $s1 4($s0)          # load the address of the memory into $s1
-        
-        addu    $v0 $0 1
-        addu    $v1 $s1 $0
-        return
-        
-    id_not_found:
-        la      $a0 id_not_found_msg
-        call    println
-        addu    $v0 $0 $0
-        addu    $v1 $0 $0
-        return
-    hcb_error:
-        la      $a0 hcb_error_msg
-        call    println
-        addu    $v0 $0 $0
-        addu    $v1 $0 $0
-        .data
-    id_not_found_msg: .asciiz "Could not find id"
-    hcb_error_msg: .asciiz "Could not get hcb element for index"
-        .text
-        return
-    }
+#         return
+#     free_error2:
+#         la      $a0 error_msg2
+#         call    println
+#         return
+#     
+#         .data
+#     error_msg: .asciiz "Get HCB error\n"
+#     error_msg2: .asciiz "Find Index Error in Free\n"
+#     index_msg: .asciiz "index = "
+#     id_msg: .asciiz "id = "
+#     amt_msg: .asciiz "amt = "
+#     freed_msg: .asciiz "freed\n"
+#         .text
+#     }
+#     
+#     # get_addr(id) --> $v0 = found?, $v1 = addr
+#     get_addr:
+#     {
+#         addu    $s7 $a0 $0          # mem_id = $s7
+#         call    find_index
+#         beqz    $v0 id_not_found      # if not found: jump free_error
+#         addu    $s6 $v1 $0          # index = $s6
+#         addu    $a0 $s6 $0
+#         get_hcb
+#         bne     $v1 $0 hcb_error   # if err: jump free_error
+#         addu    $s0 $v0 $0          # addr = $s0
+#         lw      $s1 4($s0)          # load the address of the memory into $s1
+#         
+#         addu    $v0 $0 1
+#         addu    $v1 $s1 $0
+#         return
+#         
+#     id_not_found:
+#         la      $a0 id_not_found_msg
+#         call    println
+#         addu    $v0 $0 $0
+#         addu    $v1 $0 $0
+#         return
+#     hcb_error:
+#         la      $a0 hcb_error_msg
+#         call    println
+#         addu    $v0 $0 $0
+#         addu    $v1 $0 $0
+#         .data
+#     id_not_found_msg: .asciiz "Could not find id"
+#     hcb_error_msg: .asciiz "Could not get hcb element for index"
+#         .text
+#         return
+#     }
 
 
 
