@@ -71,10 +71,25 @@ main:
     endblock:
     }
     
+    
+#     del_hcb_item(index, addr) --> $v0 = error
+    addu    @index $0 2
+    {
+        @err = $t4
+        addu    $a0 @index $0
+        addu    $a1 @addr $0
+        call    del_hcb_item
+        addu    @err $v0 $0
+        println_hex err_equal_msg @err
+    }
+    
+    print_hcb @addr
+    
     exit
     .data
     msg: .asciiz "addr = "
     error_msg: .asciiz "error"
+    err_equal_msg: .asciiz " error = "
     .text
 }
 #     addu    $s0 $0 4
