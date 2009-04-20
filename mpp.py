@@ -204,13 +204,21 @@ def rep_names(lines, names):
         for name in names.keys():
             nameloc = lines[i].find(name)
             hashsign = lines[i].find('#')
-            while nameloc != -1 and (nameloc < hashsign or hashsign == -1):
+            r = re.compile(r'(\W)'+name+'(\W|$)')
+            gs = r.search(lines[i])
+            while gs and nameloc != -1 and (nameloc < hashsign or hashsign == -1):
+                gs = gs.groups()
                 if nameloc != -1 and (nameloc < hashsign or hashsign == -1):
                     rep = True
-                    lines[i] = lines[i].replace(name, names[name], 1)
+                    lines[i] = r.sub(gs[0]+names[name]+gs[1], lines[i])
                 nameloc = lines[i].find(name)
                 hashsign = lines[i].find('#')
-            if rep and lines[i][-1] != '>': lines[i] += ' # orgline = ' + line.lstrip().rstrip() + '>'
+                gs = r.search(lines[i])
+            if rep and lines[i][-1] != '>':
+                line = line.lstrip().rstrip()
+                hashsign = line.find('#')
+                if hashsign == -1: hashsign = len(line)
+                lines[i] += ' # ::-> ' + line[:hashsign] + '>'
         
     
     return lines;
@@ -331,7 +339,7 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict(), toplevel=Fa
             hashsign = line.find('#')
             if toplevel and atsign != -1 and (atsign < hashsign or hashsign == -1):
                 raise Warning, "Syntax error name unconverted on line = '%s'" % line
-            if line and line[-1] == '>': lines[i] = line[:-1]
+            if toplevel and line and line[-1] == '>': lines[i] = line[:-1]
             lines[i] = ' '*4 + lines[i].lstrip().rstrip()
         if strip_comments:
             return '\n'.join([l for l in lines if not l.strip().startswith('#') and l.strip() != ''])
@@ -371,4 +379,4 @@ if __name__ == "__main__":
     except:
         raise Exception, "use 'python mpp.py in_file out_file"
     
-    process(infile, outfile, cstrip=True)
+    process(infile, outfile)
