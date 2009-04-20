@@ -1,0 +1,5 @@
+shell.s
+wumpus.s
+stack_mgr.s
+
+init_with: wumpus.s

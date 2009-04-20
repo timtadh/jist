@@ -25,6 +25,7 @@
 
 # stack_new(start_size) --> $v0 = stack_addr
 stack_new:
+{
     mul     $t0 $a0 4           # multiply the number of words they want in the stack
                                 # by 4
     addu    $t0 $t0 8           # add 8 to the size of stack the user wants
@@ -36,11 +37,13 @@ stack_new:
     
     addu    $v0 $s0 $0          # move the addr of the stack into $v0 the return reg
     return
+}
 
 # stack_push(stack_addr, word_to_push) --> $v0 = success
 #       success : 1 if the push succeeded
 #                 0 if the push failed
 stack_push:
+{
     addu    $s0 $a0 $0          # move the addr of the stack to $s0
     addu    $s7 $a1 $0          # move the word you want to add to $s7
     lw      $s1 0($s0)          # load the size of the stack into $s1
@@ -62,7 +65,8 @@ stack_push:
     addi    $v0 $0 1            # put 1 (for success) into out reg
     return
 
-stack_push_fail:
-    add    $v0 $0 $0            # put 0 (for failure) into out reg
-    return
+    stack_push_fail:
+        add    $v0 $0 $0            # put 0 (for failure) into out reg
+        return
+}
 

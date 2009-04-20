@@ -16,7 +16,9 @@ move_msg:   .asciiz "\nAdjacent rooms: "
 w_msg:      .asciiz "I smell a wumpus!\n"
 p_msg:      .asciiz "I feel a draft.\n"
 b_msg:      .asciiz "Bats nearby!\n"
-msg_fly:    .asciiz "You are grabbed by a giant bat and flown to another room..."
+msg_fly:    .asciiz "\nYou are grabbed by a giant bat and flown to another room..."
+wump_move:  .asciiz "You woke the wumpus! He has moved to another room..."
+wump_kill:  .asciiz "Thou hast slain the mighty wumpus!"
 wrooms:     .byte 2,5,8,    1,3,10,     2,4,12,     3,5,14,     1,4,6
             .byte 5,7,15,   6,8,17,     1,7,9,      8,10,18,    2,9,11
             .byte 10,12,19, 3,11,13,    12,14,20,   4,13,15,    6,14,16
@@ -37,7 +39,7 @@ intro2: .ascii "Wumpus:\n"
         .ascii "        (no tunnel) it moves at random to the next room.\n"
         .ascii "        If the arrow hits the wumpus, you win.\n"
         .ascii "        If the arrow hits you, you lose.\n\n"
-        .asciiz "Hit Return.\n"
+        .asciiz "Hit Return to continue.\n"
 intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         .ascii  "   The Wumpus lives in a cave of 20 rooms. Each room has 3 tunnels leading to \n"
         .ascii  "   other rooms. (Look at a dodecahedron to see how this works-if you don't know\n"
@@ -49,7 +51,7 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         .ascii "Super Bats:\n"
         .ascii "    Two other rooms have Super Bats. If you go there, a bat grabs you and takes\n"
         .ascii "    you to some other room at random. (which may be troublesome)\n\n"
-        .asciiz "Hit Return.\n"
+        .asciiz "Press q to quit at any time. Hit Return to continue.\n"
 .text
 
 #define qprint_char
@@ -80,6 +82,7 @@ intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
 
 #define load_data
     la $s7 wdata
+    #DOES NOT LOAD PLAYER POSITION - ON PURPOSE
     lb $s1 1($s7)
     lb $s2 2($s7)
     lb $s3 3($s7)
@@ -182,7 +185,7 @@ start_game:
         return
 }
 
-get_room:
+load_adjacent_rooms:
 {
     li $t1 3
     la $t0 wrooms
@@ -200,34 +203,6 @@ get_room:
     bgez $t1 another_room
     return
 }
-
-#define check_room
-    addi $s0 $a0 0
-    bne $s0 $s2 nowumpus
-        la $a0 w_msg
-        call print
-    nowumpus:
-    
-    bne $s0 $s3 nopit1
-        la $a0 p_msg
-        call print
-    nopit1:
-    
-    bne $s0 $s4 nopit2
-        la $a0 p_msg
-        call print
-    nopit2:
-    
-    bne $s0 $s5 nobat1
-        la $a0 b_msg
-        call print
-    nobat1:
-    
-    bne $s0 $s6 nobat2
-        la $a0 b_msg
-        call print
-    nobat2:
-#end
 
 check_status:
 {
@@ -271,18 +246,41 @@ check_status:
     load_data
     
     add $a0 $s1 $zero
-    call get_room
-    {
-        la $s7 adjrooms
-        li $s8 3
+    call load_adjacent_rooms
     
-        another_room:
-            lb $a0 0($s7)
-            check_room
-            addi $s7 $s7 1
-            addi $s8 $s8 -1
-        bgtz $s8 another_room
-    }
+    la $s7 adjrooms
+    li $s8 3
+
+    another_room:
+        lb $s0 0($s7)
+        addi $s0 $s0 -1
+        bne $s0 $s2 nowumpus
+            la $a0 w_msg
+            call print
+        nowumpus:
+
+        bne $s0 $s3 nopit1
+            la $a0 p_msg
+            call print
+        nopit1:
+
+        bne $s0 $s4 nopit2
+            la $a0 p_msg
+            call print
+        nopit2:
+
+        bne $s0 $s5 nobat1
+            la $a0 b_msg
+            call print
+        nobat1:
+
+        bne $s0 $s6 nobat2
+            la $a0 b_msg
+            call print
+        nobat2:
+        addi $s7 $s7 1
+        addi $s8 $s8 -1
+    bgtz $s8 another_room
 #end
 
 #define print_rooms
@@ -292,7 +290,7 @@ check_status:
     call print_int
     
     add $a0 $s1 $zero
-    call get_room
+    call load_adjacent_rooms
     
     qprint_string move_msg
 
@@ -319,7 +317,7 @@ check_status:
     add $s7 $v0 $zero
     
     add $a0 $s1 $zero
-    call get_room
+    call load_adjacent_rooms
     la $s0 adjrooms
     lb $a0 0($s0)
     beq $v0 $a0 in_ok
@@ -334,6 +332,47 @@ check_status:
         la $s0 wdata
         sb $s7 1($s0)
         b mainloop
+}
+#end
+
+#define do_shoot
+{
+    shoot_again:
+    print_rooms
+    qprint_string prompt
+
+    la $a0 str_buf
+    call read_int
+    add $s7 $v0 $zero
+    
+    add $a0 $s1 $zero
+    call load_adjacent_rooms
+    la $s0 adjrooms
+    lb $a0 0($s0)
+    beq $v0 $a0 in_ok
+    lb $a0 1($s0)
+    beq $v0 $a0 in_ok
+    lb $a0 2($s0)
+    beq $v0 $a0 in_ok
+    
+    b shoot_again
+    in_ok:
+        addi $s0 $s7 -1
+        load_data
+        beq $s0 $s2 kill_the_wumpus
+        _wumpus_move:
+            choose 20 $s2
+            beq $s2 $s3 _wumpus_move
+            beq $s2 $s4 _wumpus_move
+            beq $s2 $s5 _wumpus_move
+            beq $s2 $s6 _wumpus_move
+            sb $s2 2($s7)
+            qprint_string wump_move
+        b mainloop
+        kill_the_wumpus:
+            qprint_string wump_kill
+            call readln
+            b main
 }
 #end
 
@@ -380,12 +419,17 @@ main:
         get_char
         li $t0 113  #q
         beq $t0 $v0 userquit
-        li $t0 109
+        li $t0 109  #m
         beq $t0 $v0 usermove
+        li $t0 115  #s
+        beq $t0 $v0 usershoot
         b mainloop
         usermove:
             do_move
-        b mainloop
+            b mainloop
+        usershoot:
+            do_shoot
+            b mainloop
     userquit:
         exit
 }
