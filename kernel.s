@@ -90,7 +90,7 @@ exception_handler:              # exception handler
     # syscall
     
     
-    beqz $a0 skip_interrupt_handler
+    bnez $a0 skip_interrupt_handler
     la $a0 interrupt_handler
     jr $a0
     skip_interrupt_handler:
