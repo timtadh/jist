@@ -372,6 +372,13 @@ alread_zero:
     addu    @err $v0 $0
 #end
 
+# khcb_writeback hcb_addr
+#define khcb_writeback
+    @khcb_addr = $t0
+    @hcb_addr = %1
+    la  @khcb_addr  KHCB_ADDR
+    sw  @hcb_addr   0(@khcb_addr)
+#end
 
 # # initialize_heap(start, len) --> Null
 # #

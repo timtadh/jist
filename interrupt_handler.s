@@ -53,7 +53,6 @@ save_state:
     .text
 restore_state:
 {
-
     sw      $t0 __save_t0       # load $t0 - $t3
     sw      $t1 __save_t1
     sw      $t2 __save_t2
