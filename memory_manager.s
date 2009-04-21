@@ -232,6 +232,7 @@ add_hcb_item:
     
     addu    @end_list @hcb_size $0          # move size_HCB into $t0
     addu    @hcb_size @hcb_size 3           # size_HCB += 3
+    subu    @hcb_free @hcb_free 3
     
     sll     @end_list @end_list 2
         # add the size of the hcb to the addr
@@ -320,6 +321,7 @@ del_hcb_item:
     @hcb_free = $s4
     @hcb_len_list = $s5
     
+    @item_size = $s6
     @index = $s7
     
     @to_addr = $t0
@@ -333,10 +335,11 @@ del_hcb_item:
     
     addu    $a0 @index $0
     call    get_hcb_item
-    #call get_hcb_list_elem      # get the addr of the element
 #     if err: jump del_hcb_list_elem_error
     bne     $v1 $0 del_hcb_list_elem_error
     addu    @to_addr $v0 $0          # to_addr = $t0
+    
+    lw      @item_size 8(@to_addr) 
     
     load_hcb @hcb_addr
     addu    @from_addr @to_addr 12   # from_addr = to_addr + 3*4
@@ -354,6 +357,7 @@ del_hcb_item:
         subu    @hcb_len_list @hcb_len_list 1   # len_list -= 1
         subu    @hcb_size @hcb_size 3           # size_HCB -= 3
         addu    @hcb_free @hcb_free 3           # free += 3
+        addu    @hcb_free @hcb_free @item_size
         save_hcb @hcb_addr
         add     $v0 $0 $0           # error = 0 success!
         return
@@ -493,18 +497,18 @@ compact:
         #         if (from_addr == hcb_addr)
             {
             bne     @from_addr @hcb_addr endif
-                addu    @hcb_addr @to_addr $0          # hcb_addr = to_addr + 4
+                addu    @hcb_addr @to_addr $0          # hcb_addr = to_addr
             endif:
             }
             
             addu    @x $0 0x5
             {
-            blt     @count @x endif
+            ble     @count @x endif
                 subu    @count_temp @count @x
                 addu    @x $0 0x3
                 div     @count_temp @x
                 mfhi    @remainder
-                addu    @x $0 0x2
+                addu    @x $0 0x1
                 bne     @remainder @x endif
                 
                 subu    @temp_addr @to_addr 0x4
@@ -513,7 +517,7 @@ compact:
                 li      @memid_loc 0x1
                 var_restore @mem_id @memid_loc 
                 
-                ble     @temp @mem_id endif
+#                 blt     @temp @mem_id endif
                 
                 lw      @temp 0(@to_addr)
                 subu    @temp @temp @hole_size
@@ -522,7 +526,11 @@ compact:
             }
             addu    @to_addr @to_addr 4           # to_addr += 4
             addu    @from_addr @from_addr 4           # from_addr += 4
-            addu    @count @count 0x1
+            {
+            ble     @to_addr @hcb_addr endif
+                addu    @count @count 0x1
+            endif:
+            }
 #             println_hex count_msg @count
 #             println_hex from_addr_msg @from_addr
 #             println_hex to_addr_msg @to_addr
@@ -731,7 +739,7 @@ free:
         addu    @mem_id $a0 $0
         addu    @hcb_addr $a1 $0
         
-#         println_hex mem_id_msg @mem_id
+        println_hex mem_id_msg @mem_id
         addu $a0 @mem_id $0
         addu $a1 @hcb_addr $0
         call find_index
@@ -753,8 +761,8 @@ free:
         
 #         println_hex err_equal_msg @err
         
-        addu    $a0 @item_addr $0
-        call    print_hcb_item
+#         addu    $a0 @item_addr $0
+#         call    print_hcb_item
         
         lw      @hole_addr 4(@item_addr)
         lw      @hole_size 8(@item_addr)
