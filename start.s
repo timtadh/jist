@@ -2,38 +2,25 @@
 # start.s - header for user programs
 
 #include stdlib.s
-
-    .data
-__msg: .asciiz "\nmy procedure\n"
-
     .text
-proc:
-    load_arg 3 $a0
-    #li      $a0 15
-    li       $v0 1
-    syscall
+init_kernel:
+{
+    @hcb_addr = $s0
+    sbrk_imm 4096 @hcb_addr
+    li $a1 1024
+    add $a0 @hcb_addr $zero
+    call initialize_heap
     
-    la      $a0, __msg          # load the addr of hello_msg into $a0.
-    li      $v0, 4              # 4 is the print_string syscall.
-    #syscall
+    @khcb_addr = $s2
+    la  @khcb_addr  KHCB_ADDR
+    sw  @hcb_addr   0(@khcb_addr)
+    
     return
-    
+}
+    .text
     .globl __start
+
 __start:
-    #add     $fp $sp $0
-    li      $t0 5
-    store_arg $t0
-    li      $t0 13
-    store_arg $t0
-    li      $t0 15
-    store_arg $t0
-    call    proc
-    
-    la      $a0 __msg
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall
-    
-    
 #     enable_interrupts
 #     enable_clock_interrupt
 #     load_user_programs
@@ -44,10 +31,14 @@ __start:
 #     load_user_programs
 #     la      $s0  user_program_locations
 #     lw      $s1  4($s0)
+    
+    exec init_kernel
+    
+    #sneaky kernel macros:
     load_user_programs
-    #this is a sneaky kernel macro:
     load_first_program
     jr      $s1
+    
     #la      $s0  user_program_locations
     #lw      $s1  12($s0)
 #     
