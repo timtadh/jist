@@ -73,6 +73,11 @@ main:
     get @loc @mem_id0 @addr @val @err
     println_hex val_msg @val
     
+    addu    @val $0 0x17
+    addu    @loc $0 0x3
+    put @loc @mem_id1 @addr @val @err
+    get @loc @mem_id1 @addr @val @err
+    println_hex val_msg @val
     {
         addu    $a0 @mem_id0 $0
         addu    $a1 @addr $0
