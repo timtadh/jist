@@ -4,12 +4,12 @@
     .globl  proc_limit
     .globl  proc_list
     .globl  user_program_locations
-    .globl  HCB_ADDR
+    .globl  KHCB_ADDR
     .data 
 user_program_locations:
             #repeat 16
             .word   0
-HCB_ADDR:   .word   0
+KHCB_ADDR:  .word   0
 proc_limit: .word   0x80
 proc_list:
             #repeat 128
