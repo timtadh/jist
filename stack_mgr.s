@@ -14,7 +14,6 @@
 # (Actually it won't, but it will when we have a memory manager.)
 
 #include stdlib.s
-#include sys_macros.m
 
 .data
 #Format of saved stack array, by word:
