@@ -6,6 +6,9 @@
 init_kernel:
 {
     @hcb_addr = $s0
+    @khcb_addr_loc = $s1
+    @mem_id = $s2
+    
     sbrk_imm 4096 @hcb_addr
     li $a1 1024
     add $a0 @hcb_addr $zero
@@ -15,9 +18,12 @@ init_kernel:
     addu $a1 @hcb_addr $zero
     call alloc
     
-    @khcb_addr_loc = $s2
-    la  @khcb_addr_loc  KHCB_ADDR
-    sw  @hcb_addr_loc   0(@khcb_addr)
+    addu @mem_id $v0 $zero
+    addu @hcb_addr $v1 $zero
+    
+    khcb_writeback @hcb_addr
+    
+    addu $v0 @mem_id $zero
     
     return
 }
