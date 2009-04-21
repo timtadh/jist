@@ -87,9 +87,9 @@ __int_msg: .asciiz "interrupt handler entered\n"
 
     .text
 interrupt_handler:
-    la      $a0, __int_msg      # load the addr of exception_msg into $a0.
-    li      $v0, 4              # 4 is the print_string syscall.
-    syscall                     # do the syscall.
+    # la      $a0, __int_msg      # load the addr of exception_msg into $a0.
+    # li      $v0, 4              # 4 is the print_string syscall.
+    # syscall                     # do the syscall.
     j       save_state
 save_state_return:
     j       restore_state
