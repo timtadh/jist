@@ -58,31 +58,61 @@ create_pcb:
     sbrk_addr pcb_size $v0
     return
 
-    # save_proc(pcb_addr, status)  -> Null
+    # save_proc(mem_id, status)  -> Null
 save_proc:
-    addu    $t0  $a0  0         # move the address of the PCB to $t0
+{
+    @hcb_addr = $s0
+    @mem_id = $s1
+    @loc = $t0
+    @status = $s2
+    @error = $t1
+    @temp = $t2
+    addu    @mem_id  $a0  $zero     # move the address of the mem_id to $t0
+    addu    @status  $a1  $zero
+    khcb_getaddr @hcb_addr
     
-    sw      $a1  0($t0)         # save the status into the pcb
+    li      @loc 0
+    put     @loc @mem_id @hcb_addr @status @error
+    bne     @error $zero put_error
     
-    mfc0    $t1  $14            # get the EPC register
-    sw      $t1  8($t0)         # save the program counter number in the pcb
+    mfc0    @temp  $14          # get the EPC register
+    li      @loc 2
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+
     
-    lw      $t1  __save_HCB_ADDR
-    sw      $t1  12($t0)        # save the hcb_addr into the pcb
+    la      @temp  __save_HCB_ADDR
+    lw      @temp 0(@temp)
+    #lw      $t1  __save_HCB_ADDR
+    li      @loc 3
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+ 
+    lw      @temp  __save_at      # load the saved $at reg
+    li      @loc 6
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  24($t0)        # save it in the PCB
     
-    lw      $t1  __save_at      # load the saved $at reg
-    sw      $t1  24($t0)        # save it in the PCB
+    lw      @temp  __save_sp      # load the saved stack pointer
+    li      @loc 7
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  28($t0)        # save it in the PCB
     
-    lw      $t1  __save_sp      # load the saved stack pointer
-    sw      $t1  28($t0)        # save it in the PCB
+    lw      @temp  __save_fp      # load the saved frame pointer
+    li      @loc 8
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  32($t0)        # save it in the PCB
     
-    lw      $t1  __save_fp      # load the saved frame pointer
-    sw      $t1  32($t0)        # save it in the PCB
+    lw      @temp  __save_gp      # load the saved global pointer
+    li      @loc 9
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  36($t0)        # save it in the PCB
     
-    lw      $t1  __save_gp      # load the saved global pointer
-    sw      $t1  36($t0)        # save it in the PCB
-    
-    lw      $t1  __save_ra      # load the saved return address pointer
+    lw      @temp  __save_ra      # load the saved return address pointer
     sw      $t1  40($t0)        # save it in the PCB
     
     lw      $t1  __save_v0      # load the saved $v0
@@ -140,6 +170,10 @@ save_proc:
     sw      $s7  136($t0)       # save $s7 in the PCB
     
     return
+put_error:
+    #print helpful message here
+    return
+}
     
 # new_proc(pcb_address data_amt) -> Null
 #     data_amt = the amount of room this proccess gets for its heap and stack. static can't change.
