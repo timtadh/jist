@@ -61,6 +61,9 @@ ll_append:
     return
 }
 .text
+#ll_next(list_head, current_node)
+#   v0 = pcb mem_id
+#
 ll_next:    #@h @current
 {
     @head = $s0
@@ -75,24 +78,47 @@ ll_next:    #@h @current
     
     return_head:
     add $v1 @head $zero
-    lw $v0 0($v1)
+    lw $v0 8($v1)
     return
 }
-# .text
-# ll_print:
-# {
-#     @addr = $s0
-#     add @addr $a0 $zero
-#     
-#     print_again:
-#         beqz $s0 done_printing
-#         lw $s1 0($s0)
-#         add $a0 $s1 $zero
-#         call print_int
-#         li $a0 10
-#         call print_char
-#         lw $s0 4($s0)
-#         b print_again
-#     done_printing:
-#     return
-# }
+
+.text
+#ll_remove(list_head, to_remove)
+ll_remove:
+    @head = $s0
+    @to_remove = $s0
+    add @head $a0 $zero
+    add @to_remove $a1 $zero
+    
+    loop:
+        beqz @head found_end
+        lw $t0 4(@head)
+        bne $t0 @to_remove not_found_yet
+            lw $t0 4(@to_remove)
+            sw $t0 4(@head)
+            return
+        not_found_yet:
+            add $t0 @head $zero
+    found_end:
+    
+    #fail silently
+    return
+
+.text
+ll_print:
+{
+    @addr = $s0
+    add @addr $a0 $zero
+    
+    print_again:
+        beqz $s0 done_printing
+        lw $s1 0($s0)
+        add $a0 $s1 $zero
+        call print_int
+        li $a0 10
+        call print_char
+        lw $s0 4($s0)
+        b print_again
+    done_printing:
+    return
+}
