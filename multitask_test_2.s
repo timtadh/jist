@@ -2,8 +2,8 @@
 #include sys_macros.m
 
 .data
-mtt_str_1: .asciiz "mtt1-a"
-mtt_str_2: .asciiz "mtt1-b"
+mtt_str_1: .asciiz "mtt2-a"
+mtt_str_2: .asciiz "mtt2-b"
 
 .globl main
 .text

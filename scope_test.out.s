@@ -2,6 +2,8 @@
     
     
     #    @a = $t0
+    #    @a_o = $t5
+    lw $t0 0 $t0  # ::-> lw @a 0(@a)
     #        @b = $t0
     #        @a = $t2
     #        @longc = $t3
@@ -23,3 +25,4 @@
     #    @start_ = $t1
     
     addu    $t9 $t1 # ::-> addu    @start $t1  # ::-> addu    @start @start_
+    

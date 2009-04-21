@@ -4,16 +4,14 @@
 
 .text
 #format of a linked list:
-#   @ll: info block containing [head][greatest element number]
-#   @h: head: [value][next address]
+#   @h: head: [process num][next address][pcb mem_id]
 ll_init:    #a0 = value to init @h to
 {
     @size = $s0
-    @ll = $t1
     @initval = $s1
     add $s1 $a0 $zero
     
-    li @size 2
+    li @size 3
     allocate_array @size $t0
     sw @initval 0($t0)
     sw $zero 4($t0)
@@ -31,7 +29,7 @@ ll_append:
     add @thisnode $a0 $zero
     add @newval $a1 $zero
     
-    li @size 2
+    li @size 3
     allocate_array @size @new
     
     lw $t3 4(@thisnode)

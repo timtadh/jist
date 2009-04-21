@@ -1,6 +1,6 @@
 #!/bin/sh
 
-python spim.py -f
+python spim.py -f -s
 
 #python spim.py --stripcomments sys_macros.m timer_user.s add.s mappedio_test.s wumpus.s stack_mgr.s kernel.s
 
