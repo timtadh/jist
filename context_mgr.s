@@ -7,7 +7,7 @@
 #   @h: head: [process num][next address][pcb mem_id]
 
 #ll_init(initial_pid, initial_pcb)
-ll_init:    #a0 = value to init @h to
+ll_init:
 {
     @size = $s0
     @initval = $s1
@@ -27,7 +27,7 @@ ll_init:    #a0 = value to init @h to
 }
 
 .text
-#ll_append(some_node, new_pid, new_pcb)
+#ll_append(some_node, new_pid, new_pcb_mem_id)
 ll_append:
 {
     @size = $s0
