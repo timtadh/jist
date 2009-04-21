@@ -517,7 +517,7 @@ compact:
                 li      @memid_loc 0x1
                 var_restore @mem_id @memid_loc 
                 
-#                 blt     @temp @mem_id endif
+                blt     @temp @mem_id endif
                 
                 lw      @temp 0(@to_addr)
                 subu    @temp @temp @hole_size
@@ -739,7 +739,7 @@ free:
         addu    @mem_id $a0 $0
         addu    @hcb_addr $a1 $0
         
-        println_hex mem_id_msg @mem_id
+#         println_hex mem_id_msg @mem_id
         addu $a0 @mem_id $0
         addu $a1 @hcb_addr $0
         call find_index
@@ -893,7 +893,7 @@ __getword:
         return
         
     .data
-    error_msg: .asciiz "Index not found\n"
+    error_msg: .asciiz "Memory id not found\n"
     error_msg2: .asciiz "Error in get hcb item\n"
     error_msg3: .asciiz "location not in range 0-(n-1)\n"
     .text
@@ -971,7 +971,7 @@ __putword:
         return
         
     .data
-    error_msg: .asciiz "Index not found\n"
+    error_msg: .asciiz "Memory id not found\n"
     error_msg2: .asciiz "Error in get hcb item\n"
     error_msg3: .asciiz "location not in range 0-(n-1)\n"
     word_addr_msg: .asciiz "word address = "
