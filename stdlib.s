@@ -303,39 +303,39 @@ end_write:
 }
 
     .text
-# print_arr array_addr size
-#     array_addr = the address of the array
-#     size = the size of the array
-print_array:
-{
-    add     $s0 $a0 $0
-    add     $s1 $a1 $0
-    la      $a0 sbracket_l
-    exec    print
-    add     $s2 $0 $0
-    beq     $s1 $0 end_loop
-loop:
-    add     $a0 $s0 $0
-    add     $a1 $s2 $0
-    exec    get
-    add     $a0 $v0 $0
-    exec    print_int
-    
-    add     $s2 $s2 1
-    beq     $s2 $s1 end_loop
-    la      $a0 comma
-    exec    print
-    
-    j       loop
-end_loop:
-    la      $a0 sbracket_r
-    exec    println
-    return
-    .data
-comma: .asciiz ", "
-sbracket_l: .asciiz "["
-sbracket_r: .asciiz "]"
-}
+# # print_arr array_addr size
+# #     array_addr = the address of the array
+# #     size = the size of the array
+# print_array:
+# {
+#     add     $s0 $a0 $0
+#     add     $s1 $a1 $0
+#     la      $a0 sbracket_l
+#     exec    print
+#     add     $s2 $0 $0
+#     beq     $s1 $0 end_loop
+# loop:
+#     add     $a0 $s0 $0
+#     add     $a1 $s2 $0
+#     exec    get
+#     add     $a0 $v0 $0
+#     exec    print_int
+#     
+#     add     $s2 $s2 1
+#     beq     $s2 $s1 end_loop
+#     la      $a0 comma
+#     exec    print
+#     
+#     j       loop
+# end_loop:
+#     la      $a0 sbracket_r
+#     exec    println
+#     return
+#     .data
+# comma: .asciiz ", "
+# sbracket_l: .asciiz "["
+# sbracket_r: .asciiz "]"
+# }
 
 
     .text
@@ -464,7 +464,7 @@ print_hcb:
         empty: .asciiz "\n"
         .text
 }
-
+.text
 # print_hcb_item(addr) --> Null
 print_hcb_item:
 {

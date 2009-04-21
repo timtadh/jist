@@ -30,9 +30,6 @@ __save_HCB_ADDR: .word 0
 
 __k_HCB_ADDR: .word 0
 
-__plist:    .word 0
-__activep:  .word 0
-
 
     .text
 save_state:
@@ -51,22 +48,11 @@ save_state:
     sw      $s2 __save_s2
     sw      $s3 __save_s3
     
-    #load kernel heap address
-    lw      $t0 HCB_ADDR
-    sw      $t0 __save_HCB_ADDR
-    lw      $t0 __k_HCB_ADDR
-    sw      $t0 HCB_ADDR
-    
     j       save_state_return
 }
     .text
 restore_state:
 {
-    #load user heap address
-    lw      $t0 HCB_ADDR
-    sw      $t0 __k_HCB_ADDR
-    lw      $t0 __save_HCB_ADDR
-    sw      $t0 HCB_ADDR
 
     sw      $t0 __save_t0       # load $t0 - $t3
     sw      $t1 __save_t1
