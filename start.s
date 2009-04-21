@@ -11,9 +11,13 @@ init_kernel:
     add $a0 @hcb_addr $zero
     call initialize_heap
     
-    @khcb_addr = $s2
-    la  @khcb_addr  KHCB_ADDR
-    sw  @hcb_addr   0(@khcb_addr)
+    li $a0 16
+    addu $a1 @hcb_addr $zero
+    call alloc
+    
+    @khcb_addr_loc = $s2
+    la  @khcb_addr_loc  KHCB_ADDR
+    sw  @hcb_addr_loc   0(@khcb_addr)
     
     return
 }
