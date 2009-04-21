@@ -46,7 +46,7 @@ __start:
 #     lw      $s1  4($s0)
     load_user_programs
     #this is a sneaky kernel macro:
-    run_first_program
+    load_first_program
     jr      $s1
     #la      $s0  user_program_locations
     #lw      $s1  12($s0)

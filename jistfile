@@ -4,4 +4,4 @@ shell.s
 wumpus.s
 stack_mgr.s
 
-init_with: multitask_test.s
+init_with: stack_mgr.s
