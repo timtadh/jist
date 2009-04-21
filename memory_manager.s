@@ -162,67 +162,6 @@
     subu    %1 %1 4             # subtract 4 to get the actual last addr
 #end
 
-
-
-# # compact (hole_addr, hole_size, hcb_addr) --> new_hcb_addr
-# #define compact local
-#     #     from_addr = $t0
-#     #     to_addr = $t1
-#     #     last_addr = $t2
-#     #     temp = $t3
-#     #     hcb_addr = $s0
-#     #     while (from_addr <= last_addr)
-#     #     {
-#     #         lw  temp 0(from_addr)
-#     #         sw  temp 0(to_addr)
-#     #         if (from_addr == hcb_addr)
-#     #         {
-#     #             hcb_addr = to_addr
-#     #             sw  hcb_addr HCB_ADDR
-#     #         }
-#     #         to_addr += 4
-#     #         from_addr += 4
-#     #     }
-#     .text
-#         addu    $s6 $a0 $0          # $s6 = hole_addr
-#         addu    $s7 $a1 $0          # $s7 = hole_size
-#         addu    $s0 $a2 $0
-#         la      $a0 hole_addr_msg
-#         call    print
-#         addu    $a0 $s6 $0
-#         call    println_hex
-#         la      $a0 hole_size_msg
-#         call    print
-#         addu    $a0 $s7 $0
-#         call    println_hex
-#         #call    println_hex
-#         load_hcb $s0                # load the control block
-#         addu    $t0 $s7 $0           # move hole_size into $t0
-#         words_to_bytes $t0          # convert hole_size to bytes
-#         addu    $t1 $s6 $0          # to_addr = $t1
-#         addu    $t2 $s1 $0          # move size_HCB into $t0
-#         hcbtop  $t2 $s0 $t2         # last_addr = $t1
-#     compact_loop:
-#     #   if from_addr > last_addr: jump compact_loop_end
-#         bgt     $t0 $t2 compact_loop_end
-#         lw      $t3 0($t0)          # lw  temp 0(from_addr)
-#         sw      $t3 0($t1)          # sw  temp 0(to_addr)
-#     #         if (from_addr == hcb_addr)
-#         bne     $t0 $s0 compact_loop_endif
-#         addu    $s0 $t1 $0          # hcb_addr = to_addr
-#     compact_loop_endif:
-#         addu    $t1 $t1 4           # to_addr += 4
-#         addu    $t0 $t0 4           # from_addr += 4
-#     compact_loop_end:
-#         j       end
-#     .data
-#     hole_addr_msg: .asciiz "hole_addr = "
-#     hole_size_msg: .asciiz "hole_size = "
-#     .text
-# end:
-#         addu    $v0 $s0 $0
-# #end
-
 .text
 .globl initialize_heap
 # initialize_heap(addr, len) --> Null
@@ -447,7 +386,7 @@ move_hcb_up:
 {
 # while (hcb_addr <= move_from_addr)
 # {
-#     move_to_addr = move_from_addr+amt
+#     move_to_addr = move_to_addr+4
 #     lw      temp 0(move_from_addr)
 #     sw      temp 0(move_to_addr)
 #     move_from_addr = move_from_addr-4
@@ -465,13 +404,14 @@ move_hcb_up:
     sll     @amt @amt 2          # multiply the amt by 4
     
     load_hcb  @hcb_addr
-    addu    @move_from $s1 $0
+    addu    @move_from $s1 0x0
     sll     @move_from @move_from 2
     addu    @move_from @hcb_addr @move_from
     addu    @move_to @move_from @amt
+    addu    @move_to @move_to 0x4
 loop:
 #   if hcb_addr < move_from_addr: jump loop_end
-    bgt     @hcb_addr @move_from loop_end
+    bgt    @hcb_addr @move_from loop_end
         subu    @move_to @move_to 4
         lw      @temp 0(@move_from)
         sw      @temp 0(@move_to)
@@ -486,91 +426,199 @@ loop_end:
     .text
 }
 
-    
-    # find_index(mem_id, addr) --> $v0 = found?, $v2 = index if found
-    #     mem_id : the memory_id you want to find the addr
-    #     found? : zero if not found one if found
-    #     index : the index in the hcb list of that mem_id's control block
-    
-    .text
-    .globl find_index
-    find_index:
-    {
-        @l = $s0
-        @r = $s1
-        @m = $s2
-        @cur_id = $s3
-        @item_addr = $s4
-        @len = $s5
-        @hcb_addr = $s6
-        @mem_id = $s7
+.text
+.globl compact
+# # compact (mem_id, hole_addr, hole_size, hcb_addr) --> new_hcb_addr
+compact:
+{
+        @hcb_addr = $s0
+        @hcb_size = $s1
         
-        @err = $v1
+        @from_addr = $s2
+        @to_addr = $s3
+        @last_addr = $s4
+        @count = $s5
+        
+        @hole_addr = $s6
+        @hole_size = $s7
+        
+        @temp = $t0
+        @count_temp = $t1
+        @x = $t2
+        @remainder = $t3
+        @temp_addr = $t4
+        
+        @memid_loc = $t8
+        @mem_id = $t9
         
         addu    @mem_id $a0 $0
-        addu    @hcb_addr $a1 $0
-        load_hcb @hcb_addr
+        addu    @hole_addr $a1 $0          # $s6 = hole_addr
+        addu    @hole_size $a2 $0          # $s7 = hole_size
+        addu    @hcb_addr  $a3 $0
         
-        println start_msg
+        li      $t8 0x1
+        init_varstore $t8
         
-        add     @l $0 $0           # l = 0
-        add     @r @len $0          # r = len_list
-    loop:
-    #     if l > r: jump find_index_loop_end
-        bgt     @l @r loop_end
-        sub     @m @r @l           # m = r - l
-        sra     @m @m 1            # div m by 2
-        add     @m @m @l           # m = m + l
+        li      @memid_loc 0x1
+        var_store @memid_loc @mem_id
         
-        println_hex m_msg @m
-        addu    $a0 @m $0
-        addu    $a1 @hcb_addr $0
-        call    get_hcb_item
-        addu    @item_addr $v0 $0
+        println_hex hole_size_msg @hole_size
+        println_hex hole_addr_msg @hole_addr
+        println_hex hcb_addr_msg @hcb_addr
         
-        bne     @err $0 loop_end
-        lw      @cur_id 0(@item_addr)
-        println_hex cid_msg @cur_id
-        println_hex mem_id_msg @mem_id
+        load_hcb @hcb_addr          # load the control block
+        sll     @hole_size @hole_size 2
+        addu    @from_addr @hole_size $0           # move hole_size into $t0
+        addu    @from_addr @from_addr @hole_addr
+        addu    @to_addr @hole_addr $0          # to_addr = $t1
         
-    
-    #     if cur_id == mem_id
-        beq     @cur_id @mem_id index_found
-        #     if cur_id > mem_id: jump find_index_val_gt_mem_id
-            bgt     @cur_id @mem_id curid_gt_memid
-        #     else: cur_id < mem_id
-            addi    @l @m 1           # l = m + 1
+        #calculate the top of hcb
+        addu    @last_addr @hcb_size $0          # move size_HCB into $t2
+        sll     @last_addr @last_addr 2
+        addu    @last_addr @hcb_addr @last_addr
+        
+        addu    @count $0 $0
+        
+        println_hex count_msg @count
+        println_hex from_addr_msg @from_addr
+        println_hex to_addr_msg @to_addr
+        println_hex last_addr_msg @last_addr
+        
+        {
+        loop:
+    #   if from_addr > last_addr: jump compact_loop_end
+        bgt     @from_addr @last_addr loop_end
+            lw      @temp 0(@from_addr)          # lw  temp 0(from_addr)
+            sw      @temp 0(@to_addr)          # sw  temp 0(to_addr)
+        #         if (from_addr == hcb_addr)
+            {
+            bne     @from_addr @hcb_addr endif
+                addu    @hcb_addr @to_addr $0          # hcb_addr = to_addr + 4
+            endif:
+            }
+            
+            addu    @x $0 0x5
+            {
+            blt     @count @x endif
+                subu    @count_temp @count @x
+                addu    @x $0 0x3
+                div     @count_temp @x
+                mfhi    @remainder
+                addu    @x $0 0x2
+                bne     @remainder @x endif
+                
+                subu    @temp_addr @to_addr 0x4
+                lw      @temp 0(@temp_addr)     #load the mem_id
+                
+                li      @memid_loc 0x1
+                var_restore @mem_id @memid_loc 
+                
+                ble     @temp @mem_id endif
+                
+                lw      @temp 0(@to_addr)
+                subu    @temp @temp @hole_size
+                sw      @temp 0(@to_addr)
+            endif:
+            }
+            addu    @to_addr @to_addr 4           # to_addr += 4
+            addu    @from_addr @from_addr 4           # from_addr += 4
+            addu    @count @count 0x1
+            println_hex count_msg @count
+            println_hex from_addr_msg @from_addr
+            println_hex to_addr_msg @to_addr
+            println_hex last_addr_msg @last_addr
             j       loop
-        curid_gt_memid:
-            sub     @r @m 1           # r = m - 1
-            j       loop
-    
-    index_found:
-        println found_msg
-        println_hex m_msg @m
-        addu    $v0 $0 1            # found = 1
-        addu    $v1 @m $0           # return index = m
+        loop_end:
+        }
+        addu    $v0 @hcb_addr $0
         return
-    loop_end:
-        println notfound_msg
-        add     $v0 $0 $0           # found = 0
-        add     $v1 $0 $0           # index = 0
-        return
-        
     .data
-    start_msg: .asciiz "find index start"
-    m_msg: .asciiz "m = "
-    id_msg: .asciiz "id = "
-    cid_msg: .asciiz "cid = "
-    mem_id_msg: .asciiz "mem_id = "
-    bigger_msg: .asciiz "cid is bigger than m"
-    smaller_msg: .asciiz "cid is smaller than m"
-    len_msg: .asciiz "length of list = "
-    found_msg: .asciiz "found!!"
-    notfound_msg: .asciiz "not found :'("
-    
+    hcb_addr_msg: .asciiz "hcb_addr = "
+    hole_addr_msg: .asciiz "hole_addr = "
+    hole_size_msg: .asciiz "hole_size = "
+    to_addr_msg: .asciiz "to_addr = "
+    from_addr_msg: .asciiz "from_addr = "
+    last_addr_msg: .asciiz "last_addr = "
+    count_msg: .asciiz "\ncount = "
     .text
-    }
+}
+
+# find_index(mem_id, addr) --> $v0 = found?, $v2 = index if found
+#     mem_id : the memory_id you want to find the addr
+#     found? : zero if not found one if found
+#     index : the index in the hcb list of that mem_id's control block
+
+.text
+.globl find_index
+find_index:
+{
+    @l = $s0
+    @r = $s1
+    @m = $s2
+    @cur_id = $s3
+    @item_addr = $s4
+    @len = $s5
+    @hcb_addr = $s6
+    @mem_id = $s7
+    
+    @err = $v1
+    
+    addu    @mem_id $a0 $0
+    addu    @hcb_addr $a1 $0
+    load_hcb @hcb_addr
+    
+    add     @l $0 $0           # l = 0
+    add     @r @len $0          # r = len_list
+loop:
+#     if l > r: jump find_index_loop_end
+    bgt     @l @r loop_end
+    sub     @m @r @l           # m = r - l
+    sra     @m @m 1            # div m by 2
+    add     @m @m @l           # m = m + l
+    
+    addu    $a0 @m $0
+    addu    $a1 @hcb_addr $0
+    call    get_hcb_item
+    addu    @item_addr $v0 $0
+    
+    bne     @err $0 loop_end
+    lw      @cur_id 0(@item_addr)
+    
+
+#     if cur_id == mem_id
+    beq     @cur_id @mem_id index_found
+    #     if cur_id > mem_id: jump find_index_val_gt_mem_id
+        bgt     @cur_id @mem_id curid_gt_memid
+    #     else: cur_id < mem_id
+        addi    @l @m 1           # l = m + 1
+        j       loop
+    curid_gt_memid:
+        sub     @r @m 1           # r = m - 1
+        j       loop
+
+index_found:
+    addu    $v0 $0 1            # found = 1
+    addu    $v1 @m $0           # return index = m
+    return
+loop_end:
+    add     $v0 $0 $0           # found = 0
+    add     $v1 $0 $0           # index = 0
+    return
+    
+.data
+start_msg: .asciiz "find index start"
+m_msg: .asciiz "m = "
+id_msg: .asciiz "id = "
+cid_msg: .asciiz "cid = "
+mem_id_msg: .asciiz "mem_id = "
+bigger_msg: .asciiz "cid is bigger than m"
+smaller_msg: .asciiz "cid is smaller than m"
+len_msg: .asciiz "length of list = "
+found_msg: .asciiz "found!!"
+notfound_msg: .asciiz "not found :'("
+
+.text
+}
     
 .text
 .globl alloc

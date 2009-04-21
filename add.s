@@ -34,6 +34,8 @@ main:
     addu    @mem_id0 $v0 $0
     addu    @addr $v1 $0
     
+    print_hcb @addr
+    
     
 #     alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
     addu    $a0 @amt $0
@@ -41,6 +43,8 @@ main:
     call    alloc
     addu    @mem_id1 $v0 $0
     addu    @addr $v1 $0
+    
+    print_hcb @addr
     
     addu    $a0 @amt $0
     addu    $a1 @addr $0
@@ -53,17 +57,50 @@ main:
     {
         @found = $s5
         @index = $s6
+        @item_addr = $s1
+        @hole_size = $t3
+        @hole_addr = $t5
+        @err = $t4
+        @mem_id = @mem_id1
         
-        addu $a0 $0 $0
+        println_hex mem_id_msg @mem_id
+        addu $a0 @mem_id $0
         addu $a1 @addr $0
         call find_index
         addu @found $v0 $0
         addu @index $v1 $0
         
-        println_hex addr_msg @addr
-        println_hex mem_id_msg @mem_id2
         println_hex found_msg @found
         println_hex index_msg @index
+        
+        addu    $a0 @index $0
+        addu    $a1 @addr $0
+        call    get_hcb_item
+        addu    @item_addr $v0 $0
+        addu    @err $v1 $0
+        println_hex err_equal_msg @err
+        
+        addu    $a0 @item_addr $0
+        call    print_hcb_item
+        
+        lw      @hole_addr 4(@item_addr)
+        lw      @hole_size 8(@item_addr)
+        
+        addu    $a0 @mem_id $0
+        addu    $a1 @hole_addr $0
+        addu    $a2 @hole_size $0
+        addu    $a3 @addr $0
+        call    compact
+        addu    @addr $v0 $0
+        
+        addu    $a0 @index $0
+        addu    $a1 @addr $0
+#         call    del_hcb_item
+        addu    @err $v0 $0
+        println_hex err_equal_msg @err
+        
+        print_hcb @addr
+        
     }
     
 #     print_hcb @addr

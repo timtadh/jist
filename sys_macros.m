@@ -33,6 +33,46 @@
     lw      $sp 40($sp)         # load the old stack pointer
 #end
 
+# var_store dst src
+#     dst : a number (1-N) indicating which spot you want to store it in, gets trampled
+#     src : a register containing the value you want to store
+#
+#     varstore will store exactly one word of data at a time. It stores it on the stack and is 
+#     compatable with call/return
+#define var_store global
+    @dst = %1
+    @src = %2
+    sll     @dst @dst 2         # mul the dst by 4
+    addu    @dst @dst $sp       # add the stack pointer to the @dst
+    sw      @src 0(@dst)
+#end
+
+# var_restore dst src
+#     dst : a register where you want the value placed
+#     src : a number (1-N) indicating which spot you want to restore from, gets trampled
+#
+#     varstore will store exactly one word of data at a time. It stores it on the stack and is 
+#     compatable with call/return
+#define var_restore global
+    @dst = %1
+    @src = %2
+    sll     @src @src 2         # mul the dst by 4
+    addu    @src @src $sp       # add the stack pointer to the @dst
+    lw      @dst 0(@src)
+#end
+
+# init_varstore reg
+#     reg : contains the size it words you want the store to be, note it gets trampled
+#
+#     varstore is a place to put variables when you are inside a procedure and run out of $s regs
+#     it can only be initiated once per procedure call.
+#define init_varstore global
+    @size = %1
+    
+    sll     @size @size 2       # mul the size by 4
+    subu    $sp $sp @size
+#end
+
 # store_arg arg
 #     arg : the register you would like to store on frame
 #define store_arg global
