@@ -183,7 +183,7 @@ initialize_heap:
     
     {
         @mem_id = $t1
-        li      @mem_id 5               # the first memory id is one
+        li      @mem_id 0x0               # the first memory id is one
         sw      @mem_id 4(@hcb_addr)    # store the next memory id in the HCB
     }
     
