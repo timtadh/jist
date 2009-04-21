@@ -393,31 +393,31 @@ println_hex:
 }
 
     .text
-# put array_addr index reg --> Null
-#     array_addr = the address of the array
-#     index = what index
-#     reg = the register you want to save
-put:
-{
-    add     $a3 $a1 $0
-    mul     $a3 $a3 4
-    addu    $a3 $a3 $a0
-    sw      $a2  0($a3)
-    return
-}
+# # put array_addr index reg --> Null
+# #     array_addr = the address of the array
+# #     index = what index
+# #     reg = the register you want to save
+# put:
+# {
+#     add     $a3 $a1 $0
+#     mul     $a3 $a3 4
+#     addu    $a3 $a3 $a0
+#     sw      $a2  0($a3)
+#     return
+# }
 
     .text
-# get array_addr index --> $v0 = the value from the array
-#     array_addr = the address of the array
-#     index = what index
-get:
-{
-    add     $a3 $a1 $0
-    mul     $a3 $a3 4
-    addu    $a3 $a3 $a0
-    lw      $v0 0($a3)
-    return
-}
+# # get array_addr index --> $v0 = the value from the array
+# #     array_addr = the address of the array
+# #     index = what index
+# get:
+# {
+#     add     $a3 $a1 $0
+#     mul     $a3 $a3 4
+#     addu    $a3 $a3 $a0
+#     lw      $v0 0($a3)
+#     return
+# }
 
 # print_hcb (hcb_addr) --> Null
 print_hcb:

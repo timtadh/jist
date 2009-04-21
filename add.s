@@ -12,7 +12,10 @@ main:
     @mem_id0 = $s2
     @mem_id1 = $s3
     @mem_id2 = $s4
+    @loc = $s5
     @index = $t2
+    @val = $s6
+    @err = $t4
     
     sbrk_imm   1024 @addr 
     addu    @end @addr 1024
@@ -54,13 +57,29 @@ main:
     
     print_hcb @addr
     
+    addu    @val $0 0x14
+    addu    @loc $0 $0
+    put @loc @mem_id0 @addr @val @err
+    get @loc @mem_id0 @addr @val @err
+    println_hex val_msg $s6
+    
+    addu    @val $0 0x15
+    addu    @loc $0 0x1
+    put @loc @mem_id0 @addr @val @err
+    get @loc @mem_id0 @addr @val @err
+    println_hex val_msg @val
+    
+    addu    @loc $0 $0
+    get @loc @mem_id0 @addr @val @err
+    println_hex val_msg @val
+    
     {
         addu    $a0 @mem_id0 $0
         addu    $a1 @addr $0
         call    free
         addu    @addr $v0 $0
         
-        print_hcb @addr
+#         print_hcb @addr
     }
     {
         addu    $a0 @mem_id2 $0
@@ -68,7 +87,7 @@ main:
         call    free
         addu    @addr $v0 $0
         
-        print_hcb @addr
+#         print_hcb @addr
     }
 #     
     {
@@ -124,6 +143,7 @@ main:
     found_msg: .asciiz " found = "
     index_msg: .asciiz " index = "
     mem_id_msg: .asciiz " mem_id = "
+    val_msg: .asciiz " val = "
     .text
 }
 #     addu    $s0 $0 4

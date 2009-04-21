@@ -821,11 +821,162 @@ free:
         .text
 }
 
+.text
+.globl __getword
+# __getword(loc, mem_id, hcb_addr) --> $v0 = error, $v1 = val
+__getword:
+{
+    @hcb_addr = $s0
+    @mem_id = $s1
+    @loc = $s2
+    @index = $s3
+    @item_addr = $s4
+    @block_size = $s5
+    
+    @word_addr = $s6
+    
+    @found = $t0
+    @err = $t1
+    @value = $t2
+    
+    addu    @loc $a0 $0
+    addu    @mem_id $a1 $0
+    addu    @hcb_addr $a2 $0
+    
+    addu $a0 @mem_id $0
+    addu $a1 @hcb_addr $0
+    call find_index
+    addu @found $v0 $0
+    addu @index $v1 $0
+    
+    beq     @found $0 index_not_found
+    
+    addu    $a0 @index $0
+    addu    $a1 @hcb_addr $0
+    call    get_hcb_item
+    addu    @item_addr $v0 $0
+    addu    @err $v1 $0
+    
+    bne     @err $0 get_hcb_error
+    
+    lw      @block_size 8(@item_addr)
+    bge     @loc @block_size loc_error
+    blt     @loc $0 loc_error
+    
+    sll     @loc @loc 2     #mul by 4
+    lw      @word_addr 4(@item_addr)
+    addu    @word_addr @word_addr @loc
+    
+    lw      @value 0(@word_addr)
+    
+    addu    $v0 $0 $0  #error = 0
+    addu    $v1 @value $0
+    return
+    
+    index_not_found:
+        la      $a0 error_msg
+        call    println
+        addu    $v0 $0 0x1
+        addu    $v1 $0 $0
+        return
+    get_hcb_error:
+        la      $a0 error_msg2
+        call    println
+        addu    $v0 $0 0x2
+        addu    $v1 $0 $0
+        return
+    loc_error:
+        la      $a0 error_msg3
+        call    println
+        addu    $v0 $0 0x3
+        addu    $v1 $0 $0
+        return
+        
+    .data
+    error_msg: .asciiz "Index not found\n"
+    error_msg2: .asciiz "Error in get hcb item\n"
+    error_msg3: .asciiz "location not in range 0-(n-1)\n"
+    .text
+}
 
-
-
-
-
+.text
+.globl __putword
+# __putword(value, loc, mem_id, hcb_addr) --> $v0 = error
+__putword:
+{
+    @hcb_addr = $s0
+    @mem_id = $s1
+    @loc = $s2
+    @index = $s3
+    @item_addr = $s4
+    @block_size = $s5
+    
+    @word_addr = $s6
+    @value = $s7
+    
+    @found = $t0
+    @err = $t1
+    
+    addu    @value $a0 $0
+    addu    @loc $a1 $0
+    addu    @mem_id $a2 $0
+    addu    @hcb_addr $a3 $0
+    
+    addu $a0 @mem_id $0
+    addu $a1 @hcb_addr $0
+    call find_index
+    addu @found $v0 $0
+    addu @index $v1 $0
+    
+    beq     @found $0 index_not_found
+    
+    addu    $a0 @index $0
+    addu    $a1 @hcb_addr $0
+    call    get_hcb_item
+    addu    @item_addr $v0 $0
+    addu    @err $v1 $0
+    
+    bne     @err $0 get_hcb_error
+    
+    lw      @block_size 8(@item_addr)
+    bge     @loc @block_size loc_error
+    blt     @loc $0 loc_error
+    
+    sll     @loc @loc 2     #mul by 4
+    lw      @word_addr 4(@item_addr)
+    addu    @word_addr @word_addr @loc
+    sw      @value 0(@word_addr)
+    
+    addu    $v0 $0 $0  #error = 0
+    addu    $v1 @value $0
+    return
+    
+    index_not_found:
+        la      $a0 error_msg
+        call    println
+        addu    $v0 $0 0x1
+        addu    $v1 $0 $0
+        return
+    get_hcb_error:
+        la      $a0 error_msg2
+        call    println
+        addu    $v0 $0 0x2
+        addu    $v1 $0 $0
+        return
+    loc_error:
+        la      $a0 error_msg3
+        call    println
+        addu    $v0 $0 0x3
+        addu    $v1 $0 $0
+        return
+        
+    .data
+    error_msg: .asciiz "Index not found\n"
+    error_msg2: .asciiz "Error in get hcb item\n"
+    error_msg3: .asciiz "location not in range 0-(n-1)\n"
+    word_addr_msg: .asciiz "word address = "
+    .text
+}
 
 
 

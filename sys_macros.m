@@ -329,6 +329,50 @@ alread_zero:
     __restore_args
 #end
 
+
+# get word mem_id hcb_addr dst err
+#     word : the word you want to get should be from 0-(n-1) where n is len of block, reg
+#     mem_id : the memory id for the block you are accessing
+#     hcb_addr : the address of the hcb
+#     dst : the register you want the result placed
+#     err : error code 0 is success
+#define get global
+    @word = %1
+    @mem_id = %2
+    @hcb_addr = %3
+    @dst = %4
+    @err = %5
+    
+    addu    $a0 @word $0
+    addu    $a1 @mem_id $0
+    addu    $a2 @hcb_addr $0
+    call    __getword
+    addu    @err $v0 $0
+    addu    @dst $v1 $0
+#end
+
+# put word mem_id hcb_addr val err
+#     word : the word you want to put should be from 0-(n-1) where n is len of block
+#     mem_id : the memory id for the block you are accessing
+#     hcb_addr : the address of the hcb
+#     val : the value (in a reg) that you want put into the word
+#     err : error code 0 is success
+#define put global
+    @word = %1
+    @mem_id = %2
+    @hcb_addr = %3
+    @value = %4
+    @err = %5
+    
+    addu    $a0 @value $0
+    addu    $a1 @word $0
+    addu    $a2 @mem_id $0
+    addu    $a3 @hcb_addr $0
+    call    __putword
+    addu    @err $v0 $0
+#end
+
+
 # # initialize_heap(start, len) --> Null
 # #
 # #     treat this as procedure call because it is
