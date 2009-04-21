@@ -205,7 +205,7 @@ initialize_heap:
 
 .text
 # add_to_hcb(mem_addr, mem_size, hcb_addr) --> $v0 = mem_id
-.globl add_to_hcb
+.globl add_hcb_item
 add_hcb_item:
 {
     @hcb_addr = $s0
@@ -462,9 +462,9 @@ compact:
         li      @memid_loc 0x1
         var_store @memid_loc @mem_id
         
-        println_hex hole_size_msg @hole_size
-        println_hex hole_addr_msg @hole_addr
-        println_hex hcb_addr_msg @hcb_addr
+#         println_hex hole_size_msg @hole_size
+#         println_hex hole_addr_msg @hole_addr
+#         println_hex hcb_addr_msg @hcb_addr
         
         load_hcb @hcb_addr          # load the control block
         sll     @hole_size @hole_size 2
@@ -479,10 +479,10 @@ compact:
         
         addu    @count $0 $0
         
-        println_hex count_msg @count
-        println_hex from_addr_msg @from_addr
-        println_hex to_addr_msg @to_addr
-        println_hex last_addr_msg @last_addr
+#         println_hex count_msg @count
+#         println_hex from_addr_msg @from_addr
+#         println_hex to_addr_msg @to_addr
+#         println_hex last_addr_msg @last_addr
         
         {
         loop:
@@ -523,10 +523,10 @@ compact:
             addu    @to_addr @to_addr 4           # to_addr += 4
             addu    @from_addr @from_addr 4           # from_addr += 4
             addu    @count @count 0x1
-            println_hex count_msg @count
-            println_hex from_addr_msg @from_addr
-            println_hex to_addr_msg @to_addr
-            println_hex last_addr_msg @last_addr
+#             println_hex count_msg @count
+#             println_hex from_addr_msg @from_addr
+#             println_hex to_addr_msg @to_addr
+#             println_hex last_addr_msg @last_addr
             j       loop
         loop_end:
         }
@@ -712,7 +712,107 @@ start_msg: .asciiz "start alloc.\n"
 addr_msg: .asciiz "->addr = "
     .text
 }
-    
+
+.text
+
+# free(mem_id, hcb_addr) --> $v0 = hcb_addr
+free:
+{
+        @hcb_addr = $s0
+        @mem_id = $s1
+        @item_addr = $s2
+        @found = $s5
+        @index = $s6
+        
+        @hole_size = $t3
+        @hole_addr = $t5
+        @err = $t4
+        
+        addu    @mem_id $a0 $0
+        addu    @hcb_addr $a1 $0
+        
+#         println_hex mem_id_msg @mem_id
+        addu $a0 @mem_id $0
+        addu $a1 @hcb_addr $0
+        call find_index
+        addu @found $v0 $0
+        addu @index $v1 $0
+        
+#         println_hex found_msg @found
+#         println_hex index_msg @index
+        
+        beq     @found $0 index_not_found
+        
+        addu    $a0 @index $0
+        addu    $a1 @hcb_addr $0
+        call    get_hcb_item
+        addu    @item_addr $v0 $0
+        addu    @err $v1 $0
+        
+        bne     @err $0 get_hcb_error
+        
+#         println_hex err_equal_msg @err
+        
+        addu    $a0 @item_addr $0
+        call    print_hcb_item
+        
+        lw      @hole_addr 4(@item_addr)
+        lw      @hole_size 8(@item_addr)
+        
+        addu    $a0 @mem_id $0
+        addu    $a1 @hole_addr $0
+        addu    $a2 @hole_size $0
+        addu    $a3 @hcb_addr $0
+        call    compact
+        addu    @hcb_addr $v0 $0
+        
+#         print_hcb @hcb_addr
+        
+        addu    $a0 @index $0
+        addu    $a1 @hcb_addr $0
+        call    del_hcb_item
+        addu    @err $v0 $0
+        bne     @err $0 del_hcb_error
+#         println_hex err_equal_msg @err
+        
+#         print_hcb @hcb_addr
+        
+        
+        addu    $v0 @hcb_addr $0
+        return
+        
+        
+    get_hcb_error:
+        la      $a0 error_msg2
+        call    println
+        addu    $v0 @hcb_addr $0
+        return
+    del_hcb_error:
+        la      $a0 error_msg3
+        call    println
+        addu    $v0 @hcb_addr $0
+        return
+    index_not_found:
+        la      $a0 error_msg
+        call    println
+        addu    $v0 @hcb_addr $0
+        return
+        
+        .data
+    error_msg: .asciiz "Index not found\n"
+    error_msg2: .asciiz "Error in get hcb item\n"
+    error_msg3: .asciiz "Error in del hcb item\n"
+    index_msg: .asciiz "index = "
+    id_msg: .asciiz "id = "
+    amt_msg: .asciiz "amt = "
+    freed_msg: .asciiz "freed\n"
+    addr_msg: .asciiz "addr = "
+    err_equal_msg: .asciiz " error = "
+    found_msg: .asciiz " found = "
+    mem_id_msg: .asciiz " mem_id = "
+        .text
+}
+
     # free(mem_id) --> Null
     #     finds the mem_id using the mem_id find_mem_id method DONE
     #     get the amount to free
