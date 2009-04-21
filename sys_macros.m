@@ -380,6 +380,14 @@ alread_zero:
     sw  @hcb_addr   0(@khcb_addr)
 #end
 
+# khcb_getaddr hcb_addr
+#define khcb_getaddr
+    @khcb_addr = $t0
+    @hcb_addr = %1
+    la  @khcb_addr  KHCB_ADDR
+    lw  @hcb_addr   0(@khcb_addr)
+#end
+
 # # initialize_heap(start, len) --> Null
 # #
 # #     treat this as procedure call because it is
