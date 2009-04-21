@@ -1,8 +1,7 @@
 multitask_test.s
-multitask_test_2.s
 add.s
 shell.s
 wumpus.s
 stack_mgr.s
 
-init_with: stack_mgr.s
+init_with: add.s
