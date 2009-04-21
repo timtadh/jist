@@ -201,7 +201,7 @@ ret:
 
 
 #define exit global
-    li      $v0, 10             # syscall code 10 is for exit.
+    li      $v0 10              # syscall code 10 is for exit.
     syscall                     # make the syscall.
 #end
 
@@ -211,6 +211,8 @@ ret:
     la      $a0 wait_return
     subu    $a0 $a0 4
     mtc0    $a0 $14
+    li      $a0 0
+    mtc0    $a0 $13
     la      $a0 exception_handler
     jr      $a0
 wait_return:

@@ -77,7 +77,7 @@ exception_handler:              # exception handler
     sw      $v1 __save_v1
     
     
-    mfc0    $a0, $14            # get the EPC register
+    mfc0    $a0 $14             # get the EPC register
 #     call    println_hex
     
     # print a message to the screen
@@ -86,11 +86,14 @@ exception_handler:              # exception handler
     andi    $a0 $k0 0x7C      
     srl     $a0 $a0 2           # Extract ExcCode Field
     
-    li      $v0 1               # syscall 1 (print_int)
-    syscall
+    # li      $v0 1               # syscall 1 (print_int)
+    # syscall
     
-    beqz    $a0 interrupt_handler
     
+    beqz $a0 skip_interrupt_handler
+    la $a0 interrupt_handler
+    jr $a0
+    skip_interrupt_handler:
 
     andi    $a0 $k0 0x7C      
     srl     $a0 $a0 2           # Extract ExcCode Field
@@ -133,5 +136,4 @@ exception_finished:
     .set noat
     lw      $at __save_at
     .set at
-
     eret                        # return from exception handler

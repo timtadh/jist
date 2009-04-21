@@ -1,4 +1,5 @@
 #include stdlib.s
+#include sys_macros.m
 
 .data
 wdata:      .space 7    #for locations, etc.
@@ -30,7 +31,7 @@ intro2: .ascii "Wumpus:\n"
         .ascii "    shooting an arrow or you entering his room. If the wumpus wakes he moves \n"
         .ascii "    (p=.75) one room or stays still (p=.25).  After that, if he is where you\n"
         .ascii "    are, he eats you up and you lose!\n\n"
-        .ascii "YOU\n"
+        .ascii "YOU:\n"
         .ascii "    Each turn you may move or shoot a crooked arrow.\n"
         .ascii "    Moving: You can move one room (thru one tunnel).\n"
         .ascii "    Arrows: You have 5 arrows. You lose when you run out.\n"
@@ -383,6 +384,7 @@ main:
     li $s0 10
     la $t0 wdata    #seed random number generator
     sb $s0 0($t0)
+    wait
     clear_console
     
     la $a0 ask_instr    #ask y/n for instructions
