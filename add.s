@@ -34,6 +34,8 @@ main:
     addu    @mem_id0 $v0 $0
     addu    @addr $v1 $0
     
+#     print_hcb @addr
+    
     
 #     alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
     addu    $a0 @amt $0
@@ -41,6 +43,8 @@ main:
     call    alloc
     addu    @mem_id1 $v0 $0
     addu    @addr $v1 $0
+    
+#     print_hcb @addr
     
     addu    $a0 @amt $0
     addu    $a1 @addr $0
@@ -51,20 +55,31 @@ main:
     print_hcb @addr
     
     {
-        @found = $s5
-        @index = $s6
+        addu    $a0 @mem_id0 $0
+        addu    $a1 @addr $0
+        call    free
+        addu    @addr $v0 $0
         
-        addu $a0 $0 $0
-        addu $a1 @addr $0
-        call find_index
-        addu @found $v0 $0
-        addu @index $v1 $0
-        
-        println_hex addr_msg @addr
-        println_hex mem_id_msg @mem_id2
-        println_hex found_msg @found
-        println_hex index_msg @index
+        print_hcb @addr
     }
+    {
+        addu    $a0 @mem_id2 $0
+        addu    $a1 @addr $0
+        call    free
+        addu    @addr $v0 $0
+        
+        print_hcb @addr
+    }
+#     
+    {
+        addu    $a0 @mem_id1 $0
+        addu    $a1 @addr $0
+        call    free
+        addu    @addr $v0 $0
+        
+        print_hcb @addr
+    }
+    
     
 #     print_hcb @addr
 #     

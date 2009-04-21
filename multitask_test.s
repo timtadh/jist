@@ -7,7 +7,6 @@ mtt_str_1: .asciiz "Look at me! I'm multitasking!"
 mtt_str_2: .asciiz "Look at me again! I'm still multitasking!"
 
 .text
-
 #format of a linked list:
 #   @ll: info block containing [head][greatest element number]
 #   @h: head: [value][next address]
@@ -27,7 +26,7 @@ ll_init:    #a0 = value to init @h to
     add $v0 @h $zero
     return
 }
-
+.text
 ll_append:
 {
     @size = $s0
@@ -45,7 +44,7 @@ ll_append:
     
     return
 }
-
+.text
 ll_print:
 {
     @addr = $s0
