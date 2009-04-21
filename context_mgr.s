@@ -85,6 +85,7 @@ ll_next:    #@h @current
 .text
 #ll_remove(list_head, to_remove)
 ll_remove:
+{
     @head = $s0
     @to_remove = $s0
     add @head $a0 $zero
@@ -103,6 +104,7 @@ ll_remove:
     
     #fail silently
     return
+}
 
 .text
 ll_print:
