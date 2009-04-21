@@ -210,7 +210,7 @@ def rep_names(lines, names):
                 gs = gs.groups()
                 if nameloc != -1 and (nameloc < hashsign or hashsign == -1):
                     rep = True
-                    lines[i] = r.sub(gs[0]+names[name]+gs[1], lines[i])
+                    lines[i] = r.sub(gs[0]+names[name]+gs[1], lines[i], 1)
                 nameloc = lines[i].find(name)
                 hashsign = lines[i].find('#')
                 gs = r.search(lines[i])
