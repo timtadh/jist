@@ -30,6 +30,9 @@ __save_HCB_ADDR: .word 0
 
 __k_HCB_ADDR: .word 0
 
+__plist:    .word 0
+__activep:  .word 0
+
 
     .text
 save_state:

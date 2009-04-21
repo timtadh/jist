@@ -98,18 +98,19 @@ def make_kernel_macros():
         process_lines(load_user_programs, True, False)
     )
     
-    run_first_program = ''
+    load_first_program = ''
     if not strip_comments:
-        run_first_program += '    '+"#"*16+' start run_first_program '+'#'*16+'\n'
-    run_first_program += "    la      $s0  user_program_locations\n"
-    run_first_program += "    lw      $s1  %s($s0)\n" % str(first_prog)
+        load_first_program += '    '+"#"*16+' start load_first_program '+'#'*16+'\n'
+    load_first_program += "    la      $s0  user_program_locations\n"
+    load_first_program += "    lw      $s1  %s($s0)\n" % str(first_prog)
+    load_first_program += "    li      $s2  %s\n" % str(first_prog)
     if not strip_comments:
-        run_first_program += ' '*4 + '#'*17 + ' end run_first_program ' + '#'*17 + '\n'
+        load_first_program += ' '*4 + '#'*17 + ' end load_first_program ' + '#'*17 + '\n'
     
     kernel_macros.update({
         'number_user_programs':number_user_programs, 
         'load_user_programs':load_user_programs,
-        'run_first_program':run_first_program
+        'load_first_program':load_first_program
     })
 
 def post_process_kernel_macro(macro_text):

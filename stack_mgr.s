@@ -1,4 +1,3 @@
-
 #Steve Johnson
 #Stack Manager
 
@@ -21,11 +20,10 @@
 #Format of saved stack array, by word:
 #   0: Available
 #   1: PID
-#   2: $fp
-#   3: $sp
-_saved_stacks:  .word 0             #need to use .word to make it align properly
-                .space 252          #number of array spots * 16 - 4
-                .word 2, 0, 0, 0    #terminates array
+#   2: address of data array
+_saved_stacks:  .word 0         #need to use .word to make it align properly
+                .space 188      #number of array spots * 12 - 4
+                .word 2, 0, 0   #terminates array
 _current_stack: .word 0
 .text
 
@@ -40,7 +38,7 @@ _find_stack:
         beq $s0 $s1 _slot_found
         lw $s0 0($s3)
         beq $s0 $s2 _not_found
-        addi $s3 $s3 16
+        addi $s3 $s3 12
         b _next_item
     _slot_found:
     add $v0 $s3 $zero
@@ -61,15 +59,14 @@ save_stack:
     _next_item:
         lw $t0 0($v0)
         beqz $t0 _slot_found
-        addi $v0 $v0 16
+        addi $v0 $v0 12
         b _next_item
     _slot_found:
     
     addi $t0 $zero 1
     sw $t0 0($v0)   #used = 1
     sw $a0 4($v0)   #PID = $a0
-    sw $a1 8($v0)   #$fp = $a1
-    sw $a2 12($v0)  #$sp = $a2
+    sw $a1 8($v0)   #addr = $a1
     return
 }
 
@@ -84,9 +81,8 @@ init_stack:
     return
 }
 
-#change_stack new_PID old_fp old_sp
-#   v0 = new_fp
-#   v1 = new_sp
+#change_stack new_PID old_array_addr
+#   v0 = address of array of data to load
 change_stack:
 {
     #save old stack if there is one
@@ -104,8 +100,7 @@ change_stack:
     call _find_stack
     beqz $v0 _new_stack
         add $s4 $v0 $zero
-        lw $v0 8($s4)       #v0 = fp
-        lw $v1 12($s4)      #v1 = sp
+        lw $v0 8($s4)       #v0 = addr
         sw $zero 0($s4)     #used = 0
         b _update_current
     _new_stack:
@@ -144,14 +139,10 @@ print_stack:
         call print_char
         lw $a0 8($s2)
         call print_int
-        li $a0 32
-        call print_char
-        lw $a0 12($s2)
-        call print_int
         li $a0 10
         call print_char
         lw $s0 0($s2)
-        addi $s2 $s2 16
+        addi $s2 $s2 12
     bne $s0 $s1 print_again
     li $a0 10
     call print_char
@@ -166,27 +157,23 @@ main:
     call print_stack
     
     li $a0 2            #2 is the NEW PID
-    li $a1 11           #11 is the OLD FRAME POINTER for stack 1 to be saved
-    li $a2 111          #111 is the OLD STACK POINTER for stack 1  to be saved
+    li $a1 11           #11 is the OLD ADDRESS of stack data
     call change_stack
     call print_stack
     
     li $a0 1
     li $a1 22
-    li $a2 222
     call change_stack
     addi $a0 $zero 1
     call print_stack
     
     li $a0 3
     li $a1 12
-    li $a2 121
     call change_stack
     call print_stack
     
     li $a0 4
     li $a1 33
-    li $a2 333
     call change_stack
     call print_stack
     exit
