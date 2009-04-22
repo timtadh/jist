@@ -4,5 +4,6 @@ shell.s
 wumpus.s
 stack_mgr.s
 context_mgr_test.s
+stack_mgr.test.s
 
-init_with: context_mgr_test.s
+init_with: stack_mgr.test.s
