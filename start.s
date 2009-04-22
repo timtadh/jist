@@ -66,8 +66,7 @@ __start:
 #     la      $s0  user_program_locations
 #     lw      $s1  4($s0)
     
-    exec init_kernel
-    
+    call init_kernel
     #sneaky kernel macros:
     load_user_programs
     load_first_program
