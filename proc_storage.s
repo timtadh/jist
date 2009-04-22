@@ -113,66 +113,147 @@ save_proc:
     #sw      $t1  36($t0)        # save it in the PCB
     
     lw      @temp  __save_ra      # load the saved return address pointer
-    sw      $t1  40($t0)        # save it in the PCB
+    li      @loc 10
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  40($t0)        # save it in the PCB
     
-    lw      $t1  __save_v0      # load the saved $v0
-    sw      $t1  44($t0)        # save it in the PCB
+    lw      @temp  __save_v0      # load the saved $v0
+    li      @loc 11
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  44($t0)        # save it in the PCB
     
-    lw      $t1  __save_v1      # load the saved $v1
-    sw      $t1  48($t0)        # save it in the PCB
+    lw      @temp  __save_v1      # load the saved $v1
+    li      @loc 12
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  48($t0)        # save it in the PCB
     
-    lw      $t1  __save_a0      # load the saved $a0
-    sw      $t1  52($t0)        # save it in the PCB
+    lw      @temp  __save_a0      # load the saved $a0
+    li      @loc 13
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  52($t0)        # save it in the PCB
     
-    lw      $t1  __save_a1      # load the saved $a1
-    sw      $t1  56($t0)        # save it in the PCB
+    lw      @temp  __save_a1      # load the saved $a1
+    li      @loc 14
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  56($t0)        # save it in the PCB
     
-    lw      $t1  __save_a2      # load the saved $a2
-    sw      $t1  60($t0)        # save it in the PCB
+    lw      @temp  __save_a2      # load the saved $a2
+    li      @loc 15
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  60($t0)        # save it in the PCB
     
-    lw      $t1  __save_a3      # load the saved $a3
-    sw      $t1  64($t0)        # save it in the PCB
+    lw      @temp  __save_a3      # load the saved $a3
+    li      @loc 16
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  64($t0)        # save it in the PCB
     
-    lw      $t1  __save_t0      # load the saved $t0
-    sw      $t1  68($t0)        # save it in the PCB
+    lw      @temp  __save_t0      # load the saved $t0
+    li      @loc 17
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  68($t0)        # save it in the PCB
     
-    lw      $t1  __save_t1      # load the saved $t1
-    sw      $t1  72($t0)        # save it in the PCB
+    lw      @temp  __save_t1      # load the saved $t1
+    li      @loc 18
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  72($t0)        # save it in the PCB
     
-    lw      $t1  __save_t2      # load the saved $t2
-    sw      $t1  76($t0)        # save it in the PCB
+    lw      @temp  __save_t2      # load the saved $t2
+    li      @loc 19
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  76($t0)        # save it in the PCB
     
-    lw      $t1  __save_t3      # load the saved $t3
-    sw      $t1  80($t0)        # save it in the PCB
+    lw      @temp  __save_t3      # load the saved $t3
+    li      @loc 20
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  80($t0)        # save it in the PCB
     
-    sw      $t4  84($t0)        # save $t4 in the PCB
-    sw      $t5  88($t0)        # save $t5 in the PCB
-    sw      $t6  92($t0)        # save $t6 in the PCB
-    sw      $t7  96($t0)        # save $t7 in the PCB
-    sw      $t8  100($t0)        # save $t8 in the PCB
-    sw      $t9  104($t0)       # save $t9 in the PCB
+    li      @loc 21
+    put     @loc @mem_id @hcb_addr $t4 @error
+    bne     @error $zero put_error
+    li      @loc 22
+    put     @loc @mem_id @hcb_addr $t5 @error
+    bne     @error $zero put_error
+    li      @loc 23
+    put     @loc @mem_id @hcb_addr $t6 @error
+    bne     @error $zero put_error
+    li      @loc 24
+    put     @loc @mem_id @hcb_addr $t7 @error
+    bne     @error $zero put_error
+    li      @loc 25
+    put     @loc @mem_id @hcb_addr $t8 @error
+    bne     @error $zero put_error
+    li      @loc 26
+    put     @loc @mem_id @hcb_addr $t9 @error
+    bne     @error $zero put_error
+
+    #sw      $t4  84($t0)        # save $t4 in the PCB
+    #sw      $t5  88($t0)        # save $t5 in the PCB
+    #sw      $t6  92($t0)        # save $t6 in the PCB
+    #sw      $t7  96($t0)        # save $t7 in the PCB
+    #sw      $t8  100($t0)        # save $t8 in the PCB
+    #sw      $t9  104($t0)       # save $t9 in the PCB
     
-    lw      $t1  __save_s0      # load the saved $s0
-    sw      $t1  108($t0)       # save it in the PCB
+    lw      @temp  __save_s0      # load the saved $s0
+    li      @loc 27
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  108($t0)       # save it in the PCB
     
-    lw      $t1  __save_s1      # load the saved $s1
-    sw      $t1  112($t0)       # save it in the PCB
+    lw      @temp  __save_s1      # load the saved $s1
+    li      @loc 28
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  112($t0)       # save it in the PCB
     
-    lw      $t1  __save_s2      # load the saved $s2
-    sw      $t1  116($t0)       # save it in the PCB
+    lw      @temp  __save_s2      # load the saved $s2
+    li      @loc 29
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  116($t0)       # save it in the PCB
     
-    lw      $t1  __save_s3      # load the saved $s3
-    sw      $t1  120($t0)       # save it in the PCB
+    lw      @temp  __save_s3      # load the saved $s3
+    li      @loc 30
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1  120($t0)       # save it in the PCB
     
-    sw      $s4  124($t0)       # save $s4 in the PCB
-    sw      $s5  128($t0)       # save $s5 in the PCB
-    sw      $s6  132($t0)       # save $s6 in the PCB
-    sw      $s7  136($t0)       # save $s7 in the PCB
+    li      @loc 31
+    put     @loc @mem_id @hcb_addr $s4 @error
+    bne     @error $zero put_error
+    li      @loc 32
+    put     @loc @mem_id @hcb_addr $s5 @error
+    bne     @error $zero put_error
+    li      @loc 33
+    put     @loc @mem_id @hcb_addr $s6 @error
+    bne     @error $zero put_error
+    li      @loc 34
+    put     @loc @mem_id @hcb_addr $s7 @error
+    bne     @error $zero put_error
+
+    
+    #sw      $s4  124($t0)       # save $s4 in the PCB
+    #sw      $s5  128($t0)       # save $s5 in the PCB
+    #sw      $s6  132($t0)       # save $s6 in the PCB
+    #sw      $s7  136($t0)       # save $s7 in the PCB
     
     return
 put_error:
-    #print helpful message here
-    return
+    println  horrible_error
+    exit
+.data
+horrible_error: .asciiz "Something really bad happened when trying to save the PCB\n"
+.text
 }
     
 # new_proc(pcb_address data_amt) -> Null
