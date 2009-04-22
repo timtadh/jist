@@ -239,32 +239,47 @@ ll_print:
     @err = $s3
     add @mem_id $a0 $zero
     
+    println header
+    
     print_again:
         beqz @mem_id done_printing
         khcb_getaddr_2 @khcb_addr
         
-        addu $a0 @mem_id $zero
-        call print_int
-        li $a0 32
-        call print_char
+        #call print_int
+        #li $a0 32
+        #call print_char
         
-        geti 0 @mem_id @khcb_addr $a0 @err
-        call print_int
-        li $a0 32
-        call print_char
+        # geti 0 @mem_id @khcb_addr $a0 @err
+        # call print_int
+        # li $a0 32
+        # call print_char
         
-        geti 1 @mem_id @khcb_addr $a0 @err
-        call print_int
-        li $a0 32
-        call print_char
+        # geti 1 @mem_id @khcb_addr $a0 @err
+        # call print_int
+        # li $a0 32
+        # call print_char
+        
+        # geti 2 @mem_id @khcb_addr $a0 @err
+        # call print_int
+        # li $a0 10
+        # call print_char
         
         geti 2 @mem_id @khcb_addr $a0 @err
-        call print_int
-        li $a0 10
-        call print_char
+        store_arg $a0
+        geti 1 @mem_id @khcb_addr $a0 @err
+        store_arg $a0
+        geti 0 @mem_id @khcb_addr $a0 @err
+        store_arg $a0
+        store_arg @mem_id
+        
+        la $a0 fmt_str
+        call printf
         
         geti 0 @mem_id @khcb_addr @mem_id @err
         b print_again
     done_printing:
     return
+.data
+header: .asciiz "\nProcess List:"
+fmt_str: .asciiz "  kheap mem_id: %d      next: %d        pid: %d         pcb_mem_id: %d\n"
 }
