@@ -40,6 +40,7 @@ main:
     print_hcb @addr
     
     
+    addu    @amt $0 17
 #     alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
     addu    $a0 @amt $0
     addu    $a1 @addr $0
@@ -48,6 +49,9 @@ main:
     addu    @addr $v1 $0
     
     print_hcb @addr
+    
+    
+    addu    @amt $0 14
     
     addu    $a0 @amt $0
     addu    $a1 @addr $0
@@ -108,6 +112,117 @@ main:
         print_hcb @addr
     }
     
+    addu    @amt $0 7
+#     sw      @amt 16(@addr) #hack to check last word is moved
+    print_hcb @addr
+    
+    
+    addu    $a0 @amt $0
+    addu    $a1 @addr $0
+    call    alloc
+    addu    @mem_id0 $v0 $0
+    addu    @addr $v1 $0
+    
+    print_hcb @addr
+    
+    
+    addu    @amt $0 19
+#     alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
+    addu    $a0 @amt $0
+    addu    $a1 @addr $0
+    call    alloc
+    addu    @mem_id1 $v0 $0
+    addu    @addr $v1 $0
+    
+    print_hcb @addr
+    
+    
+    addu    @amt $0 11
+    
+    addu    $a0 @amt $0
+    addu    $a1 @addr $0
+    call    alloc
+    addu    @mem_id2 $v0 $0
+    addu    @addr $v1 $0
+    
+    print_hcb @addr
+    
+    addu    @val $0 0x14
+    addu    @loc $0 $0
+    put @loc @mem_id1 @addr @val @err
+    get @loc @mem_id1 @addr @val @err
+    println_hex val_msg $s6
+    
+    addu    @val $0 0x1123
+    addu    @loc $0 0x1
+    put @loc @mem_id2 @addr @val @err
+    get @loc @mem_id2 @addr @val @err
+    println_hex val_msg @val
+    
+    addu    @loc $0 $0
+    get @loc @mem_id1 @addr @val @err
+    println_hex val_msg @val
+    
+    addu    @val $0 0x17
+    addu    @loc $0 0x3
+    put @loc @mem_id1 @addr @val @err
+    get @loc @mem_id1 @addr @val @err
+    println_hex val_msg @val
+    
+    {
+        addu    $a0 @mem_id0 $0
+        addu    $a1 @addr $0
+        call    free
+        addu    @addr $v0 $0
+        
+        print_hcb @addr
+    }
+    addu    @loc $0 $0
+    get @loc @mem_id0 @addr @val @err
+    println_hex val_msg @val
+    {
+        addu    $a0 @mem_id2 $0
+        addu    $a1 @addr $0
+        call    free
+        addu    @addr $v0 $0
+        
+        print_hcb @addr
+    }
+    
+    addu    @amt $0 11
+    
+    addu    $a0 @amt $0
+    addu    $a1 @addr $0
+    call    alloc
+    addu    @mem_id2 $v0 $0
+    addu    @addr $v1 $0
+    
+    print_hcb @addr
+#     
+    {
+        addu    $a0 @mem_id1 $0
+        addu    $a1 @addr $0
+        call    free
+        addu    @addr $v0 $0
+        
+        print_hcb @addr
+    }
+    
+    
+    addu    @val $0 0x1123
+    addu    @loc $0 0x1
+    put @loc @mem_id2 @addr @val @err
+    get @loc @mem_id2 @addr @val @err
+    println_hex val_msg @val
+    
+    {
+        addu    $a0 @mem_id2 $0
+        addu    $a1 @addr $0
+        call    free
+        addu    @addr $v0 $0
+        
+        print_hcb @addr
+    }
     
 #     print_hcb @addr
 #     
