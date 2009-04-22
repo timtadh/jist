@@ -30,6 +30,14 @@
     call    print_hcb
 #end
 
+
+# printblock mem_id hcb_addr
+#define printblock global
+    addu    $a0 %1 $0
+    addu    $a1 %2 $0
+    call    printblock
+#end
+
     .text
 
 # read_char
@@ -482,3 +490,60 @@ print_hcb_item:
     amt_msg: .asciiz "    amt = "
     .text
 }
+
+#println_2regs reg1 msg reg2
+#define println_2regs
+    addu    $a0 %1 $0
+    call    print_int
+    la      $a0 %2
+    call    print
+    addu    $a0 %3 $0
+    call    println_hex
+#end
+
+.text
+# printblock(mem_id, hcb_addr) --> Null
+printblock:
+{
+    @hcb_addr = $s0
+    @mem_id = $s1
+    @blocksize = $s3
+    @count = $s4
+    
+    @err = $t0
+    
+    addu    @mem_id $a0 $0
+    addu    @hcb_addr $a1 $0
+    
+    blocksize @mem_id @hcb_addr @blocksize @err
+    bne     @err $0 blocksize_error
+    println_hex blocksize_msg @blocksize
+    
+    {
+    loop:
+        bge     @count @blocksize loopend
+        {
+            @temp = $s5
+            
+            get     @count @mem_id @hcb_addr @temp @err
+            bne     @err $0 blocksize_error
+            println_2regs @count equal_msg @temp
+        }
+        addu    @count @count 0x1
+        j       loop
+    loopend:
+    }
+    
+    return
+    
+    blocksize_error:
+    println blocksize_error_msg
+    return
+    
+    .data
+    equal_msg: .asciiz " = "
+    blocksize_msg: .asciiz "blocksize = "
+    blocksize_error_msg: .asciiz "blocksize error"
+    .text
+}
+

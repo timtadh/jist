@@ -33,6 +33,46 @@
     lw      $sp 40($sp)         # load the old stack pointer
 #end
 
+#define ___stshortcut global
+    var_store $s0 %1
+    addi $s0 $s0 1
+#end
+
+#define __save_temps global
+    li $s0 10
+    init_varstore $s0
+    li $s0 0
+    ___stshortcut $t0
+    ___stshortcut $t1
+    ___stshortcut $t2
+    ___stshortcut $t3
+    ___stshortcut $t4
+    ___stshortcut $t5
+    ___stshortcut $t6
+    ___stshortcut $t7
+    ___stshortcut $t8
+    ___stshortcut $t9
+#end
+
+#define ___rtshortcut global
+    var_restore $s0 %1
+    addi $s0 $s0 1
+#end
+
+#define __restore_temps global
+    li $s0 0
+    ___rtshortcut $t0
+    ___rtshortcut $t1
+    ___rtshortcut $t2
+    ___rtshortcut $t3
+    ___rtshortcut $t4
+    ___rtshortcut $t5
+    ___rtshortcut $t6
+    ___rtshortcut $t7
+    ___rtshortcut $t8
+    ___rtshortcut $t9
+#end
+
 # var_store dst src
 #     dst : a number (1-N) indicating which spot you want to store it in, gets trampled
 #     src : a register containing the value you want to store
@@ -248,6 +288,12 @@ ret:
 
 #define wait global
     __save_args
+    #__save_temps
+    
+    la      $a0 KMSG
+    li      $a1 1
+    sw      $a1 0($a0)  #KMSG = 1
+    
     la      $a0 wait_return
     subu    $a0 $a0 4
     mtc0    $a0 $14
@@ -256,6 +302,7 @@ ret:
     la      $a0 exception_handler
     jr      $a0
 wait_return:
+    #__restore_temps
     __restore_args
 #end
 
@@ -330,6 +377,24 @@ alread_zero:
 #end
 
 
+# blocksize mem_id hcb_addr dst err
+#     mem_id : the memory id for the block you are accessing
+#     hcb_addr : the address of the hcb
+#     dst : the register you want the result placed
+#     err : error code 0 is success
+#define blocksize global
+    @mem_id = %1
+    @hcb_addr = %2
+    @dst = %3
+    @err = %4
+    
+    addu    $a1 @mem_id $0
+    addu    $a2 @hcb_addr $0
+    call    blocksize
+    addu    @err $v0 $0
+    addu    @dst $v1 $0
+#end
+
 # get loc mem_id hcb_addr dst err
 #     loc : the word you want to get should be from 0-(n-1) where n is len of block, reg
 #     mem_id : the memory id for the block you are accessing
@@ -365,7 +430,7 @@ alread_zero:
     addu    @dst $v1 $0
 #end
 
-# put word mem_id hcb_addr val err
+# put loc mem_id hcb_addr val err
 #     loc : the word you want to put should be from 0-(n-1) where n is len of block
 #     mem_id : the memory id for the block you are accessing
 #     hcb_addr : the address of the hcb
@@ -404,14 +469,14 @@ alread_zero:
 #define khcb_writeback
     @khcb_addr = $t0
     @hcb_addr = %1
-    la  @khcb_addr  KHCB_ADDR
-    sw  @hcb_addr   0(@khcb_addr)
+    la  $t0  KHCB_ADDR
+    sw  %1   0($t0)
 #end
 
 # khcb_getaddr hcb_addr
 #define khcb_getaddr
     @khcb_addr = $t0
     @hcb_addr = %1
-    la  @khcb_addr  KHCB_ADDR
-    lw  @hcb_addr   0(@khcb_addr)
+    la  $t0  KHCB_ADDR
+    lw  %1   0($t0)
 #end

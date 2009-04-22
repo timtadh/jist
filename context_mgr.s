@@ -5,17 +5,19 @@ _quit_msg: .asciiz "All programs have exited. Closing jist."
 
 .text
 #define khcb_writeback_2
-    @khcb_addr = $t0
-    @val = %1
-    la  @khcb_addr  FAKE_KHCB_ADDR
-    sw  @val   0(@khcb_addr)
+    khcb_writeback %1
+    # @khcb_addr = $t0
+    # @val = %1
+    # la  @khcb_addr  FAKE_KHCB_ADDR
+    # sw  @val   0(@khcb_addr)
 #end
 
 #define khcb_getaddr_2
-    @khcb_addr = $t0
-    @hcb_addr = %1
-    la  @khcb_addr  FAKE_KHCB_ADDR
-    lw  @hcb_addr   0(@khcb_addr)
+    khcb_getaddr %1
+    # @khcb_addr = $t0
+    # @hcb_addr = %1
+    # la  @khcb_addr  FAKE_KHCB_ADDR
+    # lw  @hcb_addr   0(@khcb_addr)
 #end
 
 .text
@@ -118,6 +120,54 @@ ll_next:    #@h @current
 }
 
 .text
+#ll_find_pid(list_head, to_find)
+ll_find_pid:
+{
+    @head = $s0
+    @to_find = $s1
+    @khcb_addr = $s2
+    @err = $s3
+    @next = $s4
+    @temp = $s5
+    @temp2 = $s6
+
+    add @head $a0 $zero
+    add @to_find $a1 $zero
+
+    khcb_getaddr_2 @khcb_addr
+    
+    geti 1 @head @khcb_addr @temp @err
+    beq @temp @to_find head_case
+
+    loop:
+        beqz @head found_end
+        geti 0 @head @khcb_addr @next @err
+        geti 1 @head @khcb_addr @temp @err
+
+        bne @temp @to_find not_found_yet
+            geti 0 @head @khcb_addr @temp @err
+            geti 2 @head @khcb_addr @temp2 @err
+            addu $v0 @temp $zero
+            addu $v1 @temp2 $zero
+            return
+        not_found_yet:
+            addu @head @next $zero
+            b loop
+
+    head_case:
+        geti 0 @head @khcb_addr @temp @err
+        geti 2 @head @khcb_addr @temp2 @err
+        addu $v0 @temp $zero
+        addu $v1 @temp2 $zero
+        return
+
+    found_end:
+        li $v0 10
+        syscall     #DIE DIE DIE
+        return
+}
+
+.text
 #ll_remove(list_head, to_remove)
 ll_remove:
 {
@@ -189,32 +239,47 @@ ll_print:
     @err = $s3
     add @mem_id $a0 $zero
     
+    println header
+    
     print_again:
         beqz @mem_id done_printing
         khcb_getaddr_2 @khcb_addr
         
-        addu $a0 @mem_id $zero
-        call print_int
-        li $a0 32
-        call print_char
+        #call print_int
+        #li $a0 32
+        #call print_char
         
-        geti 0 @mem_id @khcb_addr $a0 @err
-        call print_int
-        li $a0 32
-        call print_char
+        # geti 0 @mem_id @khcb_addr $a0 @err
+        # call print_int
+        # li $a0 32
+        # call print_char
         
-        geti 1 @mem_id @khcb_addr $a0 @err
-        call print_int
-        li $a0 32
-        call print_char
+        # geti 1 @mem_id @khcb_addr $a0 @err
+        # call print_int
+        # li $a0 32
+        # call print_char
+        
+        # geti 2 @mem_id @khcb_addr $a0 @err
+        # call print_int
+        # li $a0 10
+        # call print_char
         
         geti 2 @mem_id @khcb_addr $a0 @err
-        call print_int
-        li $a0 10
-        call print_char
+        store_arg $a0
+        geti 1 @mem_id @khcb_addr $a0 @err
+        store_arg $a0
+        geti 0 @mem_id @khcb_addr $a0 @err
+        store_arg $a0
+        store_arg @mem_id
+        
+        la $a0 fmt_str
+        call printf
         
         geti 0 @mem_id @khcb_addr @mem_id @err
         b print_again
     done_printing:
     return
+.data
+header: .asciiz "\nProcess List:"
+fmt_str: .asciiz "  kheap mem_id: %d      next: %d        pid: %d         pcb_mem_id: %d\n"
 }

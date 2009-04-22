@@ -1,29 +1,29 @@
 .text
 main:
 {
-    {
-        @hcb_addr = $s0
-        @khcb_addr_loc = $s1
-        @mem_id = $s2
-        @loc = $t0
-        @err = $t1
-    
-        sbrk_imm 4096 @hcb_addr
-        li      $a1 1024
-        add     $a0 @hcb_addr $zero
-        call    initialize_heap
-    
-        addu    $a0 $0 0x10
-        addu    $a1 @hcb_addr $zero
-        call    alloc
-        addu    @mem_id $v0 $zero
-        addu    @hcb_addr $v1 $zero
-    
-        khcb_writeback_2 @hcb_addr
-    
-        addu    @loc $0 $0
-        put     @loc @mem_id @hcb_addr $0 @err
-    }
+    # {
+    #     @hcb_addr = $s0
+    #     @khcb_addr_loc = $s1
+    #     @mem_id = $s2
+    #     @loc = $t0
+    #     @err = $t1
+    # 
+    #     sbrk_imm 4096 @hcb_addr
+    #     li      $a1 1024
+    #     add     $a0 @hcb_addr $zero
+    #     call    initialize_heap
+    # 
+    #     addu    $a0 $0 0x10
+    #     addu    $a1 @hcb_addr $zero
+    #     call    alloc
+    #     addu    @mem_id $v0 $zero
+    #     addu    @hcb_addr $v1 $zero
+    # 
+    #     khcb_writeback_2 @hcb_addr
+    # 
+    #     addu    @loc $0 $0
+    #     put     @loc @mem_id @hcb_addr $0 @err
+    # }
     {
         @head = $s0
         @current = $s1
@@ -63,6 +63,14 @@ main:
         
         addu $a0 @head $zero
         call ll_print
+        
+        addu $a0 @head $zero
+        addu $a1 $zero 1
+        call ll_find_pid
+        addu $a0 $v1 $zero
+        call print_int
+        li $a0 10
+        call print_char
         
         li @counter 10
         addu @current @head $zero

@@ -101,9 +101,9 @@ def make_kernel_macros():
     load_first_program = ''
     if not strip_comments:
         load_first_program += '    '+"#"*16+' start load_first_program '+'#'*16+'\n'
-    load_first_program += "    la      $s0  user_program_locations\n"
-    load_first_program += "    lw      $s1  %s($s0)\n" % str(first_prog)
-    load_first_program += "    li      $s2  %s\n" % str(first_prog)
+    load_first_program += "    la      $s0  " + "user_program_locations\n"
+    load_first_program += "    lw      $s1  " + "%s($s0)\n" % str(first_prog)
+    load_first_program += "    li      $s2  " + "%s\n" % str(first_prog)
     load_first_program = ''.join(
         process_lines(load_first_program, True, False)
     )
