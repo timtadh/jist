@@ -5,19 +5,19 @@ _quit_msg: .asciiz "All programs have exited. Closing jist."
 
 .text
 #define khcb_writeback_2
-    #khcb_writeback %1
-    @khcb_addr = $t0
-    @val = %1
-    la  @khcb_addr  FAKE_KHCB_ADDR
-    sw  @val   0(@khcb_addr)
+    khcb_writeback %1
+    # @khcb_addr = $t0
+    # @val = %1
+    # la  @khcb_addr  FAKE_KHCB_ADDR
+    # sw  @val   0(@khcb_addr)
 #end
 
 #define khcb_getaddr_2
-    #khcb_getaddr %1
-    @khcb_addr = $t0
-    @hcb_addr = %1
-    la  @khcb_addr  FAKE_KHCB_ADDR
-    lw  @hcb_addr   0(@khcb_addr)
+    khcb_getaddr %1
+    # @khcb_addr = $t0
+    # @hcb_addr = %1
+    # la  @khcb_addr  FAKE_KHCB_ADDR
+    # lw  @hcb_addr   0(@khcb_addr)
 #end
 
 .text

@@ -106,7 +106,7 @@ __start:
     
     load_first_program
     
-    #call load_first_process
+    call load_first_process
     
     jr      $s1
     
