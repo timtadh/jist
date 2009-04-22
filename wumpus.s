@@ -410,7 +410,7 @@ main:
         sb $s5 5($s7)
         sb $s6 6($s7)
     mainloop:
-        print_debug
+        #print_debug
         call check_status
         print_status
         print_rooms
