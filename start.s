@@ -14,6 +14,8 @@
 # -----------------------------------------
 # |   2 | current PID                     |
 # -----------------------------------------
+# |   3 | stack heap                      |
+# -----------------------------------------
 
     .text
 init_kernel:
@@ -39,6 +41,11 @@ init_kernel:
     
     addu    @loc $0 $0
     put     @loc @mem_id @hcb_addr $0 @err
+    
+#     sbrk_imm 4096 @hcb_addr
+#     li      $a1 1024
+#     add     $a0 @hcb_addr $zero
+#     call    initialize_heap
     
     addu    $v0 @mem_id $zero
     
