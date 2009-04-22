@@ -157,6 +157,7 @@ ll_remove:
             b loop
     
     head_case:
+    khcb_getaddr_2 @khcb_addr
     geti 0 @head @khcb_addr @temp @err
     beqz @temp head_only
     addu @head @temp $zero
@@ -176,6 +177,7 @@ ll_remove:
     syscall
     
     tail_case:
+    
     
     found_end:
     li $v0 10

@@ -42,12 +42,12 @@ main:
         addu $a1 $zero 3
         addu $a2 $zero 33
         call ll_append
-        addu @current $v0 $zero
         
         addu $a0 @head $zero
         addu $a1 $zero 4
         addu $a2 $zero 44
         call ll_append
+        addu @current $v0 $zero
         
         addu $a0 @head $zero
         addu $a1 @current $zero
