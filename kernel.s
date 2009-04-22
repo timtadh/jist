@@ -5,6 +5,7 @@
 #include memory_manager.s
 #include start.s
 #include interrupt_handler.s
+#include context_mgr.s
     
     .globl __save_a0
     .globl __save_a1

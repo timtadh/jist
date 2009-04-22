@@ -2,6 +2,7 @@
 # start.s - header for user programs
 
 #include stdlib.s
+#include proc_manager.s
 
 # KERNEL STATIC HEAP DATA mem_id = 0
 # -----------------------------------------
@@ -9,7 +10,9 @@
 # -----------------------------------------
 # |   0 | next pid                        |
 # -----------------------------------------
-# | ... | ....                            |
+# |   1 | context_mgr linked list         |
+# -----------------------------------------
+# |   2 | current PID                     |
 # -----------------------------------------
 
     .text
@@ -56,8 +59,7 @@ __start:
 #     la      $s0  user_program_locations
 #     lw      $s1  4($s0)
     
-    exec init_kernel
-    
+    call init_kernel
     #sneaky kernel macros:
     load_user_programs
     load_first_program

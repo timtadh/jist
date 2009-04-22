@@ -351,7 +351,21 @@ alread_zero:
     addu    @dst $v1 $0
 #end
 
-# put loc mem_id hcb_addr val err
+#define geti global
+    @mem_id = %2
+    @hcb_addr = %3
+    @dst = %4
+    @err = %5
+    
+    addu    $a0 $0 %1
+    addu    $a1 @mem_id $0
+    addu    $a2 @hcb_addr $0
+    call    __getword
+    addu    @err $v0 $0
+    addu    @dst $v1 $0
+#end
+
+# put word mem_id hcb_addr val err
 #     loc : the word you want to put should be from 0-(n-1) where n is len of block
 #     mem_id : the memory id for the block you are accessing
 #     hcb_addr : the address of the hcb
@@ -366,6 +380,20 @@ alread_zero:
     
     addu    $a0 @value $0
     addu    $a1 @word $0
+    addu    $a2 @mem_id $0
+    addu    $a3 @hcb_addr $0
+    call    __putword
+    addu    @err $v0 $0
+#end
+
+#define puti global
+    @mem_id = %2
+    @hcb_addr = %3
+    @value = %4
+    @err = %5
+    
+    addu    $a0 @value $0
+    addu    $a1 $0 %1
     addu    $a2 @mem_id $0
     addu    $a3 @hcb_addr $0
     call    __putword
