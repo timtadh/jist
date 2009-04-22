@@ -262,7 +262,7 @@ save_proc:
     puti    4 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
     geti    4 @mem_id @hcb_addr @temp @error
-    printblock @mem_id @hcb_addr
+    printblock @temp @hcb_addr
     #sw      $t1  28($t0)        # save it in the PCB
     
     return
