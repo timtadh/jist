@@ -143,6 +143,32 @@ save_state_return:
         print_hcb  @stackheap
         printblock @stack_id @stackheap
         
+        addu    $a0 @stack_id $0
+        addu    $a1 @sp $0
+        call    restore_stack
+        
+        
+        khcb_getaddr @hcb_addr
+        la      @curpcb_addr current_pcb
+        lw      @pcb_id      0(@curpcb_addr)
+        geti    7 @pcb_id @hcb_addr @sp @error
+#         bne     @error $zero put_error
+        addu    $a0 @sp $zero
+        call    save_stack
+        addu    @stack_id $v0 $zero
+        
+        puti    4 @pcb_id @hcb_addr @stack_id @error
+#         bne     @error $zero put_error
+        geti    4 @pcb_id @hcb_addr @stack_id @error
+        
+        geti    3 $0 @hcb_addr @stackheap @error
+        print_hcb  @stackheap
+        printblock @stack_id @stackheap
+        
+        
+        
+#         addu    @stack_id $v0 $0
+        
     }
     
     
