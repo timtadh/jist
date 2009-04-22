@@ -1,5 +1,3 @@
-#include context_mgr.s
-
 .text
 main:
 {
@@ -28,6 +26,8 @@ main:
     }
     {
         @head = $s0
+        @current = $s1
+        @counter = $s2
         addu $a0 $zero 1
         addu $a1 $zero 11
         call ll_init
@@ -50,6 +50,21 @@ main:
         
         addu $a0 @head $zero
         call ll_print
+        
+        li @counter 10
+        addu @current @head $zero
+        loop:
+            addu $a0 @head $zero
+            addu $a1 @current $zero
+            call ll_next
+            addu @current $v0 $zero
+            addu $a0 @current $zero
+            call print_int
+            
+            li $a0 32
+            call print_char
+            addi @counter @counter -1
+        bgtz @counter loop
         exit
     }
 }

@@ -97,23 +97,24 @@ ll_append:
 }
 .text
 #ll_next(list_head, current_node)
-#   v0 = pcb mem_id
-#
+#   v0 = mem_id
 ll_next:    #@h @current
 {
     @head = $s0
     @current = $s1
+    @khcb_addr = $s2
+    @err = $s3
+    @r1 = $s4
+    @r2 = $s5
     add @head $a0 $zero
     add @current $a1 $zero
     
-    lw $v1 4(@current)
-    beqz $v1 return_head
-    lw $v0 0($v1)
-    return
-    
+    khcb_getaddr_2 @khcb_addr
+    geti 0 @current @khcb_addr $v0 @err
+    beqz $v0 return_head
+        return
     return_head:
-    add $v1 @head $zero
-    lw $v0 8($v1)
+        addu $v0 @head $zero
     return
 }
 
