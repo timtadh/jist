@@ -1,5 +1,5 @@
 
-# save_stack() --> $v0 = mem_id
+# save_stack(sp) --> $v0 = mem_id
 save_stack:
 {
     @stackheap = $s0
@@ -9,9 +9,12 @@ save_stack:
     @amt = $s4
     @mem_id = $s5
     @hcb_addr = $s6
+    @sp = $s7
     
     @loc = $t0
     @err = $t1
+    
+    addu    @sp $a0 $0
     
     {
         khcb_getaddr @hcb_addr
@@ -46,7 +49,7 @@ save_stack:
     addu    @count $0 $0
     {
     loop:
-        bge     @curaddr $sp endloop
+        bge     @curaddr @sp endloop
         {
             @temp = $t0
             @err = $t1
@@ -82,7 +85,7 @@ save_stack:
     .text
 }
 
-# restore_stack(mem_id) --> Null
+# restore_stack(mem_id, sp) --> Null
 restore_stack:
 {
     @stackheap = $s0
@@ -92,10 +95,12 @@ restore_stack:
     @amt = $s4
     @mem_id = $s5
     @hcb_addr = $s6
+    @sp = $s7
     @loc = $t0
     @err = $t1
     
     addu    @mem_id $a0 $0
+    addu    @sp $a1 $0
     
     {
         khcb_getaddr @hcb_addr
@@ -114,7 +119,7 @@ restore_stack:
     addu    @count $0 $0
     {
     loop:
-        bge     @curaddr $sp endloop
+        bge     @curaddr @sp endloop
         {
             @temp = $t0
             @err = $t1

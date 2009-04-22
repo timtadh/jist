@@ -74,6 +74,11 @@ proc:
     @stackheap = $s2
     @blocksize = $s3
     @err = $s4
+    @sp = $s5
+    
+    addu    @sp $sp $0
+    
+    addu    $a0 @sp $0
     call save_stack
     addu @stack_id $v0 $0
     
@@ -90,6 +95,8 @@ proc:
     call    zero_stack
     
     addu    $a0 @stack_id $0
+    addu    $a1 @sp $0
+    call    restore_stack
     
     print_hcb @stackheap
         
