@@ -10,9 +10,10 @@ save_stack:
     @mem_id = $s5
     @hcb_addr = $s6
     
+    @loc = $t0
+    @err = $t1
+    
     {
-        @loc = $t0
-        @err = $t1
         khcb_getaddr @hcb_addr
         
         addu    @loc $0 0x3
@@ -34,10 +35,8 @@ save_stack:
     addu    @stackheap $v1 $0
     
     {
-        @loc = $t0
-        @err = $t1
-        
         khcb_getaddr @hcb_addr
+        
         addu    @loc $0 0x3
         put     @loc $0 @hcb_addr @stackheap @err
         bne     @err $0 stack_addr_error
@@ -93,12 +92,12 @@ restore_stack:
     @amt = $s4
     @mem_id = $s5
     @hcb_addr = $s6
+    @loc = $t0
+    @err = $t1
     
     addu    @mem_id $a0 $0
     
     {
-        @loc = $t0
-        @err = $t1
         khcb_getaddr @hcb_addr
         
         addu    @loc $0 0x3
@@ -109,17 +108,6 @@ restore_stack:
         addu    @loc $0 0x4
         get     @loc $0 @hcb_addr @stack_top @err
         bne     @err $0 stack_top_error
-    }
-    
-    {
-        @hcb_addr = $s1
-        @loc = $t0
-        @err = $t1
-        
-        khcb_getaddr @hcb_addr
-        addu    @loc $0 0x3
-        put     @loc $0 @hcb_addr @stackheap @err
-        bne     @err $0 stack_addr_error
     }
     
     addu    @curaddr @stack_top $0

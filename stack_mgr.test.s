@@ -9,11 +9,12 @@ zero_stack:
     @amt = $s4
     @mem_id = $s5
     @hcb_addr = $s6
+    @loc = $t0
+    @err = $t1
     
+    addu    @mem_id $a0 $0
     
     {
-        @loc = $t0
-        @err = $t1
         khcb_getaddr @hcb_addr
         
         addu    @loc $0 0x3
@@ -26,31 +27,18 @@ zero_stack:
         bne     @err $0 stack_top_error
     }
     
-    {
-        @loc = $t0
-        @err = $t1
-        
-        khcb_getaddr @hcb_addr
-        addu    @loc $0 0x3
-        put     @loc $0 @hcb_addr @stackheap @err
-        bne     @err $0 stack_addr_error
-    }
-    
     addu    @curaddr @stack_top $0
     addu    @count $0 $0
     {
     loop:
-        bgt     $sp @curaddr endloop
+        bge     @curaddr $sp endloop
         {
             @temp = $t0
             @err = $t1
             
-#             sw      $0 0(@curaddr)
+            sw      $0 0(@curaddr)
             
-#             println_hex curaddr_msg @curaddr
-#             println_hex sp_msg $sp
-            
-            subu    @curaddr @curaddr 0x4
+            addu    @curaddr @curaddr 0x4
             addu    @count @count 0x1
         }
         j   loop
@@ -73,11 +61,8 @@ zero_stack:
     .data
     stack_addr_error_msg: .asciiz "get stackheap address failed in save_stack"
     stack_top_error_msg: .asciiz "get stack top address failed in save_stack"
-    stack_save_error_msg: .asciiz "saving the stack failed"
-    curaddr_msg: .asciiz "curaddr = "
-    sp_msg: .asciiz "sp = "
+    stack_save_error_msg: .asciiz "restoring the stack failed"
     .text
-    return
 }
 
 .text
@@ -85,9 +70,10 @@ proc:
 {
     @stack_id = $s0
     @loc = $t0
-    @err = $t1
     @hcb_addr = $s1
     @stackheap = $s2
+    @blocksize = $s3
+    @err = $s4
     call save_stack
     addu @stack_id $v0 $0
     
@@ -98,23 +84,25 @@ proc:
     
     print_hcb @stackheap
     
+#     blocksize @stack_id @stackheap @blocksize @err
+    printblock @stack_id @stackheap
+    
     call    zero_stack
     
     addu    $a0 @stack_id $0
-    call restore_stack
     
     print_hcb @stackheap
-    
-    call    zero_stack
-    
-    
+        
     return
+    .data
+    error_msg: .asciiz "error = "
+    blocksize_msg: .asciiz "blocksize = "
+    .text
 }
 
 .text
 temp:
 {
-    call    zero_stack 
     call proc
     return
 }

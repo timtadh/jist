@@ -330,6 +330,24 @@ alread_zero:
 #end
 
 
+# blocksize mem_id hcb_addr dst err
+#     mem_id : the memory id for the block you are accessing
+#     hcb_addr : the address of the hcb
+#     dst : the register you want the result placed
+#     err : error code 0 is success
+#define blocksize global
+    @mem_id = %1
+    @hcb_addr = %2
+    @dst = %3
+    @err = %4
+    
+    addu    $a1 @mem_id $0
+    addu    $a2 @hcb_addr $0
+    call    blocksize
+    addu    @err $v0 $0
+    addu    @dst $v1 $0
+#end
+
 # get loc mem_id hcb_addr dst err
 #     loc : the word you want to get should be from 0-(n-1) where n is len of block, reg
 #     mem_id : the memory id for the block you are accessing
