@@ -16,6 +16,8 @@
 # -----------------------------------------
 # |   3 | stack heap                      |
 # -----------------------------------------
+# |   4 | original sp                     |
+# -----------------------------------------
 
     .text
 init_kernel:
@@ -25,6 +27,9 @@ init_kernel:
     @mem_id = $s2
     @loc = $t0
     @err = $t1
+    @temp = $t2
+    
+    @stack_hcb = $s3
     
     sbrk_imm 4096 @hcb_addr
     li      $a1 1024
@@ -42,19 +47,33 @@ init_kernel:
     addu    @loc $0 $0
     put     @loc @mem_id @hcb_addr $0 @err
     
-#     sbrk_imm 4096 @hcb_addr
-#     li      $a1 1024
-#     add     $a0 @hcb_addr $zero
-#     call    initialize_heap
+    lui     @temp 0x0001
+    sbrk    @temp @stack_hcb
+    li      $a1 0x4000
+    add     $a0 @stack_hcb $zero
+    call    initialize_heap
+    
+    khcb_getaddr @hcb_addr
+    
+    addu    @loc $0 0x3
+    put     @loc $0 @hcb_addr @stack_hcb @err
+    addu    @loc $0 0x3
+    get     @loc $0 @hcb_addr @stack_hcb @err
+    
+    println_hex stack_hcb_msg @stack_hcb
     
     addu    $v0 @mem_id $zero
     
     return
+    .data
+    stack_hcb_msg: .asciiz " stack_hcb = "
+    .text
 }
     .text
     .globl __start
 
 __start:
+{
 #     enable_interrupts
 #     enable_clock_interrupt
 #     load_user_programs
@@ -65,8 +84,24 @@ __start:
 #     load_user_programs
 #     la      $s0  user_program_locations
 #     lw      $s1  4($s0)
-    
+    @loc = $t0 
+    @sp = $s0
+    @hcb_addr = $s1
+    @err = $t1
+    addu @sp $sp $0
+#     lui     @sp 0x7fff
+#     ori     @sp @sp 0xffff
     call init_kernel
+    
+    khcb_getaddr @hcb_addr
+    
+    addu    @loc $0 0x4
+    put     @loc $0 @hcb_addr @sp @err
+    addu    @loc $0 0x4
+    get     @loc $0 @hcb_addr @sp @err
+    
+    println_hex stack_pointer_msg @sp
+    
     #sneaky kernel macros:
     load_user_programs
     load_first_program
@@ -78,5 +113,9 @@ __start:
 #     disable_clock_interrupt
 #     enable_clock_interrupt
     exit
+    .data
+    stack_pointer_msg: .asciiz " sp = "
+    .text
+}
 #     j       $s1                 # start main program
     

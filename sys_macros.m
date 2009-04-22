@@ -404,14 +404,14 @@ alread_zero:
 #define khcb_writeback
     @khcb_addr = $t0
     @hcb_addr = %1
-    la  @khcb_addr  KHCB_ADDR
-    sw  @hcb_addr   0(@khcb_addr)
+    la  $t0  KHCB_ADDR
+    sw  %1   0($t0)
 #end
 
 # khcb_getaddr hcb_addr
 #define khcb_getaddr
     @khcb_addr = $t0
     @hcb_addr = %1
-    la  @khcb_addr  KHCB_ADDR
-    lw  @hcb_addr   0(@khcb_addr)
+    la  $t0  KHCB_ADDR
+    lw  %1   0($t0)
 #end
