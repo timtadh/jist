@@ -1,5 +1,4 @@
 #include stdlib.s
-#include sys_macros.m
 
 .data
 wdata:      .space 7    #for locations, etc.

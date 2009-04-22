@@ -80,6 +80,8 @@ interrupt_handler:
     # syscall                     # do the syscall.
     j       save_state
 save_state_return:
+    call save_proc
+    
     j       restore_state
 restore_state_return:
     la      $a0 interrupt_return

@@ -2,7 +2,6 @@
 # start.s - header for user programs
 
 #include stdlib.s
-#include proc_manager.s
 
 # KERNEL STATIC HEAP DATA mem_id = 0
 # -----------------------------------------
@@ -104,7 +103,11 @@ __start:
     
     #sneaky kernel macros:
     load_user_programs
+    
     load_first_program
+    
+    #call load_first_process
+    
     jr      $s1
     
     #la      $s0  user_program_locations

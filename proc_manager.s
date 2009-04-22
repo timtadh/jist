@@ -8,20 +8,28 @@
 new_pid:
 {
     @khcb_addr = $s0
-    @dest = $s1
+    @next_pid = $s1
     @err = $s2
+    @pid = $s3
     khcb_getaddr @khcb_addr
     
-    get $zero $zero @khcb_addr @dest @err
+    get $zero $zero @khcb_addr @next_pid @err
+    bnez @err newpid_err
     
-    addi $v0 @dest 1
-    bnez @err HOLYSHIT
-    b NOITSOK
-    HOLYSHIT:
+    addu @pid @next_pid $0
+    addu @next_pid @next_pid 0x1
+    put  $zero $zero @khcb_addr @next_pid @err
+    addu $v0 @pid $zero
+    bnez @err newpid_err
+    return
+    
+    newpid_err:
+        println errmsg
         li $v0 10
         syscall
-    NOITSOK:
-    return
+.data
+    errmsg: .asciiz "error in new_pid"
+.text
 }
 
 #     .text
@@ -65,22 +73,18 @@ load_first_process:
     call ll_init
     addu @h $v0 $zero
     
-    @temp = $t9
-    addi    @temp   $zero 1
-    put     @temp   $zero @khcb_addr @h @err
-    bnez    @err    ERRORD
+    puti    1   $zero @khcb_addr @h @err
+    bnez    @err    lfp_err
     
-    addi    @temp   $zero 2
-    put     @temp   $zero @khcb_addr @pid @err
-    bnez    @err    ERRORD
+    puti    2   $zero @khcb_addr @pid @err
+    bnez    @err    lfp_err
     
     return
     
-    ERRORD:
-    la $a0 error_msg
-    call println
-    li $v0 10
-    syscall
+    lfp_err:
+        println error_msg
+        li $v0 10
+        syscall
     
     .data
 default_data_amt: .word 0x00004000

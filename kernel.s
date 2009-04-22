@@ -4,6 +4,7 @@
 #include kernel_data.s
 #include memory_manager.s
 #include stack_mgr2.s
+#include proc_manager.s
 #include start.s
 #include interrupt_handler.s
 #include context_mgr.s
