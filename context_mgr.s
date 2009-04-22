@@ -1,14 +1,12 @@
-#include stdlib.s
-
 .data
 FAKE_KHCB_ADDR: .word 0
 
 .text
 #define khcb_writeback_2
     @khcb_addr = $t0
-    @hcb_addr = %1
+    @val = %1
     la  @khcb_addr  FAKE_KHCB_ADDR
-    sw  @hcb_addr   0(@khcb_addr)
+    sw  @val   0(@khcb_addr)
 #end
 
 #define khcb_getaddr_2
@@ -104,8 +102,7 @@ ll_next:    #@h @current
     @current = $s1
     @khcb_addr = $s2
     @err = $s3
-    @r1 = $s4
-    @r2 = $s5
+    
     add @head $a0 $zero
     add @current $a1 $zero
     
@@ -124,21 +121,36 @@ ll_remove:
 {
     @head = $s0
     @to_remove = $s1
+    @khcb_addr = $s2
+    @err = $s3
+    @next = $s4
+    @temp = $s5
+    
     add @head $a0 $zero
     add @to_remove $a1 $zero
     
+    khcb_getaddr_2 @khcb_addr
     loop:
         beqz @head found_end
-        lw $t0 4(@head)
-        bne $t0 @to_remove not_found_yet
-            lw $t0 4(@to_remove)
-            sw $t0 4(@head)
+        geti 0 @head @khcb_addr @next @err
+        
+        bne @next @to_remove not_found_yet
+            geti 0 @to_remove @khcb_addr @temp @err
+            puti 0 @head @khcb_addr @temp @err
+            
+            addu $a0 @to_remove $zero
+            addu $a1 @khcb_addr $zero
+            call free
+            addu @temp $v0 $zero
+            khcb_writeback_2 @temp
+            addu $v0 @head $zero
             return
         not_found_yet:
-            add $t0 @head $zero
+            addu @head @next $zero
+            b loop
     found_end:
-    
-    #fail silently
+    li $v0 10
+    syscall     #DIE DIE DIE
     return
 }
 
