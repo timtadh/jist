@@ -144,10 +144,6 @@ save_state_return:
 #         addu    $a0 @sp $zero
 #         call    zero_stack
         
-        geti    4 @pcb_id @hcb_addr @stack_id @error
-        addu    $a0 @stack_id $0
-        addu    $a1 @sp $0
-        call    restore_stack
         
     }
     
@@ -176,6 +172,25 @@ save_state_return:
     # la $a0 current_pcb
     # lw $a0 0($a0)
     # call restore_proc
+    
+    {
+        @hcb_addr = $s1
+        @pcb_id = $s2
+        @error = $s3
+        @curpcb_addr = $s4
+        @stack_id = $s5
+        @sp = $s6
+        
+        khcb_getaddr @hcb_addr
+        la @curpcb_addr current_pcb
+        lw @pcb_id      0(@curpcb_addr)
+        geti    7 @pcb_id @hcb_addr @sp @error
+        
+        geti    4 @pcb_id @hcb_addr @stack_id @error
+        addu    $a0 @stack_id $0
+        addu    $a1 @sp $0
+        call    restore_stack
+    }
 }
     j       restore_state
 restore_state_return:
