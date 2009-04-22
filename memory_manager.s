@@ -978,7 +978,68 @@ __putword:
     .text
 }
 
-
+.text
+.globl blocksize
+# blocksize(mem_id, hcb_addr) --> $v0 = error, $v1 = size
+blocksize:
+{
+    @hcb_addr = $s0
+    @mem_id = $s1
+    @loc = $s2
+    @index = $s3
+    @item_addr = $s4
+    @block_size = $s5
+    
+    @word_addr = $s6
+    
+    @found = $t0
+    @err = $t1
+    @value = $t2
+    
+    addu    @loc $a0 $0
+    addu    @mem_id $a1 $0
+    addu    @hcb_addr $a2 $0
+    
+    addu $a0 @mem_id $0
+    addu $a1 @hcb_addr $0
+    call find_index
+    addu @found $v0 $0
+    addu @index $v1 $0
+    
+    beq     @found $0 index_not_found
+    
+    addu    $a0 @index $0
+    addu    $a1 @hcb_addr $0
+    call    get_hcb_item
+    addu    @item_addr $v0 $0
+    addu    @err $v1 $0
+    
+    bne     @err $0 get_hcb_error
+    
+    lw      @block_size 8(@item_addr)
+    
+    addu    $v0 $0 $0  #error = 0
+    addu    $v1 @block_size $0
+    return
+    
+    index_not_found:
+        la      $a0 error_msg
+        call    println
+        addu    $v0 $0 0x1
+        addu    $v1 $0 $0
+        return
+    get_hcb_error:
+        la      $a0 error_msg2
+        call    println
+        addu    $v0 $0 0x2
+        addu    $v1 $0 $0
+        return
+        
+    .data
+    error_msg: .asciiz "Memory id not found\n"
+    error_msg2: .asciiz "Error in get hcb item\n"
+    .text
+}
 
 
 
