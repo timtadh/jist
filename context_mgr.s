@@ -1,14 +1,14 @@
-#include stdlib.s
-
 .data
 FAKE_KHCB_ADDR: .word 0
+
+_quit_msg: .asciiz "All programs have exited. Closing jist."
 
 .text
 #define khcb_writeback_2
     @khcb_addr = $t0
-    @hcb_addr = %1
+    @val = %1
     la  @khcb_addr  FAKE_KHCB_ADDR
-    sw  @hcb_addr   0(@khcb_addr)
+    sw  @val   0(@khcb_addr)
 #end
 
 #define khcb_getaddr_2
@@ -97,23 +97,23 @@ ll_append:
 }
 .text
 #ll_next(list_head, current_node)
-#   v0 = pcb mem_id
-#
+#   v0 = mem_id
 ll_next:    #@h @current
 {
     @head = $s0
     @current = $s1
+    @khcb_addr = $s2
+    @err = $s3
+    
     add @head $a0 $zero
     add @current $a1 $zero
     
-    lw $v1 4(@current)
-    beqz $v1 return_head
-    lw $v0 0($v1)
-    return
-    
+    khcb_getaddr_2 @khcb_addr
+    geti 0 @current @khcb_addr $v0 @err
+    beqz $v0 return_head
+        return
     return_head:
-    add $v1 @head $zero
-    lw $v0 8($v1)
+        addu $v0 @head $zero
     return
 }
 
@@ -123,22 +123,61 @@ ll_remove:
 {
     @head = $s0
     @to_remove = $s1
+    @khcb_addr = $s2
+    @err = $s3
+    @next = $s4
+    @temp = $s5
+    @head_o = $s6
+    
     add @head $a0 $zero
     add @to_remove $a1 $zero
+    addu @head_o @head $zero
+    
+    khcb_getaddr_2 @khcb_addr
+    beq @head @to_remove head_case
     
     loop:
         beqz @head found_end
-        lw $t0 4(@head)
-        bne $t0 @to_remove not_found_yet
-            lw $t0 4(@to_remove)
-            sw $t0 4(@head)
+        geti 0 @head @khcb_addr @next @err
+        
+        bne @next @to_remove not_found_yet
+            geti 0 @to_remove @khcb_addr @temp @err
+            puti 0 @head @khcb_addr @temp @err
+            
+            addu $a0 @to_remove $zero
+            addu $a1 @khcb_addr $zero
+            call free
+            addu @temp $v0 $zero
+            khcb_writeback_2 @temp
+            addu $v0 @head_o $zero
             return
         not_found_yet:
-            add $t0 @head $zero
-    found_end:
+            addu @head @next $zero
+            b loop
     
-    #fail silently
-    return
+    head_case:
+        geti 0 @head @khcb_addr @temp @err
+        beqz @temp head_only
+        addu @head @temp $zero
+    
+        addu $a0 @to_remove $zero
+        addu $a1 @khcb_addr $zero
+        call free
+        addu @temp $v0 $zero
+        khcb_writeback_2 @temp
+        addu $v0 @head $zero
+        return
+    
+    head_only:
+        la $a0 _quit_msg
+        call println
+        li $v0 10
+        syscall
+    
+    found_end:
+        li $v0 10
+        syscall     #DIE DIE DIE
+        return
 }
 
 .text

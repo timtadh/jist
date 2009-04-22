@@ -383,8 +383,8 @@ alread_zero:
     addu    @dst $v1 $0
 #end
 
-# put word mem_id hcb_addr val err
-#     word : the word you want to put should be from 0-(n-1) where n is len of block
+# put loc mem_id hcb_addr val err
+#     loc : the word you want to put should be from 0-(n-1) where n is len of block
 #     mem_id : the memory id for the block you are accessing
 #     hcb_addr : the address of the hcb
 #     val : the value (in a reg) that you want put into the word
