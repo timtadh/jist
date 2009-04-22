@@ -1,22 +1,6 @@
 #include context_mgr.s
 
 .text
-#define khcb_writeback_3
-    @khcb_addr = $t0
-    @hcb_addr = %1
-    la  @khcb_addr  FAKE_KHCB_ADDR
-    sw  @hcb_addr   0(@khcb_addr)
-#end
-
-#define khcb_getaddr_3
-    @khcb_addr = $t0
-    @hcb_addr = %1
-    la  @khcb_addr  FAKE_KHCB_ADDR
-    lw  @hcb_addr   0(@khcb_addr)
-#end
-
-
-.text
 main:
 {
     {
@@ -37,7 +21,7 @@ main:
         addu    @mem_id $v0 $zero
         addu    @hcb_addr $v1 $zero
     
-        khcb_writeback_3 @hcb_addr
+        khcb_writeback_2 @hcb_addr
     
         addu    @loc $0 $0
         put     @loc @mem_id @hcb_addr $0 @err

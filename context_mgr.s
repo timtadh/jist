@@ -1,5 +1,4 @@
 #include stdlib.s
-#include memory_manager.s
 
 .data
 FAKE_KHCB_ADDR: .word 0
