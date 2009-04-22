@@ -131,16 +131,12 @@ ll_remove:
     add @head $a0 $zero
     add @to_remove $a1 $zero
     
-    beq @head @to_remove head_case
-    
     khcb_getaddr_2 @khcb_addr
-    geti 0 @head @khcb_addr @temp @err
-    beqz @temp tail_case
+    beq @head @to_remove head_case
     
     loop:
         beqz @head found_end
         geti 0 @head @khcb_addr @next @err
-        
         bne @next @to_remove not_found_yet
             geti 0 @to_remove @khcb_addr @temp @err
             puti 0 @head @khcb_addr @temp @err
@@ -157,32 +153,28 @@ ll_remove:
             b loop
     
     head_case:
-    khcb_getaddr_2 @khcb_addr
-    geti 0 @head @khcb_addr @temp @err
-    beqz @temp head_only
-    addu @head @temp $zero
+        geti 0 @head @khcb_addr @temp @err
+        beqz @temp head_only
+        addu @head @temp $zero
     
-    addu $a0 @to_remove $zero
-    addu $a1 @khcb_addr $zero
-    call free
-    addu @temp $v0 $zero
-    khcb_writeback_2 @temp
-    addu $v0 @head $zero
-    return
+        addu $a0 @to_remove $zero
+        addu $a1 @khcb_addr $zero
+        call free
+        addu @temp $v0 $zero
+        khcb_writeback_2 @temp
+        addu $v0 @head $zero
+        return
     
     head_only:
-    la $a0 _quit_msg
-    call println
-    li $v0 10
-    syscall
-    
-    tail_case:
-    
+        la $a0 _quit_msg
+        call println
+        li $v0 10
+        syscall
     
     found_end:
-    li $v0 10
-    syscall     #DIE DIE DIE
-    return
+        li $v0 10
+        syscall     #DIE DIE DIE
+        return
 }
 
 .text
