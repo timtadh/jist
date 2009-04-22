@@ -64,6 +64,14 @@ main:
         addu $a0 @head $zero
         call ll_print
         
+        addu $a0 @head $zero
+        addu $a1 $zero 1
+        call ll_find_pid
+        addu $a0 $v1 $zero
+        call print_int
+        li $a0 10
+        call print_char
+        
         li @counter 10
         addu @current @head $zero
         loop:
