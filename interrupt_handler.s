@@ -80,10 +80,16 @@ interrupt_handler:
     # syscall                     # do the syscall.
     j       save_state
 save_state_return:
+    la $a0 current_pcb
+    lw $a0 0($a0)
+    li $a1 0
     call save_proc
     
     j       restore_state
 restore_state_return:
+    # la $a0 current_pcb
+    # lw $a0 0($a0)
+    # call restore_proc
     la      $a0 interrupt_return
     jr      $a0
 #     j       interrupt_return
