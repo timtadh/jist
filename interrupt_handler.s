@@ -22,6 +22,12 @@ __save_t0:  .word 0
 __save_t1:  .word 0
 __save_t2:  .word 0
 __save_t3:  .word 0
+__save_t4:  .word 0
+__save_t5:  .word 0
+__save_t6:  .word 0
+__save_t7:  .word 0
+__save_t8:  .word 0
+__save_t9:  .word 0
 __save_s0:  .word 0
 __save_s1:  .word 0
 __save_s2:  .word 0
@@ -43,6 +49,12 @@ save_state:
     sw      $t1 __save_t1
     sw      $t2 __save_t2
     sw      $t3 __save_t3
+    sw      $t4 __save_t4
+    sw      $t5 __save_t5
+    sw      $t6 __save_t6
+    sw      $t7 __save_t7
+    sw      $t8 __save_t8
+    sw      $t9 __save_t9
     sw      $s0 __save_s0       # save $s0 - $s3
     sw      $s1 __save_s1
     sw      $s2 __save_s2
@@ -53,14 +65,20 @@ save_state:
     .text
 restore_state:
 {
-    sw      $t0 __save_t0       # load $t0 - $t3
-    sw      $t1 __save_t1
-    sw      $t2 __save_t2
-    sw      $t3 __save_t3
-    sw      $s0 __save_s0       # load $s0 - $s3
-    sw      $s1 __save_s1
-    sw      $s2 __save_s2
-    sw      $s3 __save_s3
+    lw      $t0 __save_t0       # load $t0 - $t3
+    lw      $t1 __save_t1
+    lw      $t2 __save_t2
+    lw      $t3 __save_t3
+    lw      $t4 __save_t4
+    lw      $t5 __save_t5
+    lw      $t6 __save_t6
+    lw      $t7 __save_t7
+    lw      $t8 __save_t8
+    lw      $t9 __save_t9
+    lw      $s0 __save_s0       # load $s0 - $s3
+    lw      $s1 __save_s1
+    lw      $s2 __save_s2
+    lw      $s3 __save_s3
     
     lw      $gp __save_gp       # load the pointer registers
     lw      $sp __save_sp
