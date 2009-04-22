@@ -72,10 +72,10 @@ save_proc:
     khcb_getaddr @hcb_addr
     
     print_hcb @hcb_addr
-    addu $a0 @mem_id $zero
-    call print_int
-    li $a0 10
-    call print_char
+#     addu $a0 @mem_id $zero
+#     call print_int
+#     li $a0 10
+#     call print_char
     
     li      @loc 0
     put     @loc @mem_id @hcb_addr @status @error

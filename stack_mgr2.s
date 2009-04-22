@@ -29,13 +29,21 @@ save_stack:
         bne     @err $0 stack_top_error
     }
     
-    subu    @amt @stack_top $sp
-    sra     @amt @amt 2             #div @amt by 4
+    
+    subu    @amt @stack_top @sp
+    srl     @amt @amt 2             #div @amt by 4
+    
+    println_hex amt_msg @amt
+    println_hex stacktop_msg @stack_top
+    println_hex sp_msg @sp
+    
     addu    $a0 @amt $0
     addu    $a1 @stackheap $0
     call    alloc
     addu    @mem_id $v0 $0
     addu    @stackheap $v1 $0
+    
+    
     
     {
         khcb_getaddr @hcb_addr
@@ -46,20 +54,31 @@ save_stack:
     }
     
     addu    @curaddr @stack_top $0
-    addu    @count $0 $0
+    subu    @count @amt 0x1
+#     println_hex sp_msg @sp
+#     println_hex curaddr_msg @curaddr
+#     println_hex count_msg @count
     {
     loop:
-        bge     @curaddr @sp endloop
+        bge     @sp @curaddr endloop
         {
             @temp = $t0
             @err = $t1
+            @pr_temp = $s4
+            
+            println_hex sp_msg @sp
+            println_hex curaddr_msg @curaddr
+            println_hex count_msg @count
+            println_hex s4_msg @pr_temp
             
             lw      @temp 0(@curaddr)
+            addu    @pr_temp @temp $0
             put     @count @mem_id @stackheap @temp @err
             bne     @err $0 stack_save_error
             
-            addu    @curaddr @curaddr 0x4
-            addu    @count @count 0x1
+            
+            subu    @curaddr @curaddr 0x4
+            subu    @count @count 0x1
         }
         j   loop
     endloop:
@@ -82,6 +101,12 @@ save_stack:
     stack_addr_error_msg: .asciiz "get stackheap address failed in save_stack"
     stack_top_error_msg: .asciiz "get stack top address failed in save_stack"
     stack_save_error_msg: .asciiz "saving the stack failed"
+    s4_msg: .asciiz " stackspot = "
+    count_msg: .asciiz " count = "
+    curaddr_msg: .asciiz " curaddr = "
+    sp_msg: .asciiz "\n sp = "
+    amt_msg: .asciiz " amt = "
+    stacktop_msg: .asciiz " stacktop = "
     .text
 }
 
