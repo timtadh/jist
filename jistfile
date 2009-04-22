@@ -3,5 +3,6 @@ add.s
 shell.s
 wumpus.s
 stack_mgr.s
+context_mgr_test.s
 
-init_with: add.s
+init_with: context_mgr_test.s
