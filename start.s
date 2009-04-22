@@ -2,6 +2,7 @@
 # start.s - header for user programs
 
 #include stdlib.s
+#include proc_manager.s
 
 # KERNEL STATIC HEAP DATA mem_id = 0
 # -----------------------------------------
@@ -9,7 +10,9 @@
 # -----------------------------------------
 # |   0 | next pid                        |
 # -----------------------------------------
-# | ... | ....                            |
+# |   1 | context_mgr linked list         |
+# -----------------------------------------
+# |   2 | current PID                     |
 # -----------------------------------------
 
     .text
