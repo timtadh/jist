@@ -127,9 +127,11 @@ ll_remove:
     @err = $s3
     @next = $s4
     @temp = $s5
+    @head_o = $s6
     
     add @head $a0 $zero
     add @to_remove $a1 $zero
+    addu @head_o @head $zero
     
     khcb_getaddr_2 @khcb_addr
     beq @head @to_remove head_case
@@ -137,6 +139,7 @@ ll_remove:
     loop:
         beqz @head found_end
         geti 0 @head @khcb_addr @next @err
+        
         bne @next @to_remove not_found_yet
             geti 0 @to_remove @khcb_addr @temp @err
             puti 0 @head @khcb_addr @temp @err
@@ -146,7 +149,7 @@ ll_remove:
             call free
             addu @temp $v0 $zero
             khcb_writeback_2 @temp
-            addu $v0 @head $zero
+            addu $v0 @head_o $zero
             return
         not_found_yet:
             addu @head @next $zero

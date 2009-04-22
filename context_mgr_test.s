@@ -43,15 +43,15 @@ main:
         addu $a1 $zero 3
         addu $a2 $zero 33
         call ll_append
-        addu @current $v0 $zero
         
         addu $a0 @head $zero
         addu $a1 $zero 4
         addu $a2 $zero 44
         call ll_append
+        addu @current $v0 $zero
         
         khcb_getaddr_2 @khcb_addr
-        print_hcb @khcb_addr
+        #print_hcb @khcb_addr
         
         addu $a0 @head $zero
         addu $a1 @current $zero
@@ -59,7 +59,7 @@ main:
         addu @head $v0 $zero
         
         khcb_getaddr_2 @khcb_addr
-        print_hcb @khcb_addr
+        #print_hcb @khcb_addr
         
         addu $a0 @head $zero
         call ll_print
