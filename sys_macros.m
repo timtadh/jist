@@ -288,7 +288,7 @@ ret:
 
 #define wait global
     __save_args
-    __save_temps
+    #__save_temps
     
     la      $a0 KMSG
     li      $a1 1
@@ -302,7 +302,7 @@ ret:
     la      $a0 exception_handler
     jr      $a0
 wait_return:
-    __restore_temps
+    #__restore_temps
     __restore_args
 #end
 
