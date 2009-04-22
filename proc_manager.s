@@ -81,10 +81,10 @@ load_first_process:
     addu $a0 @h $zero
     call ll_print
     
-    # la $t0 current_pcb
-    # sw @mem_id 0($t0)
-    # la $t0 current_pid
-    # sw @pid 0($t0)
+    la $t0 current_pcb
+    sw @mem_id 0($t0)
+    la $t0 current_pid
+    sw @pid 0($t0)
     
     return
     
