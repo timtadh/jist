@@ -1,4 +1,4 @@
-# Tim Henderson
+# Tim Henderson and Daniel DeCovnick
 # proc_storage.s handles storing proccess in PCBs
 #
 # procedures availble:
@@ -55,9 +55,19 @@ next_proc_num: .word 0x0        # start proccess number at 0
     .text
     # create_pcb() return $v0 -> addr of pcb
 create_pcb:
-    sbrk_addr pcb_size $v0
+{
+    @mem_id = $s0
+    @hcb_addr = $s1
+    lw   $a0 pcb_size
+    khcb_getaddr $a1
+    call alloc
+    addu @mem_id $v0 $zero
+    addu @hcb_addr $v1 $zero
+    khcb_writeback @hcb_addr
+    
+    addu $v0 @mem_id $zero #because kchb_writeback could clobber $v0
     return
-
+}
     # save_proc(mem_id, status)  -> Null
 save_proc:
 {
@@ -256,34 +266,47 @@ horrible_error: .asciiz "Something really bad happened when trying to save the P
 .text
 }
     
-# new_proc(pcb_address data_amt) -> Null
+# new_proc(data_amt) -> Null
 #     data_amt = the amount of room this proccess gets for its heap and stack. static can't change.
 new_proc:
 {
+    @mem_id = $s0
+    @temp = $t1
+    @loc = $s1
+    @hcb_addr = $s2
+    @error = $t2
     call create_pcb             # create a process control block
-    add     $s0 $v0 $0          # save the pcb addr into $s0
+    add     @hcb_addr $v1 $zero
+    add     @mem_id $v0 $0          # save the pcb addr into $s0
     
     
-    lw      $t1 next_proc_num   # load the next proccess number into $t1
-    sw      $t1 4($s0)          # save the proc number in the pcb
-    addi    $t1 $t1 1           # increment the next_proc_num
-    sw      $t1 next_proc_num   # save it
+    lw      @temp next_proc_num   # load the next proccess number into $t1
+    li      @loc 1
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1 4($s0)          # save the proc number in the pcb
+    addi    @temp @temp 1           # increment the next_proc_num
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1 next_proc_num   # save it
     
-    mfc0    $t1 $14             # get the EPC register
-    sw      $t1 8($s0)          # save the program counter number in the pcb
+    mfc0    @temp $14             # get the EPC register
+    li      @loc 2
+    put     @loc @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    #sw      $t1 8($s0)          # save the program counter number in the pcb
     
-    mul     $t1 $a0 4
-    sbrk    $t1 $t0
-    
-    sw      $t0 16($s0)         # save the start of the data in the pcb
-    addu    $t0 $t1 $t0
-    sw      $t0 20($s0)         # save the end of the data in the pcb
-    
-    addu    $a0 $s0 $0          # load pcb_addr into arg1
+    addu    $a0 @mem_id $0          # load pcb_addr into arg1
     li      $a1 0               # load a default status of 0 "new" into arg2
     call    save_proc
     
     return
+put_error:
+    println  horrible_error
+    exit
+.data
+horrible_error: .asciiz "Something really bad happened when trying to create a new process\n"
+.text
 }
     
     # restore_proc(mem_id) -> Nul
