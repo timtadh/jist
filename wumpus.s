@@ -384,8 +384,6 @@ main:
     la $t0 wdata    #seed random number generator
     sb $s0 0($t0)
     
-    wait
-    
     clear_console
     
     la $a0 ask_instr    #ask y/n for instructions
