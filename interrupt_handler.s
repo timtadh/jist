@@ -32,6 +32,10 @@ __save_s0:  .word 0
 __save_s1:  .word 0
 __save_s2:  .word 0
 __save_s3:  .word 0
+__save_s4:  .word 0
+__save_s5:  .word 0
+__save_s6:  .word 0
+__save_s7:  .word 0
 __save_HCB_ADDR: .word 0
 
 __k_HCB_ADDR: .word 0
@@ -59,6 +63,10 @@ save_state:
     sw      $s1 __save_s1
     sw      $s2 __save_s2
     sw      $s3 __save_s3
+    sw      $s4 __save_s4       # save $s0 - $s3
+    sw      $s5 __save_s5
+    sw      $s6 __save_s6
+    sw      $s7 __save_s7
     
     j       save_state_return
 }
@@ -79,6 +87,10 @@ restore_state:
     lw      $s1 __save_s1
     lw      $s2 __save_s2
     lw      $s3 __save_s3
+    lw      $s4 __save_s4
+    lw      $s5 __save_s5
+    lw      $s6 __save_s6
+    lw      $s7 __save_s7
     
     lw      $gp __save_gp       # load the pointer registers
     lw      $sp __save_sp
@@ -98,10 +110,33 @@ interrupt_handler:
     # syscall                     # do the syscall.
     j       save_state
 save_state_return:
+{
     la $a0 current_pcb
     lw $a0 0($a0)
     li $a1 0
     call save_proc
+    
+    {
+        @hcb_addr = $s1
+        @mem_id = $s2
+        @temp = $s3
+        @error = $s4
+        khcb_getaddr @hcb_addr
+        la @mem_id current_pcb
+        lw @mem_id 0(@mem_id)
+        geti    7 @mem_id @hcb_addr @temp @error
+#         bne     @error $zero put_error
+        addu    $a0 @temp $zero
+        call save_stack
+        addu    @temp $v0 $zero
+        puti    4 @mem_id @hcb_addr @temp @error
+#         bne     @error $zero put_error
+        geti    4 @mem_id @hcb_addr @temp @error
+        printblock @mem_id @hcb_addr
+        
+        
+    }
+    
     
     la $a0 KMSG
     lw $a0 0($a0)
@@ -127,7 +162,7 @@ save_state_return:
     # la $a0 current_pcb
     # lw $a0 0($a0)
     # call restore_proc
-    
+}
     j       restore_state
 restore_state_return:
     la      $a0 interrupt_return
