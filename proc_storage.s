@@ -185,23 +185,28 @@ save_proc:
     bne     @error $zero put_error
     #sw      $t1  80($t0)        # save it in the PCB
     
-    li      @loc 21
-    put     @loc @mem_id @hcb_addr $t4 @error
+    lw      @temp  __save_t4      # load the saved $t3
+    puti    21 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 22
-    put     @loc @mem_id @hcb_addr $t5 @error
+    
+    lw      @temp  __save_t5      # load the saved $t3
+    puti    22 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 23
-    put     @loc @mem_id @hcb_addr $t6 @error
+    
+    lw      @temp  __save_t6      # load the saved $t3
+    puti    23 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 24
-    put     @loc @mem_id @hcb_addr $t7 @error
+    
+    lw      @temp  __save_t7      # load the saved $t3
+    puti    24 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 25
-    put     @loc @mem_id @hcb_addr $t8 @error
+    
+    lw      @temp  __save_t8      # load the saved $t3
+    puti    25 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 26
-    put     @loc @mem_id @hcb_addr $t9 @error
+    
+    lw      @temp  __save_t9      # load the saved $t3
+    puti    26 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
 
     #sw      $t4  84($t0)        # save $t4 in the PCB
@@ -235,17 +240,21 @@ save_proc:
     bne     @error $zero put_error
     #sw      $t1  120($t0)       # save it in the PCB
     
-    li      @loc 31
-    put     @loc @mem_id @hcb_addr $s4 @error
+    
+    lw      @temp  __save_s4      # load the saved $s3
+    puti    31 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 32
-    put     @loc @mem_id @hcb_addr $s5 @error
+    
+    lw      @temp  __save_s5      # load the saved $s3
+    puti    32 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 33
-    put     @loc @mem_id @hcb_addr $s6 @error
+    
+    lw      @temp  __save_s6      # load the saved $s3
+    puti    33 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 34
-    put     @loc @mem_id @hcb_addr $s7 @error
+    
+    lw      @temp  __save_s7      # load the saved $s3
+    puti    34 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
 
     
@@ -253,16 +262,6 @@ save_proc:
     #sw      $s5  128($t0)       # save $s5 in the PCB
     #sw      $s6  132($t0)       # save $s6 in the PCB
     #sw      $s7  136($t0)       # save $s7 in the PCB
-    
-    geti    7 @mem_id @hcb_addr @temp @error
-    bne     @error $zero put_error
-    addu    $a0 @temp $zero
-    call save_stack
-    addu    @temp $v0 $zero
-    puti    4 @mem_id @hcb_addr @temp @error
-    bne     @error $zero put_error
-    geti    4 @mem_id @hcb_addr @temp @error
-    printblock @temp @hcb_addr
     #sw      $t1  28($t0)        # save it in the PCB
     
     return
@@ -425,26 +424,31 @@ restore_proc:
     #lw      $t7  96($t0)        # load $t7 from the PCB
     #lw      $t8  100($t0)        # load $t8 from the PCB
     #lw      $t9  104($t0)       # load $t9 from the PCB
-    li      @loc 21
-    get     @loc @mem_id @hcb_addr $t4 @error
-    bne     @error $zero put_error
-    li      @loc 22
-    get     @loc @mem_id @hcb_addr $t5 @error
-    bne     @error $zero put_error
-    li      @loc 23
-    get     @loc @mem_id @hcb_addr $t6 @error
-    bne     @error $zero put_error
-    li      @loc 24
-    get     @loc @mem_id @hcb_addr $t7 @error
-    bne     @error $zero put_error
-    li      @loc 25
-    get     @loc @mem_id @hcb_addr $t8 @error
-    bne     @error $zero put_error
-    li      @loc 26
-    get     @loc @mem_id @hcb_addr $t9 @error
-    bne     @error $zero put_error
     
-
+    
+    geti    21 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    sw      @temp  __save_t4
+    
+    geti    22 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    sw      @temp  __save_t5
+    
+    geti    23 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    sw      @temp  __save_t6
+    
+    geti    24 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    sw      @temp  __save_t7
+    
+    geti    25 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    sw      @temp  __save_t8
+    
+    geti    26 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    sw      @temp  __save_t9
 
     #lw      $t1  108($t0)       # load the saved $s0
     li      @loc 27
@@ -468,24 +472,27 @@ restore_proc:
     li      @loc 30
     get     @loc @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    sw      @temp  __save_s3      # 
+    sw      @temp  __save_s3
     
     #lw      $s4  124($t0)       # load $s4 from the PCB
     #lw      $s5  128($t0)       # load $s5 from the PCB
     #lw      $s6  132($t0)       # load $s6 from the PCB
     #lw      $s7  136($t0)       # load $s7 from the PCB
-    li      @loc 31
-    get     @loc @mem_id @hcb_addr $s4 @error
+    geti    31 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 32
-    get     @loc @mem_id @hcb_addr $s5 @error
+    sw      @temp  __save_s4
+    
+    geti    32 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 33
-    get     @loc @mem_id @hcb_addr $s6 @error
+    sw      @temp  __save_s5
+    
+    geti    33 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    li      @loc 43
-    get     @loc @mem_id @hcb_addr $s7 @error
+    sw      @temp  __save_s6
+    
+    geti    34 @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
+    sw      @temp  __save_s7
     
     return
 put_error:

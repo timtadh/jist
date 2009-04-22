@@ -102,18 +102,19 @@ __start:
     println_hex stack_pointer_msg @sp
     
     #sneaky kernel macros:
+#     load_user_programs
+    
+    disable_clock_interrupt
+    #sneaky kernel macros:
     load_user_programs
-    
     load_first_program
-    
     call load_first_process
-    
     jr      $s1
+    
     
     #la      $s0  user_program_locations
     #lw      $s1  12($s0)
 #     
-#     disable_clock_interrupt
 #     enable_clock_interrupt
     exit
     .data
