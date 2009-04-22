@@ -289,6 +289,11 @@ ret:
 #define wait global
     __save_args
     __save_temps
+    
+    la      $a0 KMSG
+    li      $a1 1
+    sw      $a1 0($a0)  #KMSG = 1
+    
     la      $a0 wait_return
     subu    $a0 $a0 4
     mtc0    $a0 $14
