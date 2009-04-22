@@ -28,7 +28,7 @@ save_stack:
     
     subu    @amt @stack_top $sp
     sra     @amt @amt 2             #div @amt by 4
-    addu    $a0 @amt 0x4
+    addu    $a0 @amt $0
     addu    $a1 @stackheap $0
     call    alloc
     addu    @mem_id $v0 $0
