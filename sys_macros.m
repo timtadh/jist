@@ -34,43 +34,41 @@
 #end
 
 #define ___stshortcut global
-    var_store $s0 %1
-    addi $s0 $s0 1
+    li $s0 %1
+    var_store $s0 %2
 #end
 
 #define __save_temps global
     li $s0 10
     init_varstore $s0
-    li $s0 0
-    ___stshortcut $t0
-    ___stshortcut $t1
-    ___stshortcut $t2
-    ___stshortcut $t3
-    ___stshortcut $t4
-    ___stshortcut $t5
-    ___stshortcut $t6
-    ___stshortcut $t7
-    ___stshortcut $t8
-    ___stshortcut $t9
+    ___stshortcut 10 $t0
+    ___stshortcut 9  $t1
+    ___stshortcut 8  $t2
+    ___stshortcut 7  $t3
+    ___stshortcut 6  $t4
+    ___stshortcut 5  $t5
+    ___stshortcut 4  $t6
+    ___stshortcut 3  $t7
+    ___stshortcut 2  $t8
+    ___stshortcut 1  $t9
 #end
 
 #define ___rtshortcut global
-    var_restore $s0 %1
-    addi $s0 $s0 1
+    li $s0 %1
+    var_restore %2 $s0
 #end
 
 #define __restore_temps global
-    li $s0 0
-    ___rtshortcut $t0
-    ___rtshortcut $t1
-    ___rtshortcut $t2
-    ___rtshortcut $t3
-    ___rtshortcut $t4
-    ___rtshortcut $t5
-    ___rtshortcut $t6
-    ___rtshortcut $t7
-    ___rtshortcut $t8
-    ___rtshortcut $t9
+    ___rtshortcut 10 $t0
+    ___rtshortcut 9  $t1
+    ___rtshortcut 8  $t2
+    ___rtshortcut 7  $t3
+    ___rtshortcut 6  $t4
+    ___rtshortcut 5  $t5
+    ___rtshortcut 4  $t6
+    ___rtshortcut 3  $t7
+    ___rtshortcut 2  $t8
+    ___rtshortcut 1  $t9
 #end
 
 # var_store dst src
@@ -288,7 +286,7 @@ ret:
 
 #define wait global
     __save_args
-    #__save_temps
+    __save_temps
     
     la      $a0 KMSG
     li      $a1 1
@@ -302,7 +300,7 @@ ret:
     la      $a0 exception_handler
     jr      $a0
 wait_return:
-    #__restore_temps
+    __restore_temps
     __restore_args
 #end
 
