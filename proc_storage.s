@@ -19,7 +19,7 @@
 # | Program Counter  | 2
 # --------------------
 # | HCB Address      | 3
-# | Base Data Addr   | 4
+# | Stack ID         | 4
 # | Top Data Addr    | 5
 # --------------------
 # | at               | 6
@@ -87,6 +87,7 @@ save_proc:
     li      @loc 3
     put     @loc @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
+    
  
     lw      @temp  __save_at      # load the saved $at reg
     li      @loc 6
@@ -251,6 +252,17 @@ save_proc:
     #sw      $s5  128($t0)       # save $s5 in the PCB
     #sw      $s6  132($t0)       # save $s6 in the PCB
     #sw      $s7  136($t0)       # save $s7 in the PCB
+    
+    geti    7 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    addu    $a0 @temp $zero
+    call save_stack
+    addu    @temp $v0 $zero
+    puti    4 @mem_id @hcb_addr @temp @error
+    bne     @error $zero put_error
+    geti    4 @mem_id @hcb_addr @temp @error
+    printblock @mem_id @hcb_addr
+    #sw      $t1  28($t0)        # save it in the PCB
     
     return
 put_error:
