@@ -98,7 +98,35 @@ interrupt_handler:
     # syscall                     # do the syscall.
     j       save_state
 save_state_return:
+    la $a0 current_pcb
+    lw $a0 0($a0)
+    li $a1 0
     call save_proc
+    
+    la $a0 KMSG
+    lw $a0 0($a0)
+    beqz $a0 km_clock_interrupt
+    li $a1 1
+    beq $a0 $a1 km_wait
+    li $a1 2
+    beq $a0 $a1 km_exit
+    b reset_kmsg #default: do nothing
+    km_wait:
+        #change processes
+        b reset_kmsg
+    km_exit:
+        #exit current process
+        b reset_kmsg
+    km_clock_interrupt:
+        #do nothing
+        b reset_kmsg
+    reset_kmsg:
+    la $a0 KMSG
+    sw $zero 0($a0)
+    
+    # la $a0 current_pcb
+    # lw $a0 0($a0)
+    # call restore_proc
     
     j       restore_state
 restore_state_return:

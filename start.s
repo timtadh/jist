@@ -108,8 +108,8 @@ __start:
     #sneaky kernel macros:
     load_user_programs
     load_first_program
+    call load_first_process
     jr      $s1
-    #call load_first_process
     
     
     #la      $s0  user_program_locations

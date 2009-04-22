@@ -49,12 +49,11 @@ new_pid:
 #load_first_process()
 load_first_process:
 {
-    @pcb_space = $s0
-    @pid = $s1
-    @h = $s2
-    @err = $s3
-    @mem_id = $s4
-    @khcb_addr = $s5
+    @pid = $s0
+    @h = $s1
+    @err = $s2
+    @mem_id = $s3
+    @khcb_addr = $s4
     
     khcb_getaddr @khcb_addr
     
@@ -78,6 +77,14 @@ load_first_process:
     
     puti    2   $zero @khcb_addr @pid @err
     bnez    @err    lfp_err
+    
+    addu $a0 @h $zero
+    call ll_print
+    
+    la $t0 current_pcb
+    sw @mem_id 0($t0)
+    la $t0 current_pid
+    sw @pid 0($t0)
     
     return
     

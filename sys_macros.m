@@ -33,6 +33,44 @@
     lw      $sp 40($sp)         # load the old stack pointer
 #end
 
+#define ___stshortcut global
+    li $s0 %1
+    var_store $s0 %2
+#end
+
+#define __save_temps global
+    li $s0 10
+    init_varstore $s0
+    ___stshortcut 10 $t0
+    ___stshortcut 9  $t1
+    ___stshortcut 8  $t2
+    ___stshortcut 7  $t3
+    ___stshortcut 6  $t4
+    ___stshortcut 5  $t5
+    ___stshortcut 4  $t6
+    ___stshortcut 3  $t7
+    ___stshortcut 2  $t8
+    ___stshortcut 1  $t9
+#end
+
+#define ___rtshortcut global
+    li $s0 %1
+    var_restore %2 $s0
+#end
+
+#define __restore_temps global
+    ___rtshortcut 10 $t0
+    ___rtshortcut 9  $t1
+    ___rtshortcut 8  $t2
+    ___rtshortcut 7  $t3
+    ___rtshortcut 6  $t4
+    ___rtshortcut 5  $t5
+    ___rtshortcut 4  $t6
+    ___rtshortcut 3  $t7
+    ___rtshortcut 2  $t8
+    ___rtshortcut 1  $t9
+#end
+
 # var_store dst src
 #     dst : a number (1-N) indicating which spot you want to store it in, gets trampled
 #     src : a register containing the value you want to store
@@ -248,6 +286,12 @@ ret:
 
 #define wait global
     __save_args
+    __save_temps
+    
+    la      $a0 KMSG
+    li      $a1 1
+    sw      $a1 0($a0)  #KMSG = 1
+    
     la      $a0 wait_return
     subu    $a0 $a0 4
     mtc0    $a0 $14
@@ -256,6 +300,7 @@ ret:
     la      $a0 exception_handler
     jr      $a0
 wait_return:
+    __restore_temps
     __restore_args
 #end
 
