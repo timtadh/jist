@@ -42,17 +42,3 @@ hold:
     wait
     b top
 }
-.text
-run_program:
-{
-    @choice = $s0
-    addu    @choice $zero $a0
-    addi    @choice @choice -1
-    sll     @choice @choice 2
-    la      $a0 user_program_locations
-    addu    $a0 $a0 @choice
-    lw      $a0 0($a0)
-    call    make_new_background_process
-    wait
-    return
-}
