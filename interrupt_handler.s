@@ -136,6 +136,8 @@ save_state_return:
         call save_stack
         addu    @stack_id $v0 $zero
         
+        #println_hex sstr @stack_id
+        
         puti    4 @pcb_id @hcb_addr @stack_id @error
 #         bne     @error $zero put_error
         
@@ -209,6 +211,7 @@ save_state_return:
         b reset_kmsg
     km_exit:
         {
+        
             @khcb_addr = $s0
             @h = $s1
             @err = $s2
@@ -227,6 +230,8 @@ save_state_return:
             addu $a1 @pid $zero #this is the old pid
             call ll_find_pid
             addu @mem_id $v0 $zero
+            
+            #println_hex memid_msg @mem_id
             
             addu $a0 @h $zero
             addu $a1 @mem_id $zero  #where mem_id is the list node to remove
@@ -273,6 +278,17 @@ save_state_return:
     # lw $a0 0($a0)
     # call restore_proc
     
+    # {
+    #     @hcb_addr = $s1
+    #     @curpcb_addr = $s2
+    #     @pcb_id = $s3
+    #     khcb_getaddr @hcb_addr
+    #     la @curpcb_addr current_pcb
+    #     lw @pcb_id      0(@curpcb_addr)
+    #     
+    #     printblock @pcb_id @hcb_addr
+    # }
+    
     la $a0 current_pcb
     lw $a0 0($a0)
     call restore_proc
@@ -293,6 +309,7 @@ save_state_return:
         
         geti    4 @pcb_id @hcb_addr @stack_id @error
         
+        #println_hex rstr @stack_id
         
         addu    $a0 @stack_id $0
         addu    $a1 @sp $0
@@ -306,3 +323,9 @@ restore_state_return:
     la      $a0 interrupt_return
     jr      $a0
 #     j       interrupt_return
+
+.data
+rstr: .asciiz "Loading stack_id "
+sstr: .asciiz "Saving stack_id "
+memid_msg: .asciiz "mem_id: "
+.text

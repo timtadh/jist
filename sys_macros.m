@@ -34,13 +34,13 @@
 #end
 
 #define ___stshortcut global
-    li $s0 %1
-    var_store $s0 %2
+    li $a0 %1
+    var_store $a0 %2
 #end
 
 #define __save_temps global
-    li $s0 10
-    init_varstore $s0
+    li $a0 10
+    init_varstore $a0
     ___stshortcut 10 $t0
     ___stshortcut 9  $t1
     ___stshortcut 8  $t2
@@ -54,7 +54,7 @@
 #end
 
 #define ___rtshortcut global
-    li $s0 %1
+    li $a0 %1
     var_restore %2 $s0
 #end
 
@@ -309,8 +309,9 @@ wait_return:
 #end
 
 #define wait global
+    __save_frame
     __save_args
-    __save_temps
+    # __save_temps
     
     la      $a0 KMSG
     li      $a1 1
@@ -324,8 +325,9 @@ wait_return:
     la      $a0 exception_handler
     jr      $a0
 wait_return:
-    __restore_temps
+    # __restore_temps
     __restore_args
+    __restore_frame
 #end
 
 #define disable_interrupts global

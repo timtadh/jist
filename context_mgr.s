@@ -146,7 +146,7 @@ ll_find_pid:
 
         bne @temp @to_find not_found_yet
             #geti 0 @head @khcb_addr @temp @err
-            addu $v0 @temp $zero
+            addu $v0 @head $zero
             return
         not_found_yet:
             addu @head @next $zero
@@ -181,6 +181,8 @@ ll_remove:
     
     khcb_getaddr_2 @khcb_addr
     beq @head @to_remove head_case
+    
+    #println_hex msg $s1
     
     loop:
         beqz @head found_end
@@ -221,9 +223,12 @@ ll_remove:
         syscall
     
     found_end:
-        li $v0 10
-        syscall     #DIE DIE DIE
+        println errorstr
+        kill_jist
         return
+.data
+errorstr: .asciiz "bloody death in ll_remove\n"
+msg: .asciiz "to remove: "
 }
 
 .text
@@ -241,20 +246,20 @@ ll_print:
         beqz @mem_id done_printing
         khcb_getaddr_2 @khcb_addr
         
-        #call print_int
-        #li $a0 32
-        #call print_char
-        
+        # call print_int
+        # li $a0 32
+        # call print_char
+        # 
         # geti 0 @mem_id @khcb_addr $a0 @err
         # call print_int
         # li $a0 32
         # call print_char
-        
+        # 
         # geti 1 @mem_id @khcb_addr $a0 @err
         # call print_int
         # li $a0 32
         # call print_char
-        
+        # 
         # geti 2 @mem_id @khcb_addr $a0 @err
         # call print_int
         # li $a0 10
