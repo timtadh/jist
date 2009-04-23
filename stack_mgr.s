@@ -1,3 +1,5 @@
+# Tim Henderson
+# stack_mgr.s handles stack saving and loading
 
 # getstackinfo khcb_addr stackheap stack_top tempreg errorlabel
 #     khbc_addr = the address of the kernel static heap. Note it must be in an $s reg

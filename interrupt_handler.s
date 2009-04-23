@@ -1,5 +1,6 @@
-# Tim Henderson
+# Tim Henderson & Steve Johnson
 # interrupt handler
+# This is where the magic happens
 
 # #     .globl __save_gp
 # #     .globl __save_sp

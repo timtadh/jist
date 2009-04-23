@@ -1,3 +1,6 @@
+# Steve Johnson
+# This is an interactive Brainf*ck interpreter.
+
 @LEFT   = 60
 @RIGHT  = 62
 @PLUS   = 43
@@ -10,6 +13,8 @@
 @LF     = 10
 
     .data
+header:         .ascii  "Welcome to iMuckfips, the interactive Muckfips prompt!\n"
+                .asciiz  "Enter a program. Press Return to show the output buffer, Esc to quit."
 program_text:   .space 4048
 output_buffer:  .space 4048
 array:          .space 4048
@@ -28,6 +33,7 @@ print_output:
     .globl main
 main:
 {
+    println header
     @tptr = $s0
     @dptr = $s1
     @bracketcount = $s2
@@ -46,6 +52,8 @@ main:
             _read_char @input
             addu @comp $zero @ESC
             bne @input @comp not_exit
+                li $a0 10
+                call print_char
                 exit
             not_exit:
             
@@ -62,10 +70,6 @@ main:
             lb @input 0(@tptr)
             li @state 0
         end_input:
-        
-        
-        #addu $a0 @input $zero
-        #call print_char
         
         addu @comp $zero @PLUS
         bne @input @comp not_plus
@@ -121,13 +125,6 @@ main:
             addi @tptr @tptr 1
             b loop
         not_comma:
-        
-        addu @comp $zero @LEFTB
-        bne @input @comp not_leftb
-            #do nothing
-            addi @tptr @tptr 1
-            b loop
-        not_leftb:
         
         addu @comp $zero @RIGHTB
         bne @input @comp not_rightb

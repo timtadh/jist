@@ -1,4 +1,4 @@
-# Tim Henderson and Daniel DeCovnick
+# Tim Henderson & Daniel DeCovnick
 # proc_storage.s handles storing proccess in PCBs
 #
 # Proccess Control Block Structure:
@@ -38,6 +38,8 @@
 # 3 -> waiting
 # 4 -> halted
 # 5 -> marked for clean up
+
+# Note: These states are not actually used.
 
     .data
 pcb_size: .word 0x8c            # 140 = 35 * 4

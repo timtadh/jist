@@ -1,23 +1,19 @@
 #include stdlib.s
 
 .data
-format_str: .asciiz "mt1: "
-dbg_str_1: .asciiz "$fp: "
-dbg_str_2: .asciiz "$sp: "
-
-#define stackprint
-    addu $s7 $fp $zero
-    println_hex dbg_str_1 $s7
-    addu $s7 $sp $zero
-    println_hex dbg_str_2 $s7
-#end
+format_str: .asciiz "Process 1 count: "
 
 .text
 print_test:
 {
     #stackprint
     addu $s0 $a0 $zero
-    println_hex format_str $s0
+    la $a0 format_str
+    call print
+    addu $a0 $s0 $zero
+    call print_int
+    li $a0 10
+    call print_char
     return
 }
 
@@ -63,6 +59,11 @@ main:
     b loop
     
     killme:
+    
+    call    getuserheap
+    addu    @hcb_addr $v0 $0
+    println_hex hcb_msg @hcb_addr
+    
     exit
     
     .data

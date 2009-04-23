@@ -1,3 +1,7 @@
+# Steve Johnson
+# Brainf*ck interpreter for a program stored in static data
+# safe for multitasking
+
 @LEFT   = 60
 @RIGHT  = 62
 @PLUS   = 43
@@ -8,6 +12,8 @@
 @RIGHTB = 93
 
     .data
+header:         .asciiz "Welcome to Muckfips. Your program will now be executed."
+
 program_text:   .asciiz ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<++++>-]<.>>>++++++++++[<+++++++++>-]<---.<<<<.+++.------.--------.>>+.-----------------------."
 
 array:          .space 1024
@@ -15,6 +21,7 @@ array:          .space 1024
     .globl main
 main:
 {
+    println header
     @tptr = $s0
     @dptr = $s1
     @bracketcount = $s2

@@ -1,5 +1,6 @@
 #Steve Johnson
 #a test of memory-mapped IO
+#actually not, this file is junk
 
 #include stdlib.s
 

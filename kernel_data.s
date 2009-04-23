@@ -1,4 +1,3 @@
-# Tim Henderson
 # labels for general kernel data
 
     .globl  proc_limit

@@ -1,3 +1,8 @@
+# Steve Johnson
+# context_mgr.s
+# These functions keep track of PIDs and PCBs for currently running processes
+#   using a circular linked list.
+
 .data
 FAKE_KHCB_ADDR: .word 0
 

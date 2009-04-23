@@ -17,12 +17,12 @@ main:
     @val = $s6
     @err = $t4
     
-    sbrk_imm   1024 @addr 
-    addu    @end @addr 1024
-    subu    @end @end @addr
-    sra     @end @end 2
+    li      $v0 9               # system call code for sbrk
+    addi    $a0 $0 0x400        # amount
+    syscall                     # make the call
+    addu    @addr $v0 $0
     addu    $a0 @addr $0
-    addu    $a1 @end $0
+    addu    $a1 $0    0x100
     call    initialize_heap
     println_hex addr_msg @addr
     

@@ -1,4 +1,5 @@
-#include stdlib.s
+# Steve Johnson
+# A simple implementation of Hunt the Wumpus
 
 .data
 wdata:      .space 7    #for locations, etc.
@@ -33,12 +34,10 @@ intro2: .ascii "Wumpus:\n"
         .ascii "YOU:\n"
         .ascii "    Each turn you may move or shoot a crooked arrow.\n"
         .ascii "    Moving: You can move one room (thru one tunnel).\n"
-        .ascii "    Arrows: You have 5 arrows. You lose when you run out.\n"
-        .ascii "        Each arrow can go from 1 to 5 rooms. You aim by telling the computer the\n"
-        .ascii "        room number you want the arrow to go to. If the arrow can't go that way \n"
-        .ascii "        (no tunnel) it moves at random to the next room.\n"
+        .ascii "    Arrows: You have an infinite number of arrows. When you are next to the\n"
+        .ascii "    room you think the wumpus is in, you can shoot an arrow into the room.\n"
         .ascii "        If the arrow hits the wumpus, you win.\n"
-        .ascii "        If the arrow hits you, you lose.\n\n"
+        .ascii "        If not, the wumpus moves to a random room.\n\n"
         .asciiz "Hit Return to continue.\n"
 intro:  .ascii  "WELCOME TO HUNT THE WUMPUS!\n"
         .ascii  "   The Wumpus lives in a cave of 20 rooms. Each room has 3 tunnels leading to \n"
@@ -383,8 +382,6 @@ main:
     li $s0 10
     la $t0 wdata    #seed random number generator
     sb $s0 0($t0)
-    
-    wait
     
     clear_console
     
