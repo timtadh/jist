@@ -1,29 +1,47 @@
-#Steve Johnson
-#a test of memory-mapped IO
-#actually not, this file is junk
-
+#Daniel DeCovnick 
 #include stdlib.s
 
 .data
 read_buffer:    .space 256
-ask_num:        .asciiz "Enter a number: "
-ask_str:        .asciiz "\nEnter a string: "
-ask_char:       .asciiz "Enter a character: "
-test_fmt_str:   .asciiz "n1: %d. n2: %x.\n%%%f\nYour character: %c\nYour string: %s\n"
+prompt_start:   .asciiz "Enter program number to run (based on the order in the jistfile) or 0 to exit:"
+bye_bye:        .asciiz "Shell Exiting. Goodbye.\n"
 nl:          .asciiz "\n"
 .text
 .globl main
 main:
 {
-    addu    $s0 $0 0x1
-    addu    $s1 $0 0x2
-    addu    $s2 $0 0x3
-    addu    $s3 $0 0x4
-    addu    $s4 $0 0x5
-    addu    $s5 $0 0x6
-    addu    $s6 $0 0x7
-    addu    $s7 $0 0x8
-    __save_frame
+loop:
+    call    prompt
+    beq     $v0 $zero end
+    addu    $a0 $v0 $zero
+    call    run_program
+    b       loop
+end:
+    la $a0 bye_bye
+    call print
     wait
     exit
+}
+.text
+prompt:
+{
+    la     $a0 prompt_start
+    call   print
+    la     $a0 read_buffer
+    call   read_int
+    return
+}
+.text
+run_program:
+{
+    @choice = $s0
+    addu    @choice $zero $a0
+    addi    @choice @choice -1
+    sll     @choice @choice 2
+    la      $a0 user_program_locations
+    addu    $a0 $a0 @choice
+    lw      $a0 0($a0)
+    call    make_new_background_process
+    wait
+    return
 }
