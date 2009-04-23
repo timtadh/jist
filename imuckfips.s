@@ -1,6 +1,11 @@
 # Steve Johnson
 # This is an interactive Brainf*ck interpreter.
 
+# Suggested demo program:
+# ++++++[>,.<-]
+# type "h" after the first comma, because the input is done then and there.
+# then type "ello" to put in the rest.
+
 @LEFT   = 60
 @RIGHT  = 62
 @PLUS   = 43
