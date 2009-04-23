@@ -26,6 +26,7 @@ end:
 prompt:
 {
 top:
+    println mpstr
     la     $a0 prompt_start
     call   print
     la     $a0 read_buffer
