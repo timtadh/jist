@@ -3,7 +3,7 @@
 
 .data
 read_buffer:    .space 256
-prompt_start:   .asciiz "Enter program number to run, or 0 to exit, or w to wait:"
+prompt_start:   .asciiz "Enter program number to run, or 0 or q to exit, or w to wait:"
 bye_bye:        .asciiz "Shell Exiting. Goodbye.\n"
 nl:          .asciiz "\n"
 .text
@@ -35,10 +35,17 @@ top:
 #     call   print_char
     li     $t0 119 # the letter w
     beq    $a0 $t0 hold
+    li     $t0 113 #the letter q
+    beq    $a0 $t0 end
     add    $a0 $s0 $zero
     call   atoi
     return
 hold:
     wait
     b top
+end:
+    la $a0 bye_bye
+    call print
+    wait
+    exit
 }
