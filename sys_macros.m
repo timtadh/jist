@@ -277,15 +277,12 @@ ret:
     quickrestore %2
 #end
 
-
-#define exit_old global
-    li      $v0 10              # syscall code 10 is for exit.
-    syscall                     # make the syscall.
-#end
-
 #define exit global
+{
     __save_args
     __save_temps
+    
+    println exit_msg
     
     la      $a0 KMSG
     li      $a1 2
@@ -301,6 +298,10 @@ ret:
 wait_return:
     __restore_temps
     __restore_args
+.data
+exit_msg: .asciiz "------Process exit------"
+.text
+}
 #end
 
 #define kill_jist global

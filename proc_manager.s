@@ -188,6 +188,6 @@ make_new_background_process:
     .data
 default_data_amt: .word 0x00004000
 error_msg: .asciiz "load_first_process failed"
-pc_msg: .asciiz "pc = "
+pc_msg: .asciiz "Spawning new process at PC = "
     .text
 }

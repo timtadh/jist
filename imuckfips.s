@@ -10,6 +10,8 @@
 @LF     = 10
 
     .data
+header:         .ascii  "Welcome to iMuckfips, the interactive Muckfips prompt!\n"
+                .asciiz  "Enter a program. Press Return to show the output buffer, Esc to quit."
 program_text:   .space 4048
 output_buffer:  .space 4048
 array:          .space 4048
@@ -28,6 +30,7 @@ print_output:
     .globl main
 main:
 {
+    println header
     @tptr = $s0
     @dptr = $s1
     @bracketcount = $s2
@@ -46,6 +49,8 @@ main:
             _read_char @input
             addu @comp $zero @ESC
             bne @input @comp not_exit
+                li $a0 10
+                call print_char
                 exit
             not_exit:
             
