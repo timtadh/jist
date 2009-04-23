@@ -76,7 +76,7 @@ def make_kernel_macros():
     number_user_programs = ''
     if not strip_comments:
         number_user_programs += ' '*4 + '#'*16 + ' start number_user_programs '  + '#'*16 + '\n'
-    number_user_programs += ' '*4 + 'li      %1 &main_count&'
+    number_user_programs += ' '*4 + 'li      $s1 &main_count&'
     if not strip_comments:
         number_user_programs += ' '*4 + '#'*17 + ' end number_user_programs '  + '#'*17 + '\n'
     number_user_programs = ''.join(
