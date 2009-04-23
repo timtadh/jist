@@ -11,9 +11,10 @@ main:
 {
     la $a0 mtt_str_1
     call println
-    #wait
+    wait
     la $a0 mtt_str_2
     call println
-    #wait
+    wait
+    wait
     exit
 }
