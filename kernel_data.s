@@ -11,9 +11,14 @@ user_program_locations:
             .word   0
 KHCB_ADDR:  .word   0
 KMSG:       .word   0
+
+mpstr:
+magic_prompt_string
+
 current_pcb:    .word   0
 current_pid:    .word   0
 proc_limit: .word   0x80
 proc_list:
+
             #repeat 128
             .word   0
