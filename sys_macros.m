@@ -368,37 +368,70 @@ wait_return:
     mtc0    $0 $11             # push to compare
 #end
 
-# sem_wait addr_reg
-#     addr_reg = a register with the address of the semaphore
+# sem_wait loc mem_id hcb_addr
 #define sem_wait global
-    quickstore %1
-    __save_args
-    quickrestore $a1
+    @loc = %1
+    @mem_id = %2
+    @hcb_addr = %3
+    @sem = $a0
+    @err = $a1
 loop:
+    disable_interrupts
+    get     @loc @mem_id @hcb_addr @sem @err
+    enable_interrupts
+    bne     @err $0 getfail
     lw      $a0 0($a1)
-    bne     $a0 $0 loop
+    beq     $a0 $0 lock
+    wait
+    j       loop
+lock:
     disable_interrupts
     addi    $a0 $a0 1
     sw      $a0 0($a1)
     enable_interrupts
-    __restore_args
+    j       end
+
+    getfail:
+        println getfail_msg
+        j       end
+.data
+    getfail_msg: .asciiz "get failed in sem_wait"
+.text
+end:
 #end
 
-# sem_signal addr_reg
-#     addr_reg = a register with the address of the semaphore
+# sem_signal loc mem_id hcb_addr
 #define sem_signal global
-    quickstore %1
-    __save_args
-    quickrestore $a1
+    @loc = %1
+    @mem_id = %2
+    @hcb_addr = %3
+    @sem = $a0
+    @err = $a1
+    
     disable_interrupts
-    lw      $a0 0($a1)
-    beq     $a0 $0 alread_zero
-    sub     $a0 $a0 1
-    sw      $a0 0($a1)
+    get     @loc @mem_id @hcb_addr @sem @err
+    bne     @err $0 getfail
+    beq     @sem $0 alread_zero
+    sub     @sem @sem 1
+    put     @loc @mem_id @hcb_addr @sem @err
+    bne     @err $0 putfail
 alread_zero:
     enable_interrupts
-    __restore_args
+    j       end
+
+    getfail:
+        println getfail_msg
+        j       end
+    putfail:
+        println putfail_msg
+        j       end
+.data
+    getfail_msg: .asciiz "get failed in sem_signal"
+    putfail_msg: .asciiz "put failed in sem_signal"
+.text
+end:
 #end
+
 
 
 # blocksize mem_id hcb_addr dst err
