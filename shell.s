@@ -4,12 +4,15 @@
 .data
 read_buffer:    .space 256
 prompt_start:   .asciiz "Enter program number to run, or 0 or q to exit, or w to wait:"
+hello:          .asciiz "Welcome to the Jist Shell.\n"
 bye_bye:        .asciiz "Shell Exiting. Goodbye.\n"
 nl:          .asciiz "\n"
 .text
 .globl main
 main:
 {
+    la      $a0 hello
+    call    print
 loop:
     call    prompt
     beq     $v0 $zero end
