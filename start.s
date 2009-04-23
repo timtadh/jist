@@ -110,7 +110,8 @@ __start:
     #sneaky kernel macros:
     load_user_programs
     
-    
+    number_user_programs
+    println_hex numprogs_msg $s1
     la $a0 user_program_locations
     lw $a0 0($a0)
     call    println_hex
@@ -133,6 +134,7 @@ __start:
     exit
     .data
     stack_pointer_msg: .asciiz " sp = "
+    numprogs_msg: .asciiz " num programs = "
     .text
 }
 #     j       $s1                 # start main program
