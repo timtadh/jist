@@ -122,20 +122,25 @@ error_msg: .asciiz "load_first_process failed"
     .text
 }
 
-make_space_for_new_process:
+#make_new_background_process(program_counter)
+make_new_background_process:
 {
     @pid = $s0
     @h = $s1
     @err = $s2
-    @mem_id = $s3
+    @pcb_id = $s3
     @khcb_addr = $s4
+    @pc = $s5
+    @sp = $s6
+    @stack_id = $s7
+    addu @pc $s5 $zero
     
     khcb_getaddr @khcb_addr
     
     addu    $a0 $0 50
     addu    $a1 @khcb_addr $zero
     call    alloc
-    addu    @mem_id $v0 $zero
+    addu    @pcb_id $v0 $zero
     addu    @khcb_addr $v1 $zero
     
     khcb_writeback @khcb_addr
@@ -148,8 +153,25 @@ make_space_for_new_process:
     
     addu $a0 @h $zero
     addu $a1 @pid $zero
-    addu $a2 @mem_id $zero
+    addu $a2 @pcb_id $zero
     call ll_append
+    
+    subu    @pc @pc 4
+    mtc0    @pc $14
+    
+    addu $a0 @pcb_id $zero
+    li $a1 0
+    call save_proc
+    
+    {
+        khcb_getaddr @khcb_addr
+        geti 4 $zero @khcb_addr @sp @err
+        addu    $a0 @sp $zero
+        call save_stack
+        addu    @stack_id $v0 $zero
+        puti    4 @pcb_id @khcb_addr @stack_id @err
+        puti    7 @pcb_id @khcb_addr @sp @err
+    }
     
     addu $a0 @h $zero
     call ll_print

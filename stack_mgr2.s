@@ -139,8 +139,8 @@ restore_stack:
         
     }
     
-#     println_hex mem_id_msg @mem_id
-#     print_hcb @stackheap
+    # println_hex mem_id_msg @mem_id
+    # print_hcb @stackheap
     
     blocksize @mem_id @stackheap @amt @err
     bne     @err $0 stack_top_error
@@ -158,10 +158,10 @@ restore_stack:
             @err = $t1
             @pr_temp = $s4
             
-#             println_hex sp_msg @sp
-#             println_hex curaddr_msg @curaddr
-#             println_hex count_msg @count
-#             println_hex s4_msg @pr_temp
+            # println_hex sp_msg @sp
+            # println_hex curaddr_msg @curaddr
+            # println_hex count_msg @count
+            # println_hex s4_msg @pr_temp
             
             get     @count @mem_id @stackheap @temp @err
             bne     @err $0 stack_save_error

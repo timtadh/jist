@@ -8,7 +8,7 @@ proc_1:
 {
     wait
     println str_1
-    wait
+    #wait
     call proc_2
     wait
     return
@@ -17,8 +17,9 @@ proc_1:
     .text
 proc_2:
 {
-    wait
+    #wait
     println str_2
+    exit
     wait
     return
 }
