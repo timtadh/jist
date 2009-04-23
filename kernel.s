@@ -139,4 +139,6 @@ exception_finished:
     .set noat
     lw      $at __save_at
     .set at
+    
+    
     eret                        # return from exception handler
