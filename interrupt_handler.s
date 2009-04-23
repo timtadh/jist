@@ -116,6 +116,7 @@ save_state_return:
     li $a1 0
     call save_proc
     
+    ######### SAVE THE STACK #########
     {
         @hcb_addr = $s1
         @pcb_id = $s2
@@ -137,39 +138,16 @@ save_state_return:
         
         puti    4 @pcb_id @hcb_addr @stack_id @error
 #         bne     @error $zero put_error
-        geti    4 @pcb_id @hcb_addr @stack_id @error
         
-        geti    3 $0 @hcb_addr @stackheap @error
-        print_hcb  @stackheap
-        printblock @stack_id @stackheap
+#         geti    3 $0 @hcb_addr @stackheap @error
+#         print_hcb  @stackheap
+#         printblock @stack_id @stackheap
+#         addu    $a0 @sp $zero
+#         call    zero_stack
         
-        addu    $a0 @stack_id $0
-        addu    $a1 @sp $0
-        call    restore_stack
-        
-        
-        khcb_getaddr @hcb_addr
-        la      @curpcb_addr current_pcb
-        lw      @pcb_id      0(@curpcb_addr)
-        geti    7 @pcb_id @hcb_addr @sp @error
-#         bne     @error $zero put_error
-        addu    $a0 @sp $zero
-        call    save_stack
-        addu    @stack_id $v0 $zero
-        
-        puti    4 @pcb_id @hcb_addr @stack_id @error
-#         bne     @error $zero put_error
-        geti    4 @pcb_id @hcb_addr @stack_id @error
-        
-        geti    3 $0 @hcb_addr @stackheap @error
-        print_hcb  @stackheap
-        printblock @stack_id @stackheap
-        
-        
-        
-#         addu    @stack_id $v0 $0
         
     }
+    ######### SAVE THE STACK #########
     
     
     la $a0 KMSG
@@ -196,6 +174,28 @@ save_state_return:
     # la $a0 current_pcb
     # lw $a0 0($a0)
     # call restore_proc
+    
+    
+    ######### RESTORE THE STACK ##########
+    {
+        @hcb_addr = $s1
+        @pcb_id = $s2
+        @error = $s3
+        @curpcb_addr = $s4
+        @stack_id = $s5
+        @sp = $s6
+        
+        khcb_getaddr @hcb_addr
+        la @curpcb_addr current_pcb
+        lw @pcb_id      0(@curpcb_addr)
+        geti    7 @pcb_id @hcb_addr @sp @error
+        
+        geti    4 @pcb_id @hcb_addr @stack_id @error
+        addu    $a0 @stack_id $0
+        addu    $a1 @sp $0
+        call    restore_stack
+    }
+    ######### RESTORE THE STACK ##########
 }
     j       restore_state
 restore_state_return:
