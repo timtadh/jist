@@ -113,5 +113,4 @@ f.close()
 mpp.process(out_path, out_path)
 
 subprocess.check_call(["spim", "-ne", "-mio", "-stext", "1048576", out_path])
->>>>>>> 459243203357e8fff319332f3d1f2504e6022b7d:spim.py
 #subprocess.check_call(["spim", "-ne", out_path])
