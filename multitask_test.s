@@ -1,5 +1,4 @@
 #include stdlib.s
-#include sys_macros.m
 
 .data
 mtt_str_1: .asciiz "mtt1-a"

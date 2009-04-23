@@ -208,7 +208,59 @@ save_state_return:
         }
         b reset_kmsg
     km_exit:
-        #exit current process
+        {
+            @khcb_addr = $s0
+            @h = $s1
+            @err = $s2
+            @pid = $s3
+            @pcb = $s4
+            @mem_id = $s5
+            khcb_getaddr @khcb_addr
+            
+            geti 1 $zero @khcb_addr @h @err
+            bnez @err ex_err
+            
+            la $a0 current_pid
+            lw @pid 0($a0)
+            
+            addu $a0 @h $zero
+            addu $a1 @pid $zero #this is the old pid
+            call ll_find_pid
+            addu @mem_id $v0 $zero
+            
+            addu $a0 @h $zero
+            addu $a1 @mem_id $zero  #where mem_id is the list node to remove
+            call ll_remove
+            addu @h $v0 $zero
+            
+            khcb_getaddr @khcb_addr
+            puti 1 $zero @khcb_addr @h @err
+            
+            addu $a0 @h $zero
+            addu $a1 @h $zero
+            call ll_next
+            addu @mem_id $v0 $zero
+            
+            geti 1 @mem_id @khcb_addr @pid @err
+            bnez @err ex_err
+            geti 2 @mem_id @khcb_addr @pcb @err
+            bnez @err ex_err
+            
+            la $a0 current_pid
+            sw @pid 0($a0)
+            la $a0 current_pcb
+            sw @pcb 0($a0)
+            
+            b noerr
+                ex_err:
+                    println errmsg
+                    li $v0 10
+                    syscall
+                .data
+                    errmsg: .asciiz "error in cmgr_exit"
+                .text
+            noerr:
+        }
         b reset_kmsg
     km_clock_interrupt:
         #do nothing
@@ -220,7 +272,6 @@ save_state_return:
     # la $a0 current_pcb
     # lw $a0 0($a0)
     # call restore_proc
-    
     
     la $a0 current_pcb
     lw $a0 0($a0)

@@ -19,7 +19,6 @@ proc_2:
 {
     wait
     println str_2
-    exit
     wait
     return
 }

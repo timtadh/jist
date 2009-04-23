@@ -278,11 +278,35 @@ ret:
 #end
 
 
-#define exit global
+#define exit_old global
     li      $v0 10              # syscall code 10 is for exit.
     syscall                     # make the syscall.
 #end
 
+#define exit global
+    __save_args
+    __save_temps
+    
+    la      $a0 KMSG
+    li      $a1 2
+    sw      $a1 0($a0)  #KMSG = 2
+    
+    la      $a0 wait_return
+    subu    $a0 $a0 4
+    mtc0    $a0 $14
+    li      $a0 0
+    mtc0    $a0 $13
+    la      $a0 exception_handler
+    jr      $a0
+wait_return:
+    __restore_temps
+    __restore_args
+#end
+
+#define kill_jist global
+    li $v0 10
+    syscall
+#end
 
 #define wait global
     __save_args
