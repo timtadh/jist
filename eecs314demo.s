@@ -1,3 +1,7 @@
+# Steve Johnson
+# Comprehensive demo program for jist
+# FIXME: program locations are hard-coded
+
     .text
     .globl main
 main:

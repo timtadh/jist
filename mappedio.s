@@ -1,7 +1,6 @@
+# Daniel DeCovnick & Steve Johnson
 # mappedio.s
-# Daniel DeCovnick and Steve Johnson
-# created 2/9/09
-# rewritten 4/8/09
+# Global macros for reading and writing using mmio
 
 # _read_char dest
 #     Waits for keyboard input and stores one character in dest. Blocking.

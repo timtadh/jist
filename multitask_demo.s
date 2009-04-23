@@ -1,3 +1,5 @@
+# Steve Johnson
+# simple demo for multitasking
     .globl main
 main:
 {

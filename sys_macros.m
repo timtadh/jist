@@ -1,4 +1,4 @@
-# Tim Henderson
+# Tim Henderson & Steve Johnson
 # System Macros for jist
 # Meant to be available to every program for jist
 

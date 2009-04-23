@@ -1,3 +1,7 @@
+# Steve Johnson
+# Brainf*ck interpreter for a program stored in static data
+# safe for multitasking
+
 @LEFT   = 60
 @RIGHT  = 62
 @PLUS   = 43

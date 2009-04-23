@@ -1,6 +1,5 @@
-# Tim Henderson
+# Steve Johnson
 # proc_manager.s handles loading and executing programs
-#
 
 #include proc_storage.s
 
@@ -54,19 +53,6 @@ get_cmgr_head:
     errmsg: .asciiz "error in get_cmgr_head"
 .text
 }
-
-#     .text
-#     # load_process(start_addr) --> v0 = pcb_addr
-# load_process:
-# {
-#     lw      $a0 default_data_amt
-#     call    new_proc            # make a new processs
-#     
-#     add     $v0 $s0 $0          # move the pcb addr into the return reg
-#     return
-#     .data
-# default_data_amt: .word 0x00004000
-# }
 
     .text
 #load_first_process()

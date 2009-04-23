@@ -1,4 +1,5 @@
-#include stdlib.s
+# Steve Johnson
+# A simple implementation of Hunt the Wumpus
 
 .data
 wdata:      .space 7    #for locations, etc.

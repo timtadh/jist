@@ -1,4 +1,5 @@
-#include stdlib.s
+# Tim Henderson & Steve Johnson
+# Simple demo for multitasking & user heaps
 
 .data
 format_str: .asciiz "                            Process 2 count: "

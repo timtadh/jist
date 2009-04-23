@@ -1,5 +1,5 @@
-# Tim Henderson
-# start.s - header for user programs
+# Tim Henderson & Steve Johnson
+# start.s is the entry point for the whole system
 
 #include stdlib.s
 

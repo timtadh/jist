@@ -1,3 +1,5 @@
+# Tim Henderson
+# Test of the stack manager
 
 .text
 zero_stack:

@@ -1,3 +1,6 @@
+# Steve Johnson
+# This is an interactive Brainf*ck interpreter.
+
 @LEFT   = 60
 @RIGHT  = 62
 @PLUS   = 43
