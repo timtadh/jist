@@ -63,10 +63,6 @@ main:
             li @state 0
         end_input:
         
-        
-        #addu $a0 @input $zero
-        #call print_char
-        
         addu @comp $zero @PLUS
         bne @input @comp not_plus
             lb @temp 0(@dptr)
@@ -121,13 +117,6 @@ main:
             addi @tptr @tptr 1
             b loop
         not_comma:
-        
-        addu @comp $zero @LEFTB
-        bne @input @comp not_leftb
-            #do nothing
-            addi @tptr @tptr 1
-            b loop
-        not_leftb:
         
         addu @comp $zero @RIGHTB
         bne @input @comp not_rightb
