@@ -5,5 +5,6 @@ wumpus.s
 stack_mgr.s
 context_mgr_test.s
 stack_mgr.test.s
+muckfips.s
 
-init_with: shell.s
+init_with: muckfips.s
