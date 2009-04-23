@@ -87,12 +87,12 @@ save_proc:
     bne     @error $zero put_error
 
     
-    la      @temp  __save_HCB_ADDR
-    lw      @temp 0(@temp)
-    #lw      $t1  __save_HCB_ADDR
-    li      @loc 3
-    put     @loc @mem_id @hcb_addr @temp @error
-    bne     @error $zero put_error
+#     la      @temp  __save_HCB_ADDR
+#     lw      @temp 0(@temp)
+#     #lw      $t1  __save_HCB_ADDR
+#     li      @loc 3
+#     put     @loc @mem_id @hcb_addr @temp @error
+#     bne     @error $zero put_error
     
  
     lw      @temp  __save_at      # load the saved $at reg
@@ -273,36 +273,6 @@ horrible_error: .asciiz "Something really bad happened when trying to save the P
 .text
 }
     
-# new_proc(pcb_address data_amt) -> Null
-#     data_amt = the amount of room this proccess gets for its heap and stack. static can't change.
-new_proc:
-{
-    call create_pcb             # create a process control block
-    add     $s0 $v0 $0          # save the pcb addr into $s0
-    
-    
-    lw      $t1 next_proc_num   # load the next proccess number into $t1
-    sw      $t1 4($s0)          # save the proc number in the pcb
-    addi    $t1 $t1 1           # increment the next_proc_num
-    sw      $t1 next_proc_num   # save it
-    
-    mfc0    $t1 $14             # get the EPC register
-    sw      $t1 8($s0)          # save the program counter number in the pcb
-    
-    mul     $t1 $a0 4
-    sbrk    $t1 $t0
-    
-    sw      $t0 16($s0)         # save the start of the data in the pcb
-    addu    $t0 $t1 $t0
-    sw      $t0 20($s0)         # save the end of the data in the pcb
-    
-    addu    $a0 $s0 $0          # load pcb_addr into arg1
-    li      $a1 0               # load a default status of 0 "new" into arg2
-    call    save_proc
-    
-    return
-}
-    
     # restore_proc(mem_id) -> Nul
 restore_proc:
 {
@@ -321,11 +291,11 @@ restore_proc:
     #lw      $t1  8($t0)         # get the program counter from pcb
     mtc0    @temp  $14            # save it in the EPC register in the co-proc
     
-    #lw      $t1  12($t0)        # load the hcb_addr into the pcb
-    li      @loc 3
-    get     @loc @mem_id @hcb_addr @temp @error
-    bne     @error $zero put_error
-    sw      @temp  __save_HCB_ADDR
+#     #lw      $t1  12($t0)        # load the hcb_addr into the pcb
+#     li      @loc 3
+#     get     @loc @mem_id @hcb_addr @temp @error
+#     bne     @error $zero put_error
+#     sw      @temp  __save_HCB_ADDR
     
     
     #lw      $t1  24($t0)        # load the saved $at reg
@@ -503,15 +473,65 @@ put_error:
 horrible_error: .asciiz "Something really bad happened when trying to restore the PCB\n"
 .text
 }   
-    # proc_number(pcb_address) -> v0 = proc_number
-proc_number:
-    addu    $t0  $a0  0         # move the address of the PCB to $t0
-    sw      $v0  4($t0)         # save the proc number in the pcb
+
+.text
+.globl getuserheap
+# getuserheap() --> $v0 = userheap_addr
+getuserheap:
+{
+    @khcb_addr = $s0
+    @pcb_id = $s1
+    @userheap_addr = $s2
+    @temp = $t0
+    @err = $t1
+    
+    khcb_getaddr @khcb_addr
+    la      @temp current_pcb
+    lw      @pcb_id 0(@temp)
+    
+    geti    0x3 @pcb_id @khcb_addr @userheap_addr @err
+    bne     @err $0 get_error
+    
+    addu    $v0 @userheap_addr $0
+    return
+
+    get_error:
+        println get_error_msg
+        addu    $v0 $0 $0
+        return
+    
+    .data
+        get_error_msg: .asciiz "get error in getuserheap"
+    .text
+}
+
+.text
+.globl putuserheap
+# putuserheap(userheap_addr)
+putuserheap:
+{
+    @khcb_addr = $s0
+    @pcb_id = $s1
+    @userheap_addr = $s2
+    @temp = $t0
+    @err = $t1
+    
+    addu    @userheap_addr $a0 $0
+    
+    khcb_getaddr @khcb_addr
+    la      @temp current_pcb
+    lw      @pcb_id 0(@temp)
+    
+    puti    0x3 @pcb_id @khcb_addr @userheap_addr @err
+    bne     @err $0 put_error
     
     return
+
+    put_error:
+        println put_error_msg
+        return
     
-    # proc_status(pcb_address) -> v0 = proc_status
-proc_status:
-    addu    $t0  $a0  0         # move the address of the PCB to $t0
-    lw      $v0  0($t0)         # load the nice and status from the pcb
-    return
+    .data
+        put_error_msg: .asciiz "put error in putuserheap"
+    .text
+}
