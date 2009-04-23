@@ -27,6 +27,9 @@ Then you can use them just like a register.
 
 ==REPETITIONS==
 Put "#repeat n" above a line to repeat that line n times. See kernel_data.s for an example.
+
+==SCOPING==
+Put curly braces around your code on their own lines to make all labels and aliases valid only within that scope.
 """
 
 

@@ -7,4 +7,4 @@ imuckfips.s
 multitask_demo.s
 eecs314demo.s
 
-init_with: eecs314demo.s
+init_with: wumpus.s
