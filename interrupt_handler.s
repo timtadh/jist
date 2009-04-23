@@ -116,6 +116,7 @@ save_state_return:
     li $a1 0
     call save_proc
     
+    ######### SAVE THE STACK #########
     {
         @hcb_addr = $s1
         @pcb_id = $s2
@@ -138,14 +139,16 @@ save_state_return:
         puti    4 @pcb_id @hcb_addr @stack_id @error
 #         bne     @error $zero put_error
         
-#         geti    3 $0 @hcb_addr @stackheap @error
-#         print_hcb  @stackheap
-#         printblock @stack_id @stackheap
-#         addu    $a0 @sp $zero
-#         call    zero_stack
+        ###uncomment this to zero the stack after saving it###
+        #geti    3 $0 @hcb_addr @stackheap @error
+        #print_hcb  @stackheap
+        #printblock @stack_id @stackheap
+        #addu    $a0 @sp $zero
+        #call    zero_stack
         
         
     }
+    ######### SAVE THE STACK #########
     
     
     la $a0 KMSG
@@ -173,6 +176,8 @@ save_state_return:
     # lw $a0 0($a0)
     # call restore_proc
     
+    
+    ######### RESTORE THE STACK ##########
     {
         @hcb_addr = $s1
         @pcb_id = $s2
@@ -191,6 +196,7 @@ save_state_return:
         addu    $a1 @sp $0
         call    restore_stack
     }
+    ######### RESTORE THE STACK ##########
 }
     j       restore_state
 restore_state_return:

@@ -32,6 +32,29 @@ new_pid:
 .text
 }
 
+    .text
+get_cmgr_head:
+{
+    @khcb_addr = $s0
+    @h = $s1
+    @err = $s2
+    khcb_getaddr @khcb_addr
+    
+    geti 1 $zero @khcb_addr @h @err
+    bnez @err ch_err
+    
+    addu $v0 @h $zero
+    return
+    
+    ch_err:
+        println errmsg
+        li $v0 10
+        syscall
+.data
+    errmsg: .asciiz "error in get_cmgr_head"
+.text
+}
+
 #     .text
 #     # load_process(start_addr) --> v0 = pcb_addr
 # load_process:
@@ -78,13 +101,58 @@ load_first_process:
     puti    2   $zero @khcb_addr @pid @err
     bnez    @err    lfp_err
     
-    addu $a0 @h $zero
-    call ll_print
+    #addu $a0 @h $zero
+    #call ll_print
     
     la $t0 current_pcb
     sw @mem_id 0($t0)
     la $t0 current_pid
     sw @pid 0($t0)
+    
+    return
+    
+    lfp_err:
+        println error_msg
+        li $v0 10
+        syscall
+    
+    .data
+default_data_amt: .word 0x00004000
+error_msg: .asciiz "load_first_process failed"
+    .text
+}
+
+make_space_for_new_process:
+{
+    @pid = $s0
+    @h = $s1
+    @err = $s2
+    @mem_id = $s3
+    @khcb_addr = $s4
+    
+    khcb_getaddr @khcb_addr
+    
+    addu    $a0 $0 50
+    addu    $a1 @khcb_addr $zero
+    call    alloc
+    addu    @mem_id $v0 $zero
+    addu    @khcb_addr $v1 $zero
+    
+    khcb_writeback @khcb_addr
+    
+    call get_cmgr_head
+    addu @h $v0 $zero
+    
+    call new_pid
+    addu @pid $v0 $zero
+    
+    addu $a0 @h $zero
+    addu $a1 @pid $zero
+    addu $a2 @mem_id $zero
+    call ll_append
+    
+    addu $a0 @h $zero
+    call ll_print
     
     return
     

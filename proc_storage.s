@@ -81,7 +81,7 @@ save_proc:
     addu    @status  $a1  $zero
     khcb_getaddr @hcb_addr
     
-    print_hcb @hcb_addr
+#     print_hcb @hcb_addr
 #     addu $a0 @mem_id $zero
 #     call print_int
 #     li $a0 10
@@ -272,7 +272,6 @@ save_proc:
     #sw      $s5  128($t0)       # save $s5 in the PCB
     #sw      $s6  132($t0)       # save $s6 in the PCB
     #sw      $s7  136($t0)       # save $s7 in the PCB
-    
     #sw      $t1  28($t0)        # save it in the PCB
     
     return

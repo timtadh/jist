@@ -101,6 +101,9 @@ __start:
     
     println_hex stack_pointer_msg @sp
     
+    call load_first_process
+    call make_space_for_new_process
+    
     #sneaky kernel macros:
 #     load_user_programs
     
@@ -108,7 +111,6 @@ __start:
     #sneaky kernel macros:
     load_user_programs
     load_first_program
-    call load_first_process
     jr      $s1
     
     
