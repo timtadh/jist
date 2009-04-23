@@ -145,20 +145,16 @@ ll_find_pid:
         geti 1 @head @khcb_addr @temp @err
 
         bne @temp @to_find not_found_yet
-            geti 0 @head @khcb_addr @temp @err
-            geti 2 @head @khcb_addr @temp2 @err
+            #geti 0 @head @khcb_addr @temp @err
             addu $v0 @temp $zero
-            addu $v1 @temp2 $zero
             return
         not_found_yet:
             addu @head @next $zero
             b loop
 
     head_case:
-        geti 0 @head @khcb_addr @temp @err
-        geti 2 @head @khcb_addr @temp2 @err
-        addu $v0 @temp $zero
-        addu $v1 @temp2 $zero
+        #geti 0 @head @khcb_addr @temp @err
+        addu $v0 @head $zero
         return
 
     found_end:

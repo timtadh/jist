@@ -102,7 +102,6 @@ __start:
     println_hex stack_pointer_msg @sp
     
     call load_first_process
-    call make_space_for_new_process
     
     #sneaky kernel macros:
 #     load_user_programs
@@ -110,6 +109,14 @@ __start:
     disable_clock_interrupt
     #sneaky kernel macros:
     load_user_programs
+    
+    la $a0 user_program_locations
+    lw $a0 0($a0)
+    call make_new_background_process
+    
+    # la $s0 user_program_locations
+    # lw $s1 0($s0)
+    
     load_first_program
     jr      $s1
     
