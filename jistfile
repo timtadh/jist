@@ -1,4 +1,5 @@
 multitask_test.s
+multitask_test_2.s
 add.s
 shell.s
 wumpus.s
@@ -6,4 +7,4 @@ context_mgr_test.s
 stack_mgr.test.s
 muckfips.s
 
-init_with: muckfips.s
+init_with: multitask_test_2.s

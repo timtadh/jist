@@ -87,9 +87,9 @@ __start:
     @sp = $s0
     @hcb_addr = $s1
     @err = $t1
-    addu @sp $sp $0
-#     lui     @sp 0x7fff
-#     ori     @sp @sp 0xffff
+#    addu @sp $sp $0
+    lui     @sp 0x7fff
+    ori     @sp @sp 0xfffc
     call init_kernel
     
     khcb_getaddr @hcb_addr

@@ -19,17 +19,13 @@ proc_2:
 {
     wait
     println str_2
-    exit
-    wait
     return
 }
 
     .text
 proc_3:
 {
-    wait
     println str_3
-    wait
     return
 }
 
@@ -38,7 +34,6 @@ proc_3:
     .globl main
 main:
     call proc_1
-    wait
     call proc_3
     wait
     exit

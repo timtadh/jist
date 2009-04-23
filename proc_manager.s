@@ -175,8 +175,8 @@ make_new_background_process:
         puti    7 @pcb_id @khcb_addr @sp @err
     }
     
-    addu $a0 @h $zero
-    call ll_print
+    #addu $a0 @h $zero
+    #call ll_print
     
     return
     
