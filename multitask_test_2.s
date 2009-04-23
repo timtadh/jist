@@ -25,7 +25,7 @@ print_test:
 .text
 main:
 {
-    @loopvar = $s5
+    @loopvar = $s0
     li @loopvar 0
     loop:
         
