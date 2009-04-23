@@ -43,8 +43,8 @@
 #
 # A program will request memory by asks for x number of words. the programs will not be able to
 # request by number of bytes. The user programs will not get back the address of the memory instead
-# they will get back a unique identifier for there memory. When they want a word from their memory
-# their programs will use a global macro that will be part of this library. ie they will pass the 
+# they will get back a unique identifier for their memory. When they want a word from their memory,
+# the programs will use a global macro that will be part of this library. ie they will pass the 
 # macro their memory id and the word they want (ie 0, 1, 2, 3 ... n) and the system will return the
 # value of the word in from their memory block.
 #
