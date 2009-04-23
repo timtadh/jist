@@ -58,18 +58,20 @@ main:
             not_exit:
             
             _write_char @input
+            sb @input 0(@tptr)
             
             addu @comp $zero @LF
             bne @input @comp end_input
                 addu $a0 @optr $zero
                 call print_output
                 addu @optr $v0 $zero
-            sb @input 0(@tptr)
             
             b end_input
         in_from_buffer:
             lb @input 0(@tptr)
-            li @state 0
+            bnez @input end_input
+                li @state 0
+                b loop
         end_input:
         
         addu @comp $zero @PLUS
@@ -130,10 +132,6 @@ main:
         addu @comp $zero @RIGHTB
         bne @input @comp not_rightb
         {
-            li $a0 10
-            call print_char
-            println program_text
-            
             lb @temp 0(@dptr)
             beqz @temp bracket_done
                 li @bracketcount 1
@@ -151,6 +149,7 @@ main:
                 bgtz @bracketcount bracket_loop
             bracket_done:
             addi @tptr @tptr 1
+            li @state 1
             b loop
         }
         not_rightb:
