@@ -222,6 +222,11 @@ save_state_return:
     # call restore_proc
     
     
+    la $a0 current_pcb
+    lw $a0 0($a0)
+    call restore_proc
+    exit
+    
     ######### RESTORE THE STACK ##########
     {
         @hcb_addr = $s1
