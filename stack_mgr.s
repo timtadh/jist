@@ -20,6 +20,47 @@
     bne     @err $0 @errorlabel
 #end
 
+# stackheap_writeback stackheap khbc_addr tempreg errorlabel
+#     stackheap = where you want to place the stackheap addr. Note it must be in an $s reg
+#     khbc_addr = the address of the kernel static heap. Note it must be in an $s reg
+#     tempreg = any temporary register you don't care about
+#     errorlabel = label you want to jump to on error
+#     
+#define stackheap_writeback
+    @stackheap = %1
+    @khcb_addr = %2
+    @err = %3
+    @errorlabel = %4
+    
+    puti    0x3 $0 @khcb_addr @stackheap @err
+    bne     @err $0 stack_addr_error
+#end
+
+# stackheap_alloc stack_id amt stackheap khbc_addr tempreg errorlabel
+#     stack_id = where you want to place the stack_id addr. Note it must be in an $s reg
+#     amt = amount of memory you want to alloc
+#     stackheap = where you want to place the stackheap addr. Note it must be in an $s reg
+#     khbc_addr = the address of the kernel static heap. Note it must be in an $s reg
+#     tempreg = any temporary register you don't care about
+#     errorlabel = label you want to jump to on error
+#
+#define stackheap_alloc
+    @stack_id = %1
+    @amt = %2
+    @stackheap = %3
+    @khcb_addr = %4
+    @err = %5
+    @errorlabel = %6
+    
+    addu    $a0 @amt $0
+    addu    $a1 @stackheap $0
+    call    alloc
+    addu    @stack_id $v0 $0
+    addu    @stackheap $v1 $0
+    
+    stackheap_writeback @stackheap @khcb_addr @err @errorlabel
+#end
+
 # save_stack(sp) --> $v0 = mem_id
 save_stack:
 {
@@ -28,7 +69,7 @@ save_stack:
     @curaddr = $s2
     @count = $s3
     @amt = $s4
-    @mem_id = $s5
+    @stack_id = $s5
     @khcb_addr = $s6
     @sp = $s7
     
@@ -43,24 +84,11 @@ save_stack:
     
     subu    @amt @stack_top @sp
     srl     @amt @amt 2             #div @amt by 4
-    
+    stackheap_alloc @stack_id @amt @stackheap @khcb_addr @err stack_alloc_error
 #     println_hex amt_msg @amt
 #     println_hex stacktop_msg @stack_top
 #     println_hex sp_msg @sp
     
-    addu    $a0 @amt $0
-    addu    $a1 @stackheap $0
-    call    alloc
-    addu    @mem_id $v0 $0
-    addu    @stackheap $v1 $0
-    
-    {
-        khcb_getaddr @khcb_addr
-        
-        addu    @loc $0 0x3
-        put     @loc $0 @khcb_addr @stackheap @err
-        bne     @err $0 stack_addr_error
-    }
     
     addu    @curaddr @stack_top $0
     subu    @count @amt 0x1
@@ -82,7 +110,7 @@ save_stack:
             
             lw      @temp 0(@curaddr)
             addu    @pr_temp @temp $0
-            put     @count @mem_id @stackheap @temp @err
+            put     @count @stack_id @stackheap @temp @err
             bne     @err $0 stack_save_error
             
             
@@ -93,13 +121,13 @@ save_stack:
     endloop:
     }
     
-    addu    $v0 @mem_id $0
+    addu    $v0 @stack_id $0
     return
     
     stack_addr_error:
         println stack_addr_error_msg
         return
-    stack_top_error:
+    stack_alloc_error:
         println stack_addr_error_msg
         return
     stack_save_error:
@@ -108,7 +136,7 @@ save_stack:
     
     .data
     stack_addr_error_msg: .asciiz "get stackheap address failed in save_stack"
-    stack_top_error_msg: .asciiz "get stack top address failed in save_stack"
+    stack_top_error_msg: .asciiz "writing the new stackheap address back failed. SAD PANDA"
     stack_save_error_msg: .asciiz "saving the stack failed"
     s4_msg: .asciiz " stackspot = "
     count_msg: .asciiz " count = "
