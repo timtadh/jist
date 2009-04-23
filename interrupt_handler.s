@@ -139,11 +139,12 @@ save_state_return:
         puti    4 @pcb_id @hcb_addr @stack_id @error
 #         bne     @error $zero put_error
         
-#         geti    3 $0 @hcb_addr @stackheap @error
-#         print_hcb  @stackheap
-#         printblock @stack_id @stackheap
-#         addu    $a0 @sp $zero
-#         call    zero_stack
+        ###uncomment this to zero the stack after saving it###
+        #geti    3 $0 @hcb_addr @stackheap @error
+        #print_hcb  @stackheap
+        #printblock @stack_id @stackheap
+        #addu    $a0 @sp $zero
+        #call    zero_stack
         
         
     }
