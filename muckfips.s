@@ -8,6 +8,8 @@
 @RIGHTB = 93
 
     .data
+header:         .asciiz "Welcome to Muckfips. Your program will now be executed."
+
 program_text:   .asciiz ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<++++>-]<.>>>++++++++++[<+++++++++>-]<---.<<<<.+++.------.--------.>>+.-----------------------."
 
 array:          .space 1024
@@ -15,6 +17,7 @@ array:          .space 1024
     .globl main
 main:
 {
+    println header
     @tptr = $s0
     @dptr = $s1
     @bracketcount = $s2

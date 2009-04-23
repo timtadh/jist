@@ -21,6 +21,7 @@ main:
     call make_new_background_process
     
     wait
+    wait
     
     #imuckfips.s
     la $a0 user_program_locations
