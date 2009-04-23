@@ -133,7 +133,8 @@ make_new_background_process:
     @pc = $s5
     @sp = $s6
     @stack_id = $s7
-    addu @pc $s5 $zero
+    
+    addu @pc $a0 $zero
     
     khcb_getaddr @khcb_addr
     
@@ -158,6 +159,7 @@ make_new_background_process:
     
     subu    @pc @pc 4
     mtc0    @pc $14
+    println_hex pc_msg @pc
     
     addu $a0 @pcb_id $zero
     li $a1 0
@@ -186,5 +188,6 @@ make_new_background_process:
     .data
 default_data_amt: .word 0x00004000
 error_msg: .asciiz "load_first_process failed"
+pc_msg: .asciiz "pc = "
     .text
 }

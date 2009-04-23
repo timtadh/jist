@@ -110,6 +110,11 @@ __start:
     #sneaky kernel macros:
     load_user_programs
     
+    
+    la $a0 user_program_locations
+    lw $a0 0($a0)
+    call    println_hex
+    
     la $a0 user_program_locations
     lw $a0 0($a0)
     call make_new_background_process

@@ -334,6 +334,7 @@ restore_proc:
     @loc = $t0
     @error = $t1
     @temp = $t2
+    
     addu    @mem_id  $a0  0         # move the address of the mem_id to $t0
     khcb_getaddr @hcb_addr
 
@@ -483,7 +484,7 @@ restore_proc:
     li      @loc 28
     get     @loc @mem_id @hcb_addr @temp @error
     bne     @error $zero put_error
-    sw      @temp  112($t0)       #
+    sw      @temp  __save_s1       #
     
     #lw      $t1  116($t0)       # load the saved $s2
     li      @loc 29
