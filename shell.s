@@ -3,7 +3,7 @@
 
 .data
 read_buffer:    .space 256
-prompt_start:   .asciiz "Enter program number to run (based on the order in the jistfile) or 0 to exit:"
+prompt_start:   .asciiz "Enter program number to run, or 0 to exit, or w to wait:"
 bye_bye:        .asciiz "Shell Exiting. Goodbye.\n"
 nl:          .asciiz "\n"
 .text
@@ -25,11 +25,22 @@ end:
 .text
 prompt:
 {
+top:
     la     $a0 prompt_start
     call   print
     la     $a0 read_buffer
-    call   read_int
+    add    $s0 $a0 $zero
+    call   readln
+    lb     $a0 0($s0)
+#     call   print_char
+    li     $t0 119 # the letter w
+    beq    $a0 $t0 hold
+    add    $a0 $s0 $zero
+    call   atoi
     return
+hold:
+    wait
+    b top
 }
 .text
 run_program:
