@@ -1,19 +1,28 @@
 #include stdlib.s
-#include sys_macros.m
 
 .data
-mtt_str_1: .asciiz "mtt2-a"
-mtt_str_2: .asciiz "mtt2-b"
+mtt_str_1: .asciiz "mtt1-a"
+mtt_str_2: .asciiz "mtt1-b"
+format_str: .asciiz "mt2: %d\n"
+
+.text
+print_test:
+{
+    store_arg $a0
+    la $a0 format_str
+    call printf
+    return
+}
 
 .globl main
 .text
 main:
 {
-    la $a0 mtt_str_1
-    call println
-    wait
-    la $a0 mtt_str_2
-    call println
-    wait
-    exit
+    li $s0 0
+    loop:
+        addu $a0 $s0 $zero
+        call print_test
+        addi $s0 $s0 1
+        wait
+    b loop
 }
