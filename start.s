@@ -112,13 +112,13 @@ __start:
     
     number_user_programs
     println_hex numprogs_msg $s1
-    la $a0 user_program_locations
-    lw $a0 0($a0)
-    call    println_hex
+    # la $a0 user_program_locations
+    # lw $a0 0($a0)
+    # call    println_hex
     
-    la $a0 user_program_locations
-    lw $a0 0($a0)
-    call make_new_background_process
+    # la $a0 user_program_locations
+    # lw $a0 0($a0)
+    # call make_new_background_process
     
     # la $s0 user_program_locations
     # lw $s1 0($s0)

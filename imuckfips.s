@@ -6,12 +6,25 @@
 @COMMA  = 44
 @LEFTB  = 91
 @RIGHTB = 93
+@ESC    = 27
+@LF     = 10
 
     .data
-program_text:   .asciiz ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<++++>-]<.>>>++++++++++[<+++++++++>-]<---.<<<<.+++.------.--------.>>+.-----------------------."
+program_text:   .space 4048
+output_buffer:  .space 4048
+array:          .space 4048
 
-array:          .space 1024
     .text
+
+print_output:
+{
+    sb $zero 0($a0)
+    la $a0 output_buffer
+    call print
+    la $v0 output_buffer
+    return
+}
+
     .globl main
 main:
 {
@@ -21,16 +34,34 @@ main:
     @input = $s3
     @temp = $s4
     @comp = $s5
+    @state = $s6
+    @optr = $s7
     
     la @tptr program_text
     la @dptr array
+    la @optr output_buffer
     
     loop:
-        lb @input 0(@tptr)
-        beqz @input quitmf
-        
-        #addu $a0 @input $zero
-        #call print_char
+        bnez @state in_from_buffer
+            _read_char @input
+            addu @comp $zero @ESC
+            bne @input @comp not_exit
+                exit
+            not_exit:
+            
+            _write_char @input
+            
+            addu @comp $zero @LF
+            bne @input @comp end_input
+                addu $a0 @optr $zero
+                call print_output
+                addu @optr $v0 $zero
+            sb @input 0(@tptr)
+            b end_input
+        in_from_buffer:
+            lb @input 0(@tptr)
+            li @state 0
+        end_input:
         
         addu @comp $zero @PLUS
         bne @input @comp not_plus
@@ -70,8 +101,9 @@ main:
         
         addu @comp $zero @PERIOD
         bne @input @comp not_period
-            lb $a0 0(@dptr)
-            call print_char
+            lb @temp 0(@dptr)
+            sb @temp 0(@optr)
+            addi @optr @optr 1
             
             addi @tptr @tptr 1
             b loop
@@ -85,13 +117,6 @@ main:
             addi @tptr @tptr 1
             b loop
         not_comma:
-        
-        addu @comp $zero @LEFTB
-        bne @input @comp not_leftb
-            #do nothing
-            addi @tptr @tptr 1
-            b loop
-        not_leftb:
         
         addu @comp $zero @RIGHTB
         bne @input @comp not_rightb
