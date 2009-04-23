@@ -25,7 +25,27 @@ print_test:
 .text
 main:
 {
-    @loopvar = $s0
+    @hcb_addr = $s0
+    @loopvar = $s5
+    
+    li      $v0 9               # system call code for sbrk
+    addi    $a0 $0 4096           # amount
+    syscall                     # make the call
+    addu    @hcb_addr $v0 $0
+    li      $a1 1024
+    addu    $a0 @hcb_addr $0
+    call    initialize_heap
+    
+    addu    $a0 @hcb_addr $0
+    call    putuserheap
+    
+    addu    @hcb_addr $0 $0
+    println_hex hcb_msg @hcb_addr
+    
+    call    getuserheap
+    addu    @hcb_addr $v0 $0
+    println_hex hcb_msg @hcb_addr
+    
     li @loopvar 0
     loop:
         
@@ -44,4 +64,8 @@ main:
     
     killme:
     exit
+    
+    .data
+        hcb_msg: .asciiz " hcb_addr = "
+    .text
 }

@@ -1,15 +1,6 @@
 # Tim Henderson
 # proc_storage.s handles storing proccess in PCBs
 #
-# procedures availble:
-#     create_pcb() return $v0 -> addr of pcb
-#     save_proc(pcb_addr, nice, status)  -> Null
-#     new_proc(pcb_address  program_start  program_len) -> Null
-#     restore_proc(pcb_address) -> $v0 = program_start  $v1 = program_end
-#     proc_number(pcb_address) -> v0 = proc_number
-#     proc_status(pcb_address) -> v0 = proc_status
-#     proc_nice(pcb_address) -> v0 = proc_nice
-#
 # Proccess Control Block Structure:
 # --------------------
 # | State            | 0
