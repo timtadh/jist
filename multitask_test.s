@@ -24,6 +24,6 @@ main:
         addu $a0 @loopvar $zero
         call print_test
         addi $s0 @loopvar 1
-        wait
+        #wait
     b loop
 }

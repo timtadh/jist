@@ -18,11 +18,12 @@ print_test:
 .text
 main:
 {
-    li $s0 0
+    @loopvar = $s0
+    li @loopvar 0
     loop:
-        addu $a0 $s0 $zero
+        addu $a0 @loopvar $zero
         call print_test
-        addi $s0 $s0 1
-        wait
+        addi $s0 @loopvar 1
+        #wait
     b loop
 }
