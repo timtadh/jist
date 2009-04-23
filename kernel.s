@@ -89,8 +89,8 @@ exception_handler:              # exception handler
     andi    $a0 $k0 0x7C      
     srl     $a0 $a0 2           # Extract ExcCode Field
     
-    # li      $v0 1               # syscall 1 (print_int)
-    # syscall
+    li      $v0 1               # syscall 1 (print_int)
+    syscall
     
     
     bnez $a0 skip_interrupt_handler

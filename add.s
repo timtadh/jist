@@ -17,6 +17,7 @@ main:
     @val = $s6
     @err = $t4
     
+    
     li      $v0 9               # system call code for sbrk
     addi    $a0 $0 0x400        # amount
     syscall                     # make the call
@@ -26,10 +27,15 @@ main:
     call    initialize_heap
     println_hex addr_msg @addr
     
+    
+    enable_interrupts
+    enable_clock_interrupt
+    
     addu    @amt $0 4
 #     sw      @amt 16(@addr) #hack to check last word is moved
     print_hcb @addr
     
+    enable_clock_interrupt
     
     addu    $a0 @amt $0
     addu    $a1 @addr $0
@@ -38,7 +44,8 @@ main:
     addu    @addr $v1 $0
     
     print_hcb @addr
-    
+    enable_clock_interrupt
+    enable_clock_interrupt
     
     addu    @amt $0 17
 #     alloc(amt, addr) --> $v0 = mem_id, $v1 = hcb_addr
@@ -50,6 +57,8 @@ main:
     
     print_hcb @addr
     
+    enable_clock_interrupt
+    enable_clock_interrupt
     
     addu    @amt $0 14
     

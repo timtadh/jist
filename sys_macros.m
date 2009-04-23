@@ -277,12 +277,15 @@ ret:
     quickrestore %2
 #end
 
+
+#define exit_old global
+    li      $v0 10              # syscall code 10 is for exit.
+    syscall                     # make the syscall.
+#end
+
 #define exit global
-{
     __save_args
     __save_temps
-    
-    println exit_msg
     
     la      $a0 KMSG
     li      $a1 2
@@ -298,10 +301,6 @@ ret:
 wait_return:
     __restore_temps
     __restore_args
-.data
-exit_msg: .asciiz "------Process exit------"
-.text
-}
 #end
 
 #define kill_jist global
@@ -332,7 +331,7 @@ wait_return:
 #end
 
 #define disable_interrupts global
-    __save_args
+#     __save_args
     mfc0    $a0 $12             # load the status register
     lui     $a1 0xffff
     ori     $a1 0xfffc
@@ -340,11 +339,11 @@ wait_return:
     mtc0    $a0 $12             # push the changes back to the co-proc
     nop
     nop
-    __restore_args
+#     __restore_args
 #end
 
 #define enable_interrupts global
-    __save_args
+#     __save_args
     mfc0    $a0 $12             # load the status register
     lui     $t1 0xffff
     ori     $t1 0xfffd
@@ -353,15 +352,15 @@ wait_return:
     mtc0    $a0 $12             # push the changes back to the co-proc
     nop
     nop
-    __restore_args
+#     __restore_args
 #end
 
 #define enable_clock_interrupt global
-    __save_args
+#     __save_args
     mfc0    $a0 $9              # get the current clock value
     add     $a0 $a0 1           # add 1
     mtc0    $a0 $11             # push to compare
-    __restore_args
+#     __restore_args
 #end
 
 
@@ -537,11 +536,4 @@ end:
     @hcb_addr = %1
     la  $t0  KHCB_ADDR
     lw  %1   0($t0)
-#end
-
-#launch_program pnum
-#define launch_program global
-    la $a0 user_program_locations
-    lw $a0 0($a0)
-    call make_new_background_process
 #end

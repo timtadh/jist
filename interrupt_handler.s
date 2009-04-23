@@ -164,6 +164,7 @@ save_state_return:
     
     km_wait:
         {
+            #define contextswitch
             @khcb_addr = $s0
             @h = $s1
             @err = $s2
@@ -207,6 +208,9 @@ save_state_return:
                     errmsg: .asciiz "error in cmgr_wait"
                 .text
             noerr:
+            #end
+            contextswitch
+#             enable_clock_interrupt
         }
         b reset_kmsg
     km_exit:
@@ -268,6 +272,8 @@ save_state_return:
         }
         b reset_kmsg
     km_clock_interrupt:
+        contextswitch
+        enable_clock_interrupt
         #do nothing
         b reset_kmsg
     reset_kmsg:
