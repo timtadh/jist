@@ -65,6 +65,7 @@ main:
                 call print_output
                 addu @optr $v0 $zero
             sb @input 0(@tptr)
+            
             b end_input
         in_from_buffer:
             lb @input 0(@tptr)
@@ -129,6 +130,10 @@ main:
         addu @comp $zero @RIGHTB
         bne @input @comp not_rightb
         {
+            li $a0 10
+            call print_char
+            println program_text
+            
             lb @temp 0(@dptr)
             beqz @temp bracket_done
                 li @bracketcount 1

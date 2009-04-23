@@ -12,7 +12,8 @@
 @RIGHTB = 93
 
     .data
-header:         .asciiz "Welcome to Muckfips. Your program will now be executed."
+header:         .asciiz "Welcome to Muckfips. Here is your program text:"
+tweener:        .asciiz "And here is its output:"
 
 program_text:   .asciiz ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<++++>-]<.>>>++++++++++[<+++++++++>-]<---.<<<<.+++.------.--------.>>+.-----------------------."
 
@@ -22,6 +23,9 @@ array:          .space 1024
 main:
 {
     println header
+    println program_text
+    println tweener
+    
     @tptr = $s0
     @dptr = $s1
     @bracketcount = $s2
