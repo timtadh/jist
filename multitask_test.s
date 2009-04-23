@@ -63,6 +63,11 @@ main:
     b loop
     
     killme:
+    
+    call    getuserheap
+    addu    @hcb_addr $v0 $0
+    println_hex hcb_msg @hcb_addr
+    
     exit
     
     .data
