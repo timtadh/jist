@@ -31,12 +31,14 @@ main:
         
         #stackprint
         
+#         sem_wait
         addu $a0 @loopvar $zero
         call print_test
         addi @loopvar @loopvar 1
         
         #stackprint
         wait
+#         sem_signal
         
         li $a0 10
         beq @loopvar $a0 killme
