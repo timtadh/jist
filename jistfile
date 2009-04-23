@@ -2,7 +2,6 @@ multitask_test.s
 add.s
 shell.s
 wumpus.s
-stack_mgr.s
 context_mgr_test.s
 stack_mgr.test.s
 muckfips.s

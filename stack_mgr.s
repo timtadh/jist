@@ -1,178 +1,312 @@
-#Steve Johnson
-#Stack Manager
 
-# ===============
-# = Basic Usage =
-# ===============
-
-# You should only need to call 2 functions here, ever:
-# change_stack new_pid old_fp old_sp
-#     returns the new stack pointer and frame pointer as v0 and v1 respectively
-# clear_stack pid_to_clear
-#     returns nothing
-# If you call change_stack and it doesn't find the new stack, it will create a new one.
-# (Actually it won't, but it will when we have a memory manager.)
-
-#include stdlib.s
-
-.data
-#Format of saved stack array, by word:
-#   0: Available
-#   1: PID
-#   2: address of data array
-_saved_stacks:  .word 0         #need to use .word to make it align properly
-                .space 188      #number of array spots * 12 - 4
-                .word 2, 0, 0   #terminates array
-_current_stack: .word 0
-.text
-
-_find_stack:
-{
-    la $s3 _saved_stacks
-    add $s1 $a0 $zero
-    addi $s2 $zero 2
-    #find the PID in the array
-    _next_item:
-        lw $s0 4($s3)
-        beq $s0 $s1 _slot_found
-        lw $s0 0($s3)
-        beq $s0 $s2 _not_found
-        addi $s3 $s3 12
-        b _next_item
-    _slot_found:
-    add $v0 $s3 $zero
-    return
-    
-    _not_found:
-    add $v0 $zero $zero
-    return
-}
-
-#save_stack new_PID old_fp old_sp
-#   Finds an available slot and stores PID($a0), $fp($a1), and $sp($a2)
+# save_stack(sp) --> $v0 = mem_id
 save_stack:
 {
-    #find a free slot in the array
-    la $v0 _saved_stacks
-    addi $t1 $zero 2
-    _next_item:
-        lw $t0 0($v0)
-        beqz $t0 _slot_found
-        addi $v0 $v0 12
-        b _next_item
-    _slot_found:
+    @stackheap = $s0
+    @stack_top = $s1
+    @curaddr = $s2
+    @count = $s3
+    @amt = $s4
+    @mem_id = $s5
+    @hcb_addr = $s6
+    @sp = $s7
     
-    addi $t0 $zero 1
-    sw $t0 0($v0)   #used = 1
-    sw $a0 4($v0)   #PID = $a0
-    sw $a1 8($v0)   #addr = $a1
+    @loc = $t0
+    @err = $t1
+    
+    addu    @sp $a0 $0
+    
+    {
+        khcb_getaddr @hcb_addr
+        
+        addu    @loc $0 0x3
+        get     @loc $0 @hcb_addr @stackheap @err
+        bne     @err $0 stack_addr_error
+        
+        
+        addu    @loc $0 0x4
+        get     @loc $0 @hcb_addr @stack_top @err
+        bne     @err $0 stack_top_error
+    }
+    
+    
+    subu    @amt @stack_top @sp
+    srl     @amt @amt 2             #div @amt by 4
+    
+#     println_hex amt_msg @amt
+#     println_hex stacktop_msg @stack_top
+#     println_hex sp_msg @sp
+    
+    addu    $a0 @amt $0
+    addu    $a1 @stackheap $0
+    call    alloc
+    addu    @mem_id $v0 $0
+    addu    @stackheap $v1 $0
+    
+    {
+        khcb_getaddr @hcb_addr
+        
+        addu    @loc $0 0x3
+        put     @loc $0 @hcb_addr @stackheap @err
+        bne     @err $0 stack_addr_error
+    }
+    
+    addu    @curaddr @stack_top $0
+    subu    @count @amt 0x1
+#     println_hex sp_msg @sp
+#     println_hex curaddr_msg @curaddr
+#     println_hex count_msg @count
+    {
+    loop:
+        bge     @sp @curaddr endloop
+        {
+            @temp = $t0
+            @err = $t1
+            @pr_temp = $s4
+            
+#             println_hex sp_msg @sp
+#             println_hex curaddr_msg @curaddr
+#             println_hex count_msg @count
+#             println_hex s4_msg @pr_temp
+            
+            lw      @temp 0(@curaddr)
+            addu    @pr_temp @temp $0
+            put     @count @mem_id @stackheap @temp @err
+            bne     @err $0 stack_save_error
+            
+            
+            subu    @curaddr @curaddr 0x4
+            subu    @count @count 0x1
+        }
+        j   loop
+    endloop:
+    }
+    
+    addu    $v0 @mem_id $0
     return
+    
+    stack_addr_error:
+        println stack_addr_error_msg
+        return
+    stack_top_error:
+        println stack_addr_error_msg
+        return
+    stack_save_error:
+        println stack_save_error_msg
+        return
+    
+    .data
+    stack_addr_error_msg: .asciiz "get stackheap address failed in save_stack"
+    stack_top_error_msg: .asciiz "get stack top address failed in save_stack"
+    stack_save_error_msg: .asciiz "saving the stack failed"
+    s4_msg: .asciiz " stackspot = "
+    count_msg: .asciiz " count = "
+    curaddr_msg: .asciiz " curaddr = "
+    sp_msg: .asciiz "\n sp = "
+    amt_msg: .asciiz " amt = "
+    stacktop_msg: .asciiz " stacktop = "
+    .text
 }
 
-#init_stack PID
-#   v0 = fp
-#   v1 = sp
-init_stack:
+# restore_stack(mem_id, sp) --> Null
+restore_stack:
 {
-    #ALLOCATE MEMORY HERE OR SOME SHIT
-    addi $v0 $a0 100
-    addi $v1 $a0 1000
+    @stackheap = $s0
+    @stack_top = $s1
+    @curaddr = $s2
+    @count = $s3
+    @amt = $s4
+    @mem_id = $s5
+    @hcb_addr = $s6
+    @sp = $s7
+    @loc = $t0
+    @err = $t1
+    
+    addu    @mem_id $a0 $0
+    addu    @sp $a1 $0
+    
+    {
+        khcb_getaddr @hcb_addr
+        
+        addu    @loc $0 0x3
+        get     @loc $0 @hcb_addr @stackheap @err
+        bne     @err $0 stack_addr_error
+        
+        
+        addu    @loc $0 0x4
+        get     @loc $0 @hcb_addr @stack_top @err
+        bne     @err $0 stack_top_error
+        
+    }
+    
+    # println_hex mem_id_msg @mem_id
+    # print_hcb @stackheap
+    
+    blocksize @mem_id @stackheap @amt @err
+    bne     @err $0 stack_top_error
+    
+    addu    @curaddr @stack_top $0
+    subu    @count @amt 0x1
+#     println_hex sp_msg @sp
+#     println_hex curaddr_msg @curaddr
+#     println_hex count_msg @count
+    {
+    loop:
+        bge     @sp @curaddr endloop
+        {
+            @temp = $t0
+            @err = $t1
+            @pr_temp = $s4
+            
+            # println_hex sp_msg @sp
+            # println_hex curaddr_msg @curaddr
+            # println_hex count_msg @count
+            # println_hex s4_msg @pr_temp
+            
+            get     @count @mem_id @stackheap @temp @err
+            bne     @err $0 stack_save_error
+            sw      @temp 0(@curaddr)
+            addu    @pr_temp @temp $0
+            
+            subu    @curaddr @curaddr 0x4
+            subu    @count @count 0x1
+        }
+        j   loop
+    endloop:
+    }
+    
+    addu    $a0 @mem_id $0
+    addu    $a1 @stackheap $0
+    call    free
+    addu    @stackheap $v0 $0
+    
+    {
+        khcb_getaddr @hcb_addr
+        
+        addu    @loc $0 0x3
+        put     @loc $0 @hcb_addr @stackheap @err
+        bne     @err $0 stack_addr_error
+    }
+    
+#     print_hcb @stackheap
+    
     return
+    
+    stack_addr_error:
+        println stack_addr_error_msg
+        return
+    stack_top_error:
+        println stack_addr_error_msg
+        return
+    stack_save_error:
+        println stack_save_error_msg
+        return
+    
+    .data
+    stack_addr_error_msg: .asciiz "get stackheap address failed in restore_stack"
+    stack_top_error_msg: .asciiz "get stack top address failed in restore_stack"
+    stack_save_error_msg: .asciiz "restoring the stack failed"
+    s4_msg: .asciiz " stackspot = "
+    count_msg: .asciiz " count = "
+    curaddr_msg: .asciiz " curaddr = "
+    sp_msg: .asciiz "\n sp = "
+    amt_msg: .asciiz " amt = "
+    stacktop_msg: .asciiz " stacktop = "
+    hcb_msg: .asciiz " hcb_addr = "
+    mem_id_msg: .asciiz " mem_id = "
+    .text
 }
 
-#change_stack new_PID old_array_addr
-#   v0 = address of array of data to load
-change_stack:
+
+# save_stack(sp) --> $v0 = mem_id
+zero_stack:
 {
-    #save old stack if there is one
-    add $s0 $a0 $zero
-    la $s2 _current_stack
-    lw $s1 0($s2)
-    beqz $s1 _skip_save
-        add $a0 $s1 $zero
-        exec save_stack
-    _skip_save:
+    @stackheap = $s0
+    @stack_top = $s1
+    @curaddr = $s2
+    @count = $s3
+    @amt = $s4
+    @mem_id = $s5
+    @hcb_addr = $s6
+    @sp = $s7
     
-    #find the old stack, load if necessary
+    @loc = $t0
+    @err = $t1
     
-    add $a0 $s0 $zero
-    call _find_stack
-    beqz $v0 _new_stack
-        add $s4 $v0 $zero
-        lw $v0 8($s4)       #v0 = addr
-        sw $zero 0($s4)     #used = 0
-        b _update_current
-    _new_stack:
-        add $a0 $s0 $zero
-        call init_stack
-    _update_current:
-    #update current_stack so next call of change_stack will work
-    la $t2 _current_stack
-    sw $s0 0($t2)   #current_stack = PID
+    addu    @sp $a0 $0
+    
+    {
+        khcb_getaddr @hcb_addr
+        
+        addu    @loc $0 0x3
+        get     @loc $0 @hcb_addr @stackheap @err
+        bne     @err $0 stack_addr_error
+        
+        
+        addu    @loc $0 0x4
+        get     @loc $0 @hcb_addr @stack_top @err
+        bne     @err $0 stack_top_error
+    }
+    
+    
+    subu    @amt @stack_top @sp
+    srl     @amt @amt 2             #div @amt by 4
+    
+    println_hex amt_msg @amt
+    println_hex stacktop_msg @stack_top
+    println_hex sp_msg @sp
+    
+    
+    addu    @curaddr @stack_top $0
+    subu    @count @amt 0x1
+    println_hex sp_msg @sp
+    println_hex curaddr_msg @curaddr
+    println_hex count_msg @count
+    {
+    loop:
+        bge     @sp @curaddr endloop
+        {
+            @temp = $t0
+            @err = $t1
+            @pr_temp = $s4
+            
+#             println_hex sp_msg @sp
+#             println_hex curaddr_msg @curaddr
+#             println_hex count_msg @count
+#             println_hex s4_msg @pr_temp
+            
+            sw      $0 0(@curaddr)
+            
+            
+            subu    @curaddr @curaddr 0x4
+            subu    @count @count 0x1
+        }
+        j   loop
+    endloop:
+    }
+    
     return
+    
+    stack_addr_error:
+        println stack_addr_error_msg
+        return
+    stack_top_error:
+        println stack_addr_error_msg
+        return
+    stack_save_error:
+        println stack_save_error_msg
+        return
+    
+    .data
+    stack_addr_error_msg: .asciiz "get stackheap address failed in save_stack"
+    stack_top_error_msg: .asciiz "get stack top address failed in save_stack"
+    stack_save_error_msg: .asciiz "saving the stack failed"
+    s4_msg: .asciiz " stackspot = "
+    count_msg: .asciiz " count = "
+    curaddr_msg: .asciiz " curaddr = "
+    sp_msg: .asciiz "\n sp = "
+    amt_msg: .asciiz " amt = "
+    stacktop_msg: .asciiz " stacktop = "
+    .text
 }
 
-#clear_stack PID
-clear_stack:
-{
-    call _find_stack
-    beqz $v0 _done
-        sw $zero 0($v0)     #used = 0...that is all
-    _done:
-    return
-}
-
-print_stack:
-{
-    la $s2 _saved_stacks
-    add $s0 $zero $zero
-    addi $s1 $zero 2
-    print_again:
-        lw $a0 0($s2)
-        call print_int
-        li $a0 32
-        call print_char
-        lw $a0 4($s2)
-        call print_int
-        li $a0 32
-        call print_char
-        lw $a0 8($s2)
-        call print_int
-        li $a0 10
-        call print_char
-        lw $s0 0($s2)
-        addi $s2 $s2 12
-    bne $s0 $s1 print_again
-    li $a0 10
-    call print_char
-    return
-}
-
-.text
-.globl main
-main:
-    li $a0 1
-    call change_stack
-    call print_stack
-    
-    li $a0 2            #2 is the NEW PID
-    li $a1 11           #11 is the OLD ADDRESS of stack data
-    call change_stack
-    call print_stack
-    
-    li $a0 1
-    li $a1 22
-    call change_stack
-    addi $a0 $zero 1
-    call print_stack
-    
-    li $a0 3
-    li $a1 12
-    call change_stack
-    call print_stack
-    
-    li $a0 4
-    li $a1 33
-    call change_stack
-    call print_stack
-    exit
