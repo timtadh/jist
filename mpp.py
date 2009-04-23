@@ -49,6 +49,7 @@ main_labels = list()
 var_split = re.compile(r'\s*=\s*')
 strip_comments = False
 first_prog = 0
+magic_strings = []
 
 def get_file_text(f1):
     #process includes
@@ -75,6 +76,10 @@ def get_file_text(f1):
 def make_kernel_macros():
     '''creates specialized macros'''
     global kernel_macros
+    
+    magic_prompt_string = ''
+    if len(magic_strings):
+        magic_prompt_string = '    .asciiz "'+''.join(magic_strings) + '"\n'
     
     number_user_programs = ''
     if not strip_comments:
@@ -116,7 +121,8 @@ def make_kernel_macros():
     kernel_macros.update({
         'number_user_programs':number_user_programs, 
         'load_user_programs':load_user_programs,
-        'load_first_program':load_first_program
+        'load_first_program':load_first_program,
+        'magic_prompt_string':magic_prompt_string
     })
 
 def post_process_kernel_macro(macro_text):
@@ -356,8 +362,9 @@ def process_lines(s, kernel, use_kernel_macros, local_macros=dict(), toplevel=Fa
     else:
         raise Exception, "Scoping Error"
 
-def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False, cstrip=False, first=0):
-    global global_macros, strip_comments, first_prog
+def process(path, out, kernel=False, replace_labels=False, use_kernel_macros=False, cstrip=False, first=0, ps=[]):
+    global global_macros, strip_comments, first_prog, magic_strings #magic!
+    magic_strings = ps
     strip_comments = cstrip
     first_prog = first
     

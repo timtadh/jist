@@ -83,11 +83,12 @@ if os.path.exists('build'):
 os.makedirs('build')
 
 kernel_started = False
+prompt_strings = [str(i)+": " + os.path.splitext(s)[0] + r"\n" for i, s in zip(range(len(filenames)), filenames)][1:-1]
 
 for filename in filenames:
     new_path = os.path.join('build', filename.split('/')[-1])
     if filename not in kernel_files:
-        mpp.process(filename, new_path, replace_labels=True, cstrip=cstrip, first=first_prog)
+        mpp.process(filename, new_path, replace_labels=True, cstrip=cstrip, first=first_prog, ps=prompt_strings)
     elif not kernel_started:
         kernel_started = True
         mpp.make_kernel_macros()
