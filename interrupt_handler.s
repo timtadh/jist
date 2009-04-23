@@ -116,6 +116,7 @@ save_state_return:
     li $a1 0
     call save_proc
     
+    ######### SAVE THE STACK #########
     {
         @hcb_addr = $s1
         @pcb_id = $s2
@@ -146,6 +147,7 @@ save_state_return:
         
         
     }
+    ######### SAVE THE STACK #########
     
     
     la $a0 KMSG
@@ -173,6 +175,8 @@ save_state_return:
     # lw $a0 0($a0)
     # call restore_proc
     
+    
+    ######### RESTORE THE STACK ##########
     {
         @hcb_addr = $s1
         @pcb_id = $s2
@@ -191,6 +195,7 @@ save_state_return:
         addu    $a1 @sp $0
         call    restore_stack
     }
+    ######### RESTORE THE STACK ##########
 }
     j       restore_state
 restore_state_return:
