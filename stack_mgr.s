@@ -1,4 +1,25 @@
 
+# getstackinfo khcb_addr stackheap stack_top tempreg errorlabel
+#     khbc_addr = the address of the kernel static heap. Note it must be in an $s reg
+#     stackheap = where you want to place the stackheap addr. Note it must be in an $s reg
+#     stack_top = where you want to place the stack_top addr. Note it must be in an $s reg
+#     tempreg = any temporary register you don't care about
+#     errorlabel = label you want to jump to on error
+#
+#define getstackinfo
+    @khcb_addr = %1
+    @stackheap = %2
+    @stack_top = %3
+    @err = %4
+    @errorlabel = %5
+    
+    geti    0x3 $0 @khcb_addr @stackheap @err
+    bne     @err $0 @errorlabel
+    
+    geti    0x4 $0 @khcb_addr @stack_top @err
+    bne     @err $0 @errorlabel
+#end
+
 # save_stack(sp) --> $v0 = mem_id
 save_stack:
 {
@@ -8,7 +29,7 @@ save_stack:
     @count = $s3
     @amt = $s4
     @mem_id = $s5
-    @hcb_addr = $s6
+    @khcb_addr = $s6
     @sp = $s7
     
     @loc = $t0
@@ -16,18 +37,8 @@ save_stack:
     
     addu    @sp $a0 $0
     
-    {
-        khcb_getaddr @hcb_addr
-        
-        addu    @loc $0 0x3
-        get     @loc $0 @hcb_addr @stackheap @err
-        bne     @err $0 stack_addr_error
-        
-        
-        addu    @loc $0 0x4
-        get     @loc $0 @hcb_addr @stack_top @err
-        bne     @err $0 stack_top_error
-    }
+    khcb_getaddr @khcb_addr
+    getstackinfo @khcb_addr @stackheap @stack_top @err stack_addr_error
     
     
     subu    @amt @stack_top @sp
@@ -44,10 +55,10 @@ save_stack:
     addu    @stackheap $v1 $0
     
     {
-        khcb_getaddr @hcb_addr
+        khcb_getaddr @khcb_addr
         
         addu    @loc $0 0x3
-        put     @loc $0 @hcb_addr @stackheap @err
+        put     @loc $0 @khcb_addr @stackheap @err
         bne     @err $0 stack_addr_error
     }
     
@@ -117,7 +128,7 @@ restore_stack:
     @count = $s3
     @amt = $s4
     @mem_id = $s5
-    @hcb_addr = $s6
+    @khcb_addr = $s6
     @sp = $s7
     @loc = $t0
     @err = $t1
@@ -125,19 +136,8 @@ restore_stack:
     addu    @mem_id $a0 $0
     addu    @sp $a1 $0
     
-    {
-        khcb_getaddr @hcb_addr
-        
-        addu    @loc $0 0x3
-        get     @loc $0 @hcb_addr @stackheap @err
-        bne     @err $0 stack_addr_error
-        
-        
-        addu    @loc $0 0x4
-        get     @loc $0 @hcb_addr @stack_top @err
-        bne     @err $0 stack_top_error
-        
-    }
+    khcb_getaddr @khcb_addr
+    getstackinfo @khcb_addr @stackheap @stack_top @err stack_addr_error
     
     # println_hex mem_id_msg @mem_id
     # print_hcb @stackheap
@@ -181,10 +181,10 @@ restore_stack:
     addu    @stackheap $v0 $0
     
     {
-        khcb_getaddr @hcb_addr
+        khcb_getaddr @khcb_addr
         
         addu    @loc $0 0x3
-        put     @loc $0 @hcb_addr @stackheap @err
+        put     @loc $0 @khcb_addr @stackheap @err
         bne     @err $0 stack_addr_error
     }
     
