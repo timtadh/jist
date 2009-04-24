@@ -280,7 +280,6 @@ ret:
 #define exit global
 {
     __save_args
-    __save_temps
     
     println exit_msg
     
@@ -296,7 +295,6 @@ ret:
     la      $a0 exception_handler
     jr      $a0
 wait_return:
-    __restore_temps
     __restore_args
 .data
 exit_msg: .asciiz "------Process exit------"
