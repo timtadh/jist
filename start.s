@@ -92,7 +92,7 @@ __start:
     #println_hex stack_pointer_msg @sp
     
     #initialize space for first process
-    call load_first_process
+    call init_context_manager
     
     #sneaky kernel macros
     load_user_programs

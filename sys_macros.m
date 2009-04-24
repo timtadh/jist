@@ -541,5 +541,5 @@ end:
 #define launch_program global
     la $a0 user_program_locations
     lw $a0 0($a0)
-    call make_new_background_process
+    call load_process
 #end

@@ -3,42 +3,20 @@
 # These functions keep track of PIDs and PCBs for currently running processes
 #   using a circular linked list.
 
-.data
-FAKE_KHCB_ADDR: .word 0
-
-_quit_msg: .asciiz "All programs have exited. Closing jist."
-
-.text
-#define khcb_writeback_2
-    khcb_writeback %1
-    # @khcb_addr = $t0
-    # @val = %1
-    # la  @khcb_addr  FAKE_KHCB_ADDR
-    # sw  @val   0(@khcb_addr)
-#end
-
-#define khcb_getaddr_2
-    khcb_getaddr %1
-    # @khcb_addr = $t0
-    # @hcb_addr = %1
-    # la  @khcb_addr  FAKE_KHCB_ADDR
-    # lw  @hcb_addr   0(@khcb_addr)
-#end
-
 .text
 #format of a linked list:
-#   @h: head: [process num][next address][pcb mem_id]
+#   @h: head: [next address][process num][pcb mem_id]
 
 
 #define _new_ll_node local
     @khcb_addr = $s3
-    khcb_getaddr_2 @khcb_addr
+    khcb_getaddr @khcb_addr
     li $a0 3
     addu $a1 @khcb_addr $zero
     call alloc
     addu    %1 $v0 $zero
     addu    @khcb_addr $v1 $zero
-    khcb_writeback_2 @khcb_addr
+    khcb_writeback @khcb_addr
 #end
 
 #ll_init(initial_pid, initial_pcb)
@@ -55,7 +33,7 @@ ll_init:
     
     _new_ll_node @h
     
-    khcb_getaddr_2 @khcb_addr
+    khcb_getaddr @khcb_addr
     puti 0 @h @khcb_addr $zero @err
     puti 1 @h @khcb_addr @initval @err
     puti 2 @h @khcb_addr @initpcb @err
@@ -83,17 +61,17 @@ ll_append:
     
     _new_ll_node @new
     
-    khcb_getaddr_2 @khcb_addr
+    khcb_getaddr @khcb_addr
     geti 0 @thisnode @khcb_addr @nextnode @err
     loop:
         beqz @nextnode found_end
         addu @thisnode @nextnode $zero
         geti 0 @thisnode @khcb_addr @nextnode @err
-        khcb_getaddr_2 @khcb_addr
+        khcb_getaddr @khcb_addr
         b loop
     found_end:
     
-    khcb_getaddr_2 @khcb_addr
+    khcb_getaddr @khcb_addr
     puti 0 @thisnode @khcb_addr @new @err
     puti 0 @new @khcb_addr $zero @err
     puti 1 @new @khcb_addr @newval @err
@@ -115,7 +93,7 @@ ll_next:    #@h @current
     add @head $a0 $zero
     add @current $a1 $zero
     
-    khcb_getaddr_2 @khcb_addr
+    khcb_getaddr @khcb_addr
     geti 0 @current @khcb_addr $v0 @err
     beqz $v0 return_head
         return
@@ -139,7 +117,7 @@ ll_find_pid:
     add @head $a0 $zero
     add @to_find $a1 $zero
 
-    khcb_getaddr_2 @khcb_addr
+    khcb_getaddr @khcb_addr
     
     geti 1 @head @khcb_addr @temp @err
     beq @temp @to_find head_case
@@ -184,7 +162,7 @@ ll_remove:
     add @to_remove $a1 $zero
     addu @head_o @head $zero
     
-    khcb_getaddr_2 @khcb_addr
+    khcb_getaddr @khcb_addr
     beq @head @to_remove head_case
     
     #println_hex msg $s1
@@ -201,7 +179,7 @@ ll_remove:
             addu $a1 @khcb_addr $zero
             call free
             addu @temp $v0 $zero
-            khcb_writeback_2 @temp
+            khcb_writeback @temp
             addu $v0 @head_o $zero
             return
         not_found_yet:
@@ -217,7 +195,7 @@ ll_remove:
         addu $a1 @khcb_addr $zero
         call free
         addu @temp $v0 $zero
-        khcb_writeback_2 @temp
+        khcb_writeback @temp
         addu $v0 @head $zero
         return
     
@@ -234,6 +212,7 @@ ll_remove:
 .data
 errorstr: .asciiz "bloody death in ll_remove\n"
 msg: .asciiz "to remove: "
+_quit_msg: .asciiz "All programs have exited. Closing Jist."
 }
 
 .text
@@ -249,26 +228,7 @@ ll_print:
     
     print_again:
         beqz @mem_id done_printing
-        khcb_getaddr_2 @khcb_addr
-        
-        # call print_int
-        # li $a0 32
-        # call print_char
-        # 
-        # geti 0 @mem_id @khcb_addr $a0 @err
-        # call print_int
-        # li $a0 32
-        # call print_char
-        # 
-        # geti 1 @mem_id @khcb_addr $a0 @err
-        # call print_int
-        # li $a0 32
-        # call print_char
-        # 
-        # geti 2 @mem_id @khcb_addr $a0 @err
-        # call print_int
-        # li $a0 10
-        # call print_char
+        khcb_getaddr @khcb_addr
         
         geti 2 @mem_id @khcb_addr $a0 @err
         store_arg $a0

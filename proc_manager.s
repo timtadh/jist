@@ -55,8 +55,8 @@ get_cmgr_head:
 }
 
     .text
-#load_first_process()
-load_first_process:
+#init_context_manager()
+init_context_manager:
 {
     @pid = $s0
     @h = $s1
@@ -87,9 +87,6 @@ load_first_process:
     puti    2   $zero @khcb_addr @pid @err
     bnez    @err    lfp_err
     
-    #addu $a0 @h $zero
-    #call ll_print
-    
     la $t0 current_pcb
     sw @mem_id 0($t0)
     la $t0 current_pid
@@ -104,12 +101,12 @@ load_first_process:
     
     .data
 default_data_amt: .word 0x00004000
-error_msg: .asciiz "load_first_process failed"
+error_msg: .asciiz "init_context_manager failed"
     .text
 }
 
-#make_new_background_process(program_counter)
-make_new_background_process:
+#load_process(program_counter)
+load_process:
 {
     @pid = $s0
     @h = $s1

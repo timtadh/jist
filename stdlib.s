@@ -507,7 +507,7 @@ run_program:
     la      $a0 user_program_locations
     addu    $a0 $a0 @choice
     lw      $a0 0($a0)
-    call    make_new_background_process
+    call    load_process
     wait
     return
 }
