@@ -6,6 +6,5 @@ muckfips.s
 imuckfips.s
 multitask_demo.s
 shell.s
-eecs314demo.s
 
 init_with: shell.s
