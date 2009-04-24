@@ -276,49 +276,6 @@ horrible_error: .asciiz "Something really bad happened when trying to save the P
 .text
 }
     
-# new_proc(data_amt) -> Null
-#     data_amt = the amount of room this proccess gets for its heap and stack. static can't change.
-new_proc:
-{
-    @mem_id = $s0
-    @temp = $t1
-    @loc = $s1
-    @hcb_addr = $s2
-    @error = $t2
-    call create_pcb             # create a process control block
-    add     @hcb_addr $v1 $zero
-    add     @mem_id $v0 $0          # save the pcb addr into $s0
-    
-    
-    lw      @temp next_proc_num   # load the next proccess number into $t1
-    li      @loc 1
-    put     @loc @mem_id @hcb_addr @temp @error
-    bne     @error $zero put_error
-    #sw      $t1 4($s0)          # save the proc number in the pcb
-    addi    @temp @temp 1           # increment the next_proc_num
-    put     @loc @mem_id @hcb_addr @temp @error
-    bne     @error $zero put_error
-    #sw      $t1 next_proc_num   # save it
-    
-    mfc0    @temp $14             # get the EPC register
-    li      @loc 2
-    put     @loc @mem_id @hcb_addr @temp @error
-    bne     @error $zero put_error
-    #sw      $t1 8($s0)          # save the program counter number in the pcb
-    
-    addu    $a0 @mem_id $0          # load pcb_addr into arg1
-    li      $a1 0               # load a default status of 0 "new" into arg2
-    call    save_proc
-    
-    return
-put_error:
-    println  horrible_error
-    exit
-.data
-horrible_error: .asciiz "Something really bad happened when trying to create a new process\n"
-.text
-}
-    
     # restore_proc(mem_id) -> Nul
 restore_proc:
 {

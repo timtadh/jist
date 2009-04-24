@@ -87,9 +87,9 @@ __start:
     khcb_getaddr @hcb_addr
     puti    4 $0 @hcb_addr @sp @err
     
-    #addu    @loc $0 0x4
-    #get     @loc $0 @hcb_addr @sp @err
-    #println_hex stack_pointer_msg @sp
+    addu    @loc $0 0x4
+    get     @loc $0 @hcb_addr @sp @err
+    println_hex stack_pointer_msg @sp
     
     #initialize space for first process
     call init_context_manager
