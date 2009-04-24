@@ -1,4 +1,4 @@
-add.s
+heap_test.s
 imuckfips.s
 muckfips.s
 multitask_demo.s
