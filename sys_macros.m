@@ -521,6 +521,19 @@ end:
     addu    @err $v0 $0
 #end
 
+# alloci size hcb_addr dest
+#define alloci
+    @size = %1
+    @hcb_addr = %2
+    @dest = %3
+    
+    addu    $a0 $0 @size
+    addu    $a1 @hcb_addr $zero
+    call    alloc
+    addu    @dest $v0 $zero
+    addu    @hcb_addr $v1 $zero
+#end
+
 # khcb_writeback hcb_addr
 #define khcb_writeback
     @khcb_addr = $t0

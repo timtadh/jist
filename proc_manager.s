@@ -61,34 +61,35 @@ init_context_manager:
     @pid = $s0
     @h = $s1
     @err = $s2
-    @mem_id = $s3
+    @pcb_id = $s3
     @khcb_addr = $s4
     
+    #Initialize a PCB on the kernel heap
     khcb_getaddr @khcb_addr
-    
-    addu    $a0 $0 50
-    addu    $a1 @khcb_addr $zero
-    call    alloc
-    addu    @mem_id $v0 $zero
-    addu    @khcb_addr $v1 $zero
-    
+    alloci 50 @khcb_addr @pcb_id
     khcb_writeback @khcb_addr
     
+    #Get a new PID
     call new_pid
     addu @pid $v0 $zero
+    
+    #Initialize the linked list with the new values
     addu $a0 @pid $zero
-    addu $a1 @mem_id $zero
+    addu $a1 @pcb_id $zero
     call ll_init
     addu @h $v0 $zero
     
+    #Put the list head and current PID into kernel static space
     puti    1   $zero @khcb_addr @h @err
     bnez    @err    lfp_err
     
     puti    2   $zero @khcb_addr @pid @err
     bnez    @err    lfp_err
     
+    #Store PCB and PID in other static data areas
+    #to initialize parts of the interrupt handler
     la $t0 current_pcb
-    sw @mem_id 0($t0)
+    sw @pcb_id 0($t0)
     la $t0 current_pid
     sw @pid 0($t0)
     
@@ -119,36 +120,37 @@ load_process:
     
     addu @pc $a0 $zero
     
+    #Initialize a PCB on the kernel heap
     khcb_getaddr @khcb_addr
-    
-    addu    $a0 $0 50
-    addu    $a1 @khcb_addr $zero
-    call    alloc
-    addu    @pcb_id $v0 $zero
-    addu    @khcb_addr $v1 $zero
-    
+    alloci 50 @khcb_addr @pcb_id
     khcb_writeback @khcb_addr
     
+    #Get the list head
     call get_cmgr_head
     addu @h $v0 $zero
     
+    #And a new PID
     call new_pid
     addu @pid $v0 $zero
     
+    #Append the new data to the context manager linked list
     addu $a0 @h $zero
     addu $a1 @pid $zero
     addu $a2 @pcb_id $zero
     call ll_append
     
+    #Initialize the program counter and print a status message
     subu    @pc @pc 4
     mtc0    @pc $14
     println_hex pc_msg @pc
     
+    #Save the procedure so it will be loaded normally by the interrupt handler
     addu $a0 @pcb_id $zero
     li $a1 0
     call save_proc
     
     {
+        #Put some sane values in stack storage
         khcb_getaddr @khcb_addr
         geti 4 $zero @khcb_addr @sp @err
         addu    $a0 @sp $zero
@@ -170,7 +172,7 @@ load_process:
     
     .data
 default_data_amt: .word 0x00004000
-error_msg: .asciiz "load_first_process failed"
+error_msg: .asciiz "load_process failed"
 pc_msg: .asciiz "Spawning new process at PC = "
     .text
 }
