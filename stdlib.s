@@ -143,7 +143,7 @@ print_int:
     add @saved $a0 $zero    #copy integer to t2
     li @ten 10
     la @bufferpos_1 p_int_buf    #init buffer in t5
-    addu @bufferpos_1 @bufferpos_1 $zero   #copy to t6
+    addu @bufferpos_2 @bufferpos_1 $zero   #copy to t6
 
     li @neg_sign 0          #init negative bit to zero
     
@@ -157,7 +157,6 @@ print_int:
 
     sub @saved $zero $a0   #make number positive
     add $a0 @saved $zero
-
     do_digit:
         #This loop actually stores the number characters *backwards.*.
         #It is faster that way.
