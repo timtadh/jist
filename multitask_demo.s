@@ -3,13 +3,9 @@
     .globl main
 main:
 {
-    la $a0 user_program_locations
-    lw $a0 0($a0)
-    call make_new_background_process
-    
-    la $a0 user_program_locations
-    lw $a0 4($a0)
-    call make_new_background_process
-    
+    li $a0 1
+    call run_program
+    li $a0 2
+    call run_program
     exit
 }
