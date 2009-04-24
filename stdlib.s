@@ -98,13 +98,14 @@ end_read:
 #     msg_addr = address of the msg
 print:
 {
-write_again:
-    lbu $t3 0($a0)
-    addi $a0 $a0 1
-    beqz $t3 end_write
-    _write_char $t3
-    b write_again
-end_write:
+    @outchar = $t3
+    write_again:
+        lbu @outchar 0($a0)
+        addi $a0 $a0 1
+        beqz @outchar end_write
+        _write_char @outchar
+        b write_again
+    end_write:
     return
 }
 
@@ -112,15 +113,16 @@ end_write:
 #     msg_addr = address of the msg
 println:
 {
-write_again:
-    lbu $t3 0($a0)
-    addi $a0 $a0 1
-    beqz $t3 end_write
-    _write_char $t3
-    b write_again
-end_write:
-    addi $t3 $zero 10
-    _write_char $t3
+    @out_char = $t3
+    write_again:
+        lbu @out_char 0($a0)
+        addi $a0 $a0 1
+        beqz @out_char end_write
+        _write_char @out_char
+        b write_again
+    end_write:
+    li @out_char 10
+    _write_char @out_char
     return
 }
 
@@ -131,54 +133,55 @@ p_int_buf: .space 11
 .text
 print_int:
 {
-    #t0-t1: used by _write_char
-    #t2: modifiedcopy of variable
-    #t3: character to write or store in buffer
-    #t4: the number 10
-    #t5-t6: buffer positons
-    #t7: negativity
-    add $t2 $a0 $zero   #copy integer to t2
-    addi $t4 $zero 10   #put 10 in t4 to use in division later
-    la $t5 p_int_buf    #init buffer in t5
-    add $t6 $t5 $zero   #copy to t6
-
-    add $t7 $zero $zero #init negative bit to zero
+    @saved = $t2
+    @out_char = $t3
+    @ten = $t4
+    @bufferpos_1 = $t5
+    @bufferpos_2 = $t6
+    @neg_sign = $t7
     
-    bnez $t2 do_digit   #check for zero
-        addi $t2 $t2 48
-        _write_char $t2
+    add @saved $a0 $zero    #copy integer to t2
+    li @ten 10
+    la @bufferpos_1 p_int_buf    #init buffer in t5
+    addu @bufferpos_1 @bufferpos_1 $zero   #copy to t6
+
+    li @neg_sign 0          #init negative bit to zero
+    
+    bnez @saved do_digit   #check for zero
+        li @saved 48
+        _write_char @saved
         return
     
-    bgez $t2 do_digit   #set negative bit if necessary, otherwise skip
-    addi $t7 $zero 1
+    bgez @saved do_digit   #set negative bit if necessary, otherwise skip
+    addi @neg_sign $zero 1
 
-    sub $t2 $zero $a0   #make number positive
-    add $a0 $t2 $zero
+    sub @saved $zero $a0   #make number positive
+    add $a0 @saved $zero
 
-do_digit:
-    #This loop actually stores the number characters *backwards.*.
-    #It is faster that way.
-    blez $t2 end_digits #stop when t2 == 0
-    div $t2 $t4         #t2 / 10
-    mfhi $t3            #t3 = t2 % 10
-    mflo $t2            #t2 = t2 / 10
-    addi $t3 $t3 48     #t3 = t3 + 48 (48 = '0')
-    sb $t3 0($t6)       #store t3 in buffer
-    addi $t6 $t6 1      #move forward in buffer
-    b do_digit
-end_digits:
-    sb $zero 0($t6)     #terminate the string just in case
+    do_digit:
+        #This loop actually stores the number characters *backwards.*.
+        #It is faster that way.
+        blez @saved end_digits              #stop when t2 == 0
+        div @saved @ten                     #t2 / 10
+        mfhi @out_char                      #t3 = t2 % 10
+        mflo @saved                         #t2 = t2 / 10
+        addi @out_char @out_char 48         #t3 = t3 + 48 (48 = '0')
+        sb @out_char 0(@bufferpos_2)        #store t3 in buffer
+        addi @bufferpos_2 @bufferpos_2 1    #move forward in buffer
+        b do_digit
+    end_digits:
+        sb $zero 0(@bufferpos_2)            #terminate the string just in case
 
-    beqz $t7 write_again    #print negative sign if necessary
-    addi $t3 $zero 45       #45 = '-'
-    _write_char $t3
-write_again:
-    addi $t6 $t6 -1     #step backwards until t6 <= t5
-    lbu $t3 0($t6)
-    blt $t6 $t5 end_write
-    _write_char $t3
-    b write_again
-end_write:
+        beqz @neg_sign write_again          #print negative sign if necessary
+        li @out_char 45                     #45 = '-'
+        _write_char @out_char
+    write_again:
+        addi @bufferpos_2 @bufferpos_2 -1   #step backwards until t6 <= t5
+        lbu @out_char 0(@bufferpos_2)
+        blt @bufferpos_2 @bufferpos_1 end_write
+        _write_char @out_char
+        b write_again
+    end_write:
     
     return
 }
@@ -248,102 +251,73 @@ printf:
     #s3: format code identifier ('d', 'c', 'x', etc)
     #s4: current argument number
     
-    add $s0 $a0 $zero
-    addi $s2 $zero 37   #37 = '%' stored here 'permanently' for speed
-    addi $s4 $zero 1
+    @buffer = $s0
+    @this_char = $s1
+    @percent = $s2
+    @fmt = $s3
+    @argnum = $s4
     
-write_again:
-    #read, move pointer, check for zero
-    lbu $s1 0($s0)
-    addi $s0 $s0 1
-    beqz $s1 end_write
+    add @buffer $a0 $zero
+    addi @percent $zero 37      #37 = '%' stored here 'permanently' for speed
+    addi @argnum $zero 1
     
-    beq $s1 $s2 format_pattern  #if not %:
-        _write_char $s1         #   write char verbatim
-        b end_format_pattern    #   read again
-    format_pattern:             #else:
-        lbu $s1 0($s0)          #   read format code
-        addi $s0 $s0 1          #   bump pointer
+    write_again:
+        #read, move pointer, check for zero
+        lbu @this_char 0(@buffer)
+        addi @buffer @buffer 1
+        beqz @this_char end_write
         
-        beqz $s1 _zero          #end of string
-        addi $s3 $zero 100      #d
-        beq $s1 $s3 _dec
-        addi $s3 $zero 120      #x
-        beq $s1 $s3 _lhex
-        addi $s3 $zero 99       #c
-        beq $s1 $s3 _char
-        addi $s3 $zero 115      #s
-        beq $s1 $s3 _str
-        b _other                #everything else
-        
-        #formula for these: load arg, call function, bump arg number, loop
-        _dec:
-            load_arg_by_reg $s4 $a0
-            exec print_int
-            addi $s4 $s4 1
-            b end_format_pattern
-        _lhex:
-            load_arg_by_reg $s4 $a0
-            call print_hex
-            addi $s4 $s4 1
-            b end_format_pattern
-        _char:
-            load_arg_by_reg $s4 $a0
-            _write_char $a0
-            addi $s4 $s4 1
-            b end_format_pattern
-        _str:
-            load_arg_by_reg $s4 $a0
-            exec print
-            addi $s4 $s4 1
-            b end_format_pattern
-        _other:
-            _write_char $s2
-            _write_char $s1
-            b write_again
-        _zero:
-            _write_char $s2
-            b end_write
-    end_format_pattern:
-    b write_again
-end_write:
+        beq @this_char @percent format_pattern  #if not %:
+            _write_char @this_char      #   write char verbatim
+            b end_format_pattern        #   read again
+        format_pattern:                 #else:
+            lbu @this_char 0(@buffer)   #   read format code
+            addi @buffer @buffer 1      #   bump pointer
+            
+            beqz @this_char _zero       #end of string
+            li @fmt 100                 #d
+            beq @this_char @fmt _dec
+            li @fmt 120                 #x
+            beq @this_char @fmt _lhex
+            li @fmt 99                  #c
+            beq @this_char @fmt _char
+            li @fmt 115                 #s
+            beq @this_char @fmt _str
+            b _other                #everything else
+            
+            #formula for these: load arg, call function, bump arg number, loop
+            _dec:
+                load_arg_by_reg @argnum $a0
+                exec print_int
+                addi @argnum @argnum 1
+                b end_format_pattern
+            _lhex:
+                load_arg_by_reg @argnum $a0
+                call print_hex
+                addi @argnum @argnum 1
+                b end_format_pattern
+            _char:
+                load_arg_by_reg @argnum $a0
+                _write_char $a0
+                addi @argnum @argnum 1
+                b end_format_pattern
+            _str:
+                load_arg_by_reg @argnum $a0
+                exec print
+                addi @argnum @argnum 1
+                b end_format_pattern
+            _other:
+                _write_char @percent
+                _write_char @this_char
+                b write_again
+            _zero:
+                _write_char @percent
+                b end_write
+        end_format_pattern:
+        b write_again
+    end_write:
     return
 }
-
-    .text
-# # print_arr array_addr size
-# #     array_addr = the address of the array
-# #     size = the size of the array
-# print_array:
-# {
-#     add     $s0 $a0 $0
-#     add     $s1 $a1 $0
-#     la      $a0 sbracket_l
-#     exec    print
-#     add     $s2 $0 $0
-#     beq     $s1 $0 end_loop
-# loop:
-#     add     $a0 $s0 $0
-#     add     $a1 $s2 $0
-#     exec    get
-#     add     $a0 $v0 $0
-#     exec    print_int
-#     
-#     add     $s2 $s2 1
-#     beq     $s2 $s1 end_loop
-#     la      $a0 comma
-#     exec    print
-#     
-#     j       loop
-# end_loop:
-#     la      $a0 sbracket_r
-#     exec    println
-#     return
-#     .data
-# comma: .asciiz ", "
-# sbracket_l: .asciiz "["
-# sbracket_r: .asciiz "]"
-# }
 
 
     .text
@@ -351,16 +325,18 @@ end_write:
 #     digit = contains the digit your want to print in first nibble
 print_hex_digit:
 {
-    andi    $s0 $a0 0x000f
+    @this_char = $s0
+    @const = $s1
+    andi    @this_char $a0 0x000f
     #if $a0 >= 10
-    li      $s1 10
-    bge     $s0 $s1 bigger_than_10
-    li      $s1 0x30 # 0 in ascii
+    li      @const 10
+    bge     @this_char @const bigger_than_10
+    li      @const 0x30 # 0 in ascii
     j       print_digit
 bigger_than_10:
-    li      $s1 0x57 # a - 10 in ascii
+    li      @const 0x57 # a - 10 in ascii
 print_digit:
-    add     $a0 $s0 $s1
+    add     $a0 @this_char @const
     _write_char $a0
     return
 }
@@ -369,21 +345,24 @@ print_digit:
 #     reg = the word you want to print
 print_hex:
 {
-    add     $s0 $a0 $0
+    @this_char = $s0
+    @temp = $s1
+    
+    add     @this_char $a0 $0
     la      $a0 ox
     call    print
-    add     $s1 $0 8
+    add     @temp $0 8
     
 loop:
-    beq     $s1 $0 loop_end
+    beq     @temp $0 loop_end
     
     lui     $a0 0xf000
-    and     $a0 $s0 $a0
+    and     $a0 @this_char $a0
     srl     $a0 $a0 28
     call    print_hex_digit
-    sll     $s0 $s0 4
+    sll     @this_char @this_char 4
     
-    sub     $s1 $s1 1
+    sub     @temp @temp 1
     j       loop
 loop_end:
     return
@@ -399,33 +378,6 @@ println_hex:
     _write_char $a0
     return
 }
-
-    .text
-# # put array_addr index reg --> Null
-# #     array_addr = the address of the array
-# #     index = what index
-# #     reg = the register you want to save
-# put:
-# {
-#     add     $a3 $a1 $0
-#     mul     $a3 $a3 4
-#     addu    $a3 $a3 $a0
-#     sw      $a2  0($a3)
-#     return
-# }
-
-    .text
-# # get array_addr index --> $v0 = the value from the array
-# #     array_addr = the address of the array
-# #     index = what index
-# get:
-# {
-#     add     $a3 $a1 $0
-#     mul     $a3 $a3 4
-#     addu    $a3 $a3 $a0
-#     lw      $v0 0($a3)
-#     return
-# }
 
 # print_hcb (hcb_addr) --> Null
 print_hcb:
