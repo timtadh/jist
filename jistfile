@@ -1,10 +1,9 @@
-multitask_test.s
-multitask_test_2.s
 add.s
-wumpus.s
-muckfips.s
 imuckfips.s
+muckfips.s
 multitask_demo.s
 shell.s
+user_heap_test.s
+wumpus.s
 
 init_with: shell.s

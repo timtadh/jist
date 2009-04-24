@@ -8,13 +8,9 @@ count_string_2: .asciiz "                      Process 2 count: "
     .globl main
 main:
 {
-    #li $a0 1
-    #call run_program
     la $a0 process_1
     call load_process
     
-    #li $a0 2
-    #call run_program
     la $a0 process_2
     call load_process
     exit
