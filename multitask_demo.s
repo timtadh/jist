@@ -1,5 +1,6 @@
 # Steve Johnson
 # simple demo for multitasking
+
 .data
 count_string_1: .asciiz "Process 1 count: "
 count_string_2: .asciiz "                      Process 2 count: "
@@ -8,15 +9,19 @@ count_string_2: .asciiz "                      Process 2 count: "
     .globl main
 main:
 {
+    #load_process simply takes a label address
     la $a0 process_1
     call load_process
     
     la $a0 process_2
     call load_process
+    
+    #take this process out of the process list and free its PCB and stack
     exit
 }
 
 .text
+#print_test(n, prefix_string)
 print_test:
 {
     addu $s0 $a0 $zero
@@ -28,7 +33,9 @@ print_test:
     call print_char
     return
 }
+
 .text
+#counts from 0 to 2 and then exits
 process_1:
 {
     @loopvar = $s0
@@ -46,7 +53,9 @@ process_1:
     killme:
     exit
 }
+
 .text
+#counts from 0 to 9 and then exits
 process_2:
 {
     @loopvar = $s0
