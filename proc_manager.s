@@ -1,11 +1,15 @@
 # Steve Johnson
 # proc_manager.s handles loading and executing programs
 
+# load_process is probably the most interesting thing in here.
+
 #include proc_storage.s
 
     .text
 new_pid:
 {
+    # Summary:
+    #   Loads last PID generated, makes a new one, saves the result
     @khcb_addr = $s0
     @next_pid = $s1
     @err = $s2
@@ -34,6 +38,8 @@ new_pid:
     .text
 get_cmgr_head:
 {
+    # Summary:
+    #   Loads the address of the head of the context manager linked list
     @khcb_addr = $s0
     @h = $s1
     @err = $s2

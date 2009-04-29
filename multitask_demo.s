@@ -9,7 +9,7 @@ count_string_2: .asciiz "                      Process 2 count: "
     .globl main
 main:
 {
-    #load_process simply takes a label address
+    #the load_process procedure simply takes a label address
     la $a0 process_1
     call load_process
     
@@ -22,6 +22,8 @@ main:
 
 .text
 #print_test(n, prefix_string)
+#   note that this function is called by two separate processes
+#   and yet nothing conflicts, it all works fine
 print_test:
 {
     addu $s0 $a0 $zero

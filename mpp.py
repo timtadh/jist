@@ -3,6 +3,8 @@
 MIPS Preprocessor
 by Steve Johnson and Tim Henderson
 
+We do not recommend trying to understand this code. It needs cleanup.
+
 ==INCLUDING FILES==
 #include your_file.s
 
@@ -34,8 +36,15 @@ Put curly braces around your code on their own lines to make all labels and alia
 
 
 """
+Kernel macros:
     number_user_programs $dst
-    user_program $dst x
+        counts user programs
+    
+    load_user_programs
+        loads starting addresses for user programs into the appropriate kernel data locations
+    
+    load_first_program:
+        starts the program specified in the jistfile
 """
 
 import string, sys, re
@@ -74,7 +83,7 @@ def get_file_text(f1):
     return ''.join(in_lines)
 
 def make_kernel_macros():
-    '''creates specialized macros'''
+    '''creates specialized macros. this is sneaky sneaky business.'''
     global kernel_macros
     
     magic_prompt_string = ''

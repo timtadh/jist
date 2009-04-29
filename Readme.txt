@@ -1,3 +1,12 @@
+ =============================
+ = The Jist Operating System =
+ =============================
+by Dan DeCovnick, Tim Henderson, and Steve Johnson
+v0.000000000001
+
+If you only look at one file, look at multitask_demo.s, which shows off all the major features 
+of Jist other than the memory manager, which can be seen in user_heap_test.s.
+
 Flow of control:
 start.s
     program text
