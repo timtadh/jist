@@ -2,18 +2,6 @@
 # interrupt handler
 # This is where the magic happens
 
-# #     .globl __save_gp
-# #     .globl __save_sp
-# #     .globl __save_fp
-# #     .globl __save_ra
-# #     .globl __save_t0
-# #     .globl __save_t1
-# #     .globl __save_t2
-# #     .globl __save_t3
-# #     .globl __save_s0
-# #     .globl __save_s1
-# #     .globl __save_s2
-# #     .globl __save_s3
     .data
 __save_gp:  .word 0
 __save_sp:  .word 0
@@ -106,9 +94,6 @@ __int_msg: .asciiz "interrupt handler entered\n"
 
     .text
 interrupt_handler:
-    # la      $a0, __int_msg      # load the addr of exception_msg into $a0.
-    # li      $v0, 4              # 4 is the print_string syscall.
-    # syscall                     # do the syscall.
     j       save_state
 save_state_return:
 {
@@ -132,28 +117,18 @@ save_state_return:
         la @curpcb_addr current_pcb
         lw @pcb_id      0(@curpcb_addr)
         geti    7 @pcb_id @hcb_addr @sp @error
-#         bne     @error $zero put_error
         addu    $a0 @sp $zero
         call save_stack
         addu    @stack_id $v0 $zero
         
-        #println_hex sstr @stack_id
-        
         puti    4 @pcb_id @hcb_addr @stack_id @error
-#         bne     @error $zero put_error
-        
-        ###uncomment this to zero the stack after saving it###
-        #geti    3 $0 @hcb_addr @stackheap @error
-        #print_hcb  @stackheap
-        #printblock @stack_id @stackheap
-        #addu    $a0 @sp $zero
-        #call    zero_stack
-        
         
     }
     ######### SAVE THE STACK #########
     
+    ######### PERFORM MAGIC #########
     
+    #Check kernel message sent to interrupt handler
     la $a0 KMSG
     lw $a0 0($a0)
     beqz $a0 km_clock_interrupt
@@ -172,28 +147,36 @@ save_state_return:
             @pcb = $s4
             @mem_id = $s5
             khcb_getaddr @khcb_addr
-
+            
+            #Load the head of the process linked list
             geti 1 $zero @khcb_addr @h @err
             bnez @err ch_err
             
+            #Load the currently active process's PID
             la $a0 current_pid
             lw @pid 0($a0)
             
+            #Linear search for the current node
+            #Note: this is stupid and inefficient. We should just be storing the node mem_id.
+            #However, we already gave the demo and wrote the report, and I'm busy.
             addu $a0 @h $zero
             addu $a1 @pid $zero #this is the old pid
             call ll_find_pid
             addu @mem_id $v0 $zero
             
+            #Get the next node in the list (i.e. next process)
             addu $a0 @h $zero
             addu $a1 @mem_id $zero  #where mem_id is a list node
             call ll_next
             addu @mem_id $v0 $zero
             
+            #Load the new PID and PCB ID
             geti 1 @mem_id @khcb_addr @pid @err
             bnez @err ch_err
             geti 2 @mem_id @khcb_addr @pcb @err
             bnez @err ch_err
             
+            #Save the current PID and current PCB back to kernel data
             la $a0 current_pid
             sw @pid 0($a0)
             la $a0 current_pcb
@@ -202,8 +185,7 @@ save_state_return:
             b noerr
                 ch_err:
                     println errmsg
-                    li $v0 10
-                    syscall
+                    kill_jist
                 .data
                     errmsg: .asciiz "error in cmgr_wait"
                 .text
@@ -212,7 +194,7 @@ save_state_return:
         b reset_kmsg
     km_exit:
         {
-        
+            #This does pretty much the same thing as km_wait with a few notable differences
             @khcb_addr = $s0
             @h = $s1
             @err = $s2
@@ -232,21 +214,18 @@ save_state_return:
             call ll_find_pid
             addu @mem_id $v0 $zero
             
-            #println_hex memid_msg @mem_id
-            
+            #Remove the current process!
             addu $a0 @h $zero
             addu $a1 @mem_id $zero  #where mem_id is the list node to remove
             call ll_remove
             addu @h $v0 $zero
             
+            #Write the (possibly) new address of the list head back to kernel data
             khcb_getaddr @khcb_addr
             puti 1 $zero @khcb_addr @h @err
             
-            addu $a0 @h $zero
-            addu $a1 @h $zero
-            call ll_next
-            addu @mem_id $v0 $zero
-            
+            #Go back to list head
+            addu @mem_id @h $zero
             geti 1 @mem_id @khcb_addr @pid @err
             bnez @err ex_err
             geti 2 @mem_id @khcb_addr @pcb @err
@@ -275,21 +254,6 @@ save_state_return:
     la $a0 KMSG
     sw $zero 0($a0)
     
-    # la $a0 current_pcb
-    # lw $a0 0($a0)
-    # call restore_proc
-    
-    # {
-    #     @hcb_addr = $s1
-    #     @curpcb_addr = $s2
-    #     @pcb_id = $s3
-    #     khcb_getaddr @hcb_addr
-    #     la @curpcb_addr current_pcb
-    #     lw @pcb_id      0(@curpcb_addr)
-    #     
-    #     printblock @pcb_id @hcb_addr
-    # }
-    
     la $a0 current_pcb
     lw $a0 0($a0)
     call restore_proc
@@ -310,8 +274,6 @@ save_state_return:
         
         geti    4 @pcb_id @hcb_addr @stack_id @error
         
-        #println_hex rstr @stack_id
-        
         addu    $a0 @stack_id $0
         addu    $a1 @sp $0
         call    restore_stack
@@ -323,7 +285,6 @@ save_state_return:
 restore_state_return:
     la      $a0 interrupt_return
     jr      $a0
-#     j       interrupt_return
 
 .data
 rstr: .asciiz "Loading stack_id "
