@@ -1,12 +1,10 @@
 #!/usr/bin/python
 """
 MIPS Preprocessor
-by Steve Johnson and Tim Henderson
+by Steve Johnson (srj15@case.edu) and Tim Henderson (tah35@case.edu)
 
-This code is licensed under the GNU General Public License v2.0. For more info, go here:
-http://www.gnu.org/licenses/gpl-2.0.html
-
-We do not recommend trying to understand this code. It needs cleanup.
+This code is licensed under the GNU General Public License v2.0. 
+For more info, please consult http://www.gnu.org/licenses/gpl-2.0.html
 
 ==INCLUDING FILES==
 #include your_file.s
