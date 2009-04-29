@@ -1,4 +1,5 @@
-#Steve Johnson, Tim Henderson, & Dan DeCovnick
+# Steve Johnson, Tim Henderson, & Dan DeCovnick
+# This file provides many handy I/O functions. All documentation is inline, sorry.
 
 #include mappedio.s
 

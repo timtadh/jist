@@ -1,4 +1,6 @@
-#scope test not real program
+# ====================================================
+# = THIS IS NOT A REAL PROGRAM, DO NOT TRY TO RUN IT =
+# ====================================================
 
 #define mactest
     @t = $t0

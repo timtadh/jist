@@ -29,7 +29,9 @@ end:
 prompt:
 {
 top:
+    #See kernel_data.s for more about this next line:
     println mpstr
+    
     la     $a0 prompt_start
     call   print
     la     $a0 read_buffer

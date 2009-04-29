@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
 '''
-This is meant to be used to build a full mips program from multiple file sources. The labels
+This is meant to be used to build a full Jist program from multiple file sources. The labels
 "__start" and "main" should be in the first file. The exception handler at ".text 0x80000180"
 should be the last thing in the last file.
+
+The code is confusing and the whole system is not terribly well documented.
 '''
 
 import sys, os, shutil
@@ -20,15 +22,16 @@ if __name__ != '__main__': sys.exit(0)
 if len(sys.argv) < 2:
     help_string = """Usage: python spim.py [options] [extra files]
 
-Options:
---stripcomments or -s:
-    Strip comments from output file
+    Options:
+    --stripcomments or -s:
+        Strip comments from output file
 
---jistfile or -j:
-    Load program list from file 'jistfile'
+    --jistfile or -j:
+        Load program list from file 'jistfile'
 
---out or -o:
-    Specify an output file (untested)"""
+    --out or -o:
+        Specify an output file (untested)"""
+    
     print help_string
     sys.exit(0)
 
