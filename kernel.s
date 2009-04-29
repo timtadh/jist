@@ -1,6 +1,7 @@
 # Tim Henderson
 # A generalized exception handler adapted from exception.s
 
+######## MASTER INCLUDE LIST ########
 #include kernel_data.s
 #include memory_manager.s
 #include stack_mgr.s
@@ -81,18 +82,18 @@ exception_handler:              # exception handler
     
     
     mfc0    $a0 $14             # get the EPC register
-#     call    println_hex
-    
-    # print a message to the screen
+    # call    println_hex
     
     mfc0    $k0 $13             # Cause register
     andi    $a0 $k0 0x7C      
     srl     $a0 $a0 2           # Extract ExcCode Field
     
+    # We don't use syscalls for I/O anymore, and we never bothered to replace this.
     # li      $v0 1               # syscall 1 (print_int)
     # syscall
     
-    
+    # If everything is ok, go ahead and do the context switch
+    # Otherwise, do error-ish things
     bnez $a0 skip_interrupt_handler
     la $a0 interrupt_handler
     jr $a0
@@ -103,15 +104,14 @@ exception_handler:              # exception handler
     addu    $k1 $a0 $0          # set $k1 to the error number so user program can access it
     mul     $a0 $a0 4
     lw      $a0 __excp($a0)
+    #Yeah, so sometimes we do syscalls for I/O anyway, but we don't trust them.
     li      $v0 4               # syscall 4 (print_str)
     nop
     syscall
     
-    
     la      $a0 __m1_
     li      $v0 4               # syscall 4 (print_str)
     syscall
-    
     
     .globl interrupt_return
 interrupt_return:
