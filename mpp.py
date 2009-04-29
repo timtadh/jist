@@ -3,6 +3,9 @@
 MIPS Preprocessor
 by Steve Johnson and Tim Henderson
 
+This code is licensed under the GNU General Public License v2.0. For more info, go here:
+http://www.gnu.org/licenses/gpl-2.0.html
+
 We do not recommend trying to understand this code. It needs cleanup.
 
 ==INCLUDING FILES==
