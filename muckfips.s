@@ -1,6 +1,7 @@
 # Steve Johnson
 # Brainf*ck interpreter for a program stored in static data
-# safe for multitasking
+# To find out what Brainf*ck is, go here:
+# http://en.wikipedia.org/wiki/Brainfuck
 
 @LEFT   = 60
 @RIGHT  = 62
@@ -37,7 +38,7 @@ main:
     la @tptr program_text
     la @dptr array
     
-    
+    #Clear the data array
     {
         li $t0 4048
         clear_more:
@@ -53,21 +54,21 @@ main:
         lb @input 0(@tptr)
         beqz @input quitmf
         
-        #addu $a0 @input $zero
-        #call print_char
-        
         addu @comp $zero @PLUS
         bne @input @comp not_plus
+            #Increment current position by 1
             lb @temp 0(@dptr)
             addi @temp @temp 1
             sb @temp 0(@dptr)
             
+            #Move the program pointer forward 1
             addi @tptr @tptr 1
             b loop
         not_plus:
         
         addu @comp $zero @MINUS
         bne @input @comp not_minus
+            #Decrement current position by 1
             lb @temp 0(@dptr)
             addi @temp @temp -1
             sb @temp 0(@dptr)
@@ -78,6 +79,7 @@ main:
         
         addu @comp $zero @RIGHT
         bne @input @comp not_right
+            #Move data pointer right 1
             addi @dptr @dptr 1
             
             addi @tptr @tptr 1
@@ -86,6 +88,7 @@ main:
         
         addu @comp $zero @LEFT
         bne @input @comp not_left
+            #Move data pointer left 1
             addi @dptr @dptr -1
             
             addi @tptr @tptr 1
@@ -94,6 +97,7 @@ main:
         
         addu @comp $zero @PERIOD
         bne @input @comp not_period
+            #Print character under pointer
             lb $a0 0(@dptr)
             call print_char
             
@@ -103,6 +107,7 @@ main:
         
         addu @comp $zero @COMMA
         bne @input @comp not_comma
+            #Read one character of input
             _read_char @temp
             sb @temp 0(@dptr)
             
@@ -110,18 +115,13 @@ main:
             b loop
         not_comma:
         
-        addu @comp $zero @LEFTB
-        bne @input @comp not_leftb
-            #do nothing
-            addi @tptr @tptr 1
-            b loop
-        not_leftb:
-        
         addu @comp $zero @RIGHTB
         bne @input @comp not_rightb
         {
+            #If current data item is zero, skip all this stuff
             lb @temp 0(@dptr)
             beqz @temp bracket_done
+                #Otherwise, search the program text for the matching left bracket
                 li @bracketcount 1
                 bracket_loop:
                     addi @tptr @tptr -1
@@ -140,6 +140,13 @@ main:
             b loop
         }
         not_rightb:
+        
+        addu @comp $zero @LEFTB
+        bne @input @comp not_leftb
+            #do nothing
+            addi @tptr @tptr 1
+            b loop
+        not_leftb:
         addi @tptr @tptr 1
     b loop
     quitmf:

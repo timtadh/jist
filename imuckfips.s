@@ -1,10 +1,17 @@
 # Steve Johnson
 # This is an interactive Brainf*ck interpreter.
+# To find out what Brainf*ck is, go here:
+# http://en.wikipedia.org/wiki/Brainfuck
 
 # Suggested demo program:
 # ++++++[>,.<-]
 # type "h" after the first comma, because the input is done then and there.
 # then type "ello" to put in the rest.
+
+# The only real difference between this and the regular Muckfips is that this version gets its input
+# from the keyboard and puts it into a buffer sequentially. When a ']' is entered, it (might) jump 
+# back to the matching left bracket and run the program from the buffer for a while until it runs
+# out of program to run. At that point, it goes back to taking input from the user.
 
 @LEFT   = 60
 @RIGHT  = 62
