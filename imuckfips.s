@@ -52,6 +52,23 @@ main:
     la @dptr array
     la @optr output_buffer
     
+    {
+        li $t0 4048
+        clear_more:
+            sb $zero 0(@tptr)
+            sb $zero 0(@dptr)
+            sb $zero 0(@optr)
+            addi @tptr @tptr 1
+            addi @dptr @dptr 1
+            addi @optr @optr 1
+            addi $t0 $t0 -1
+            bgez $t0 clear_more
+    }
+
+    la @tptr program_text
+    la @dptr array
+    la @optr output_buffer
+    
     loop:
         bnez @state in_from_buffer
             _read_char @input

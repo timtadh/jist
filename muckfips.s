@@ -17,7 +17,7 @@ tweener:        .asciiz "And here is its output:"
 
 program_text:   .asciiz ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<++++>-]<.>>>++++++++++[<+++++++++>-]<---.<<<<.+++.------.--------.>>+.-----------------------."
 
-array:          .space 1024
+array:          .space 4048
 
     .text
     .globl main
@@ -35,6 +35,18 @@ main:
     @comp = $s5
     
     la @tptr program_text
+    la @dptr array
+    
+    
+    {
+        li $t0 4048
+        clear_more:
+            sb $zero 0(@dptr)
+            addi @dptr @dptr 1
+            addi $t0 $t0 -1
+            bgez $t0 clear_more
+    }
+    
     la @dptr array
     
     loop:
@@ -131,5 +143,6 @@ main:
         addi @tptr @tptr 1
     b loop
     quitmf:
+    
     exit
 }

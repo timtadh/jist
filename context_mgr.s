@@ -1,20 +1,46 @@
 # Steve Johnson
 # context_mgr.s
 # These functions keep track of PIDs and PCBs for currently running processes
-#   using a circular linked list.
-
-.text
-#format of a linked list:
+#   using a circular linked list formatted like this:
 #   @h: head: [next address][process num][pcb mem_id]
 
+# _new_ll_node:
+#     Allocate space for a new node
+# 
+# ll_init:
+#     Initialize the linked list with the given values at the head
+# 
+# ll_append:
+#     Append a new node with the given values
+# 
+# ll_next:
+#     Get the next list item after the given item. Loop to head if at the list end.
+# 
+# ll_find_pid:
+#     Linearly searches the list for the given PID.
+# 
+# ll_remove:
+#     Remove an item from the list
+# 
+# ll_print:
+#     Print out the list
+
+.text
 
 #define _new_ll_node local
+    #Load kernel heap control block
     @khcb_addr = $s3
     khcb_getaddr @khcb_addr
+    
+    #Load third item (head of the context manager list) from static data
     li $a0 3
     addu $a1 @khcb_addr $zero
+    
+    #Make some space for the new node
     call alloc
     addu    %1 $v0 $zero
+    
+    #Write the KHCB back to its static memory location
     addu    @khcb_addr $v1 $zero
     khcb_writeback @khcb_addr
 #end
@@ -31,13 +57,16 @@ ll_init:
     add @initval $a0 $zero
     add @initpcb $a1 $zero
     
+    #Allocate space for a new node, store its address in @h
     _new_ll_node @h
     
+    #Put the given parameters into kernel static data
     khcb_getaddr @khcb_addr
     puti 0 @h @khcb_addr $zero @err
     puti 1 @h @khcb_addr @initval @err
     puti 2 @h @khcb_addr @initpcb @err
     
+    #Return the head of the new linked lists
     add $v0 @h $zero
     return
 }
@@ -59,8 +88,10 @@ ll_append:
     add @newval $a1 $zero
     add @newpcb $a2 $zero
     
+    #Allocate space for a new node
     _new_ll_node @new
     
+    #Traverse the list to find the end (denoted by zero)
     khcb_getaddr @khcb_addr
     geti 0 @thisnode @khcb_addr @nextnode @err
     loop:
@@ -93,6 +124,7 @@ ll_next:    #@h @current
     add @head $a0 $zero
     add @current $a1 $zero
     
+    #return current_node.next unless current_node.next == NULL, in which case return head
     khcb_getaddr @khcb_addr
     geti 0 @current @khcb_addr $v0 @err
     beqz $v0 return_head
@@ -128,7 +160,6 @@ ll_find_pid:
         geti 1 @head @khcb_addr @temp @err
 
         bne @temp @to_find not_found_yet
-            #geti 0 @head @khcb_addr @temp @err
             addu $v0 @head $zero
             return
         not_found_yet:
@@ -136,13 +167,11 @@ ll_find_pid:
             b loop
 
     head_case:
-        #geti 0 @head @khcb_addr @temp @err
         addu $v0 @head $zero
         return
 
     found_end:
-        li $v0 10
-        syscall     #DIE DIE DIE
+        kill_jist
         return
 }
 
